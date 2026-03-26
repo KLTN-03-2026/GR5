@@ -1,7 +1,9 @@
 import 'dotenv/config'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import { PrismaClient } from '@/app/generated/prisma/client'
+
 const prismaClientSingleton = () => {
+  // PrismaMariaDb tự động tạo pool ngầm bên trong, chỉ cần ném config cho nó!
   const adapter = new PrismaMariaDb({
     host: process.env.DATABASE_HOST,
     port: Number(process.env.DATABASE_PORT) || 3306,
@@ -10,6 +12,7 @@ const prismaClientSingleton = () => {
     database: process.env.DATABASE_NAME,
     connectionLimit: 5,
   })
+  
   return new PrismaClient({ adapter })
 }
 

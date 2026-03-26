@@ -1,0 +1,24 @@
+FROM node:20-alpine
+
+# Handle process signals đúng cách, tránh zombie process
+RUN apk add --no-cache dumb-init
+
+WORKDIR /app
+
+# Copy package trước để tận dụng Docker cache
+# (chỉ rebuild layer này khi package.json thay đổi)
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
+
+# Cài thư viện
+RUN npm install
+
+# Generate Prisma Client bên trong Linux container
+RUN npx prisma generate
+
+COPY . .
+
+EXPOSE 3000
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["npm", "run", "dev"]

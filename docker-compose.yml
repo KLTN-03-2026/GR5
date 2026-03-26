@@ -1,0 +1,54 @@
+services:
+
+  # ─── 1. MySQL Database ─────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: agri_mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: agri_db
+      MYSQL_USER: agri_user
+      MYSQL_PASSWORD: agri_password
+      command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─── 2. Next.js App ────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: agri_nextjs
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ─── 3. Adminer — xem DB qua giao diện web ─────────────────────
+  adminer:
+    image: adminer
+    container_name: agri_adminer
+    restart: always
+    ports:
+      - "8888:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
