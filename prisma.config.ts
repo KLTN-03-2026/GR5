@@ -7,6 +7,6 @@ export default defineConfig({
     seed: 'npx tsx prisma/seed.ts',
   },
   datasource: {
-    url: 'mysql://root:rootpassword@localhost:3306/agri_db',
+    url: 'mysql://root:rootpassword@localhost:3307/agri_db',
   },
 });
