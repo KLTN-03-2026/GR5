@@ -218,7 +218,7 @@ export type Bien_the_san_phamGroupByOutputType = {
   _max: Bien_the_san_phamMaxAggregateOutputType | null
 }
 
-type GetBien_the_san_phamGroupByPayload<T extends bien_the_san_phamGroupByArgs> = Prisma.PrismaPromise<
+export type GetBien_the_san_phamGroupByPayload<T extends bien_the_san_phamGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Bien_the_san_phamGroupByOutputType, T['by']> &
       {

@@ -219,7 +219,7 @@ export type Chi_tiet_phieu_nhapGroupByOutputType = {
   _max: Chi_tiet_phieu_nhapMaxAggregateOutputType | null
 }
 
-type GetChi_tiet_phieu_nhapGroupByPayload<T extends chi_tiet_phieu_nhapGroupByArgs> = Prisma.PrismaPromise<
+export type GetChi_tiet_phieu_nhapGroupByPayload<T extends chi_tiet_phieu_nhapGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Chi_tiet_phieu_nhapGroupByOutputType, T['by']> &
       {

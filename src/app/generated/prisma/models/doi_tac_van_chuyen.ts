@@ -178,7 +178,7 @@ export type Doi_tac_van_chuyenGroupByOutputType = {
   _max: Doi_tac_van_chuyenMaxAggregateOutputType | null
 }
 
-type GetDoi_tac_van_chuyenGroupByPayload<T extends doi_tac_van_chuyenGroupByArgs> = Prisma.PrismaPromise<
+export type GetDoi_tac_van_chuyenGroupByPayload<T extends doi_tac_van_chuyenGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Doi_tac_van_chuyenGroupByOutputType, T['by']> &
       {

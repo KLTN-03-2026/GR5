@@ -189,7 +189,7 @@ export type Chung_chi_san_phamGroupByOutputType = {
   _max: Chung_chi_san_phamMaxAggregateOutputType | null
 }
 
-type GetChung_chi_san_phamGroupByPayload<T extends chung_chi_san_phamGroupByArgs> = Prisma.PrismaPromise<
+export type GetChung_chi_san_phamGroupByPayload<T extends chung_chi_san_phamGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Chung_chi_san_phamGroupByOutputType, T['by']> &
       {

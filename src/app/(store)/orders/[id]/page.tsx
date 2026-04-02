@@ -128,7 +128,7 @@ export default function OrderDetailsPage() {
           <div className="lg:col-span-2 space-y-8">
             
             {/* Thông tin khách hàng */}
-            <section className="bg-white rounded-[2rem] p-8 border border-emerald-50 shadow-sm">
+            <section className="bg-white rounded-4xl p-8 border border-emerald-50 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-primary/10 rounded-lg text-primary"><User size={20}/></div>
                 <h3 className="text-xl font-bold font-headline text-[#007832]">Thông tin khách hàng</h3>
@@ -143,7 +143,7 @@ export default function OrderDetailsPage() {
             </section>
 
             {/* Danh sách sản phẩm */}
-            <section className="bg-white rounded-[2rem] p-8 border border-emerald-50 shadow-sm">
+            <section className="bg-white rounded-4xl p-8 border border-emerald-50 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-primary/10 rounded-lg text-primary"><ShoppingBag size={20}/></div>
                 <h3 className="text-xl font-bold font-headline">Sản phẩm đã mua</h3>
@@ -152,7 +152,7 @@ export default function OrderDetailsPage() {
                 {order.products.map((item) => (
                   <div key={item.id} className="flex items-center gap-4 p-4 rounded-2xl hover:bg-emerald-50/50 transition-colors">
                     <img src={item.image} className="w-16 h-16 rounded-xl object-cover border border-emerald-100" />
-                    <div className="flex-grow">
+                    <div className="grow">
                       <h4 className="font-bold text-on-surface">{item.name}</h4>
                       <p className="text-xs text-on-surface-variant font-mono">{item.sku}</p>
                     </div>
@@ -169,7 +169,7 @@ export default function OrderDetailsPage() {
           {/* Cột phải: Tổng kết & Timeline */}
           <div className="space-y-8">
             {/* Tổng kết tiền bạc */}
-            <section className="bg-[#007832] rounded-[2rem] p-8 text-white shadow-xl shadow-primary/20">
+            <section className="bg-[#007832] rounded-4xl p-8 text-white shadow-xl shadow-primary/20">
               <h3 className="text-lg font-bold mb-6 opacity-80">Tóm tắt thanh toán</h3>
               <div className="space-y-4 border-b border-white/10 pb-6">
                 <div className="flex justify-between"><span>Tạm tính</span><span>{order.summary.subtotal.toLocaleString()}đ</span></div>
@@ -183,7 +183,7 @@ export default function OrderDetailsPage() {
             </section>
 
             {/* Phương thức thanh toán */}
-            <section className="bg-[#EFF6EA] rounded-[2rem] p-6 border border-emerald-50 shadow-sm">
+            <section className="bg-[#EFF6EA] rounded-4xl p-6 border border-emerald-50 shadow-sm">
               <p className="text-xs font-bold text-on-surface-variant uppercase mb-4 tracking-widest">Phương thức thanh toán</p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center font-black text-[#007832] text-xs">VNPAY</div>
@@ -195,12 +195,12 @@ export default function OrderDetailsPage() {
             </section>
 
             {/* Lịch sử đơn hàng (Timeline) */}
-            <section className="bg-white rounded-[2rem] p-8 border border-emerald-50 shadow-sm">
+            <section className="bg-white rounded-4xl p-8 border border-emerald-50 shadow-sm">
               <h3 className="font-bold text-lg mb-6">Lịch sử đơn hàng</h3>
               <div className="space-y-8 border-l-2 border-emerald-50 ml-2 pl-6">
                 {order.timeline.map((t) => (
                   <div key={t.id} className="relative">
-                    <div className={`absolute -left-[33px] top-1 w-4 h-4 rounded-full border-4 border-white shadow-sm ${t.status === 'pending' ? 'bg-gray-200' : 'bg-[#007832]'}`} />
+                    <div className={`absolute -left-8.25 top-1 w-4 h-4 rounded-full border-4 border-white shadow-sm ${t.status === 'pending' ? 'bg-gray-200' : 'bg-[#007832]'}`} />
                     <p className="font-bold text-sm">{t.title}</p>
                     <p className="text-[10px] text-on-surface-variant">{t.date}</p>
                     <p className="text-xs italic text-on-surface-variant mt-1">{t.desc}</p>
@@ -248,7 +248,7 @@ function ReturnRequestModal({ onClose, orderId }: { onClose: () => void, orderId
         initial={{ scale: 0.95, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 20 }}
-        className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem] shadow-2xl relative"
+        className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-4xl shadow-2xl relative"
       >
         {/* Nút Đóng Modal */}
         <button 

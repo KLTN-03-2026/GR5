@@ -226,7 +226,7 @@ export type Chi_tiet_luan_chuyen_khoGroupByOutputType = {
   _max: Chi_tiet_luan_chuyen_khoMaxAggregateOutputType | null
 }
 
-type GetChi_tiet_luan_chuyen_khoGroupByPayload<T extends chi_tiet_luan_chuyen_khoGroupByArgs> = Prisma.PrismaPromise<
+export type GetChi_tiet_luan_chuyen_khoGroupByPayload<T extends chi_tiet_luan_chuyen_khoGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Chi_tiet_luan_chuyen_khoGroupByOutputType, T['by']> &
       {

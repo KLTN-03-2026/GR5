@@ -4,6 +4,7 @@ import React from 'react';
 import { ArrowRight, ShoppingBasket, Star, ChevronRight, Plus, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+
 // Mock Data
 const CATEGORIES = [
   { id: 'rau-cu', name: 'Rau củ', description: 'Tươi mới mỗi ngày', image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400' },
@@ -21,10 +22,10 @@ const PRODUCTS = [
 
 export default function HomePage() {
   return (
-    <main className="flex-grow pt-24">
+    <main className="grow pt-24">
       {/* Hero Section */}
       <section className="px-6 mb-16">
-        <div className="max-w-7xl mx-auto relative h-[600px] rounded-[2.5rem] overflow-hidden group">
+        <div className="max-w-7xl mx-auto relative h-150 rounded-[2.5rem] overflow-hidden group">
          <img 
   src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=100&w=1600&auto=format&fit=crop"
   alt="Hero" 
@@ -73,7 +74,7 @@ export default function HomePage() {
           <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full" />
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16" >
           {CATEGORIES.map((cat) => (
             <a key={cat.id} href="#" className="group flex flex-col items-center gap-4 text-center">
               <div className="relative w-32 h-32 md:w-44 md:h-44 rounded-full overflow-hidden p-1 border-2 border-transparent group-hover:border-emerald-600 transition-all duration-500">
@@ -94,7 +95,7 @@ export default function HomePage() {
       <section className="py-16 px-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-12 gap-6">
           {/* Large Card */}
-          <div className="col-span-12 lg:col-span-8 bg-emerald-50/50 rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col justify-between min-h-[500px] border border-emerald-100">
+          <div className="col-span-12 lg:col-span-8 bg-emerald-50/50 rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col justify-between min-h-125 border border-emerald-100">
             <div className="absolute top-0 right-0 w-1/2 h-full">
               <img src="https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=800" alt="Organic" className="w-full h-full object-cover opacity-90" />
               <div className="absolute inset-0 " />
@@ -185,8 +186,8 @@ export default function HomePage() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {PRODUCTS.map((product) => (
-            <motion.div key={product.id} whileHover={{ y: -8 }} className="bg-white p-4 rounded-[1.5rem] group hover:shadow-2xl hover:shadow-emerald-900/5 transition-all duration-300 border border-gray-100">
-              <div className="relative aspect-square rounded-[1rem] overflow-hidden mb-4 bg-gray-50">
+            <motion.div key={product.id} whileHover={{ y: -8 }} className="bg-white p-4 rounded-3xl group hover:shadow-2xl hover:shadow-emerald-900/5 transition-all duration-300 border border-gray-100">
+              <div className="relative aspect-square rounded-2xl overflow-hidden mb-4 bg-gray-50">
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 {product.tag && (
                   <div className="absolute top-4 left-4 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">
@@ -215,7 +216,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Newsletter */}
       <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto bg-[#EFF6EA] rounded-[3rem] p-12 text-center border border-emerald-100 relative overflow-hidden">
           <div className="relative z-10">

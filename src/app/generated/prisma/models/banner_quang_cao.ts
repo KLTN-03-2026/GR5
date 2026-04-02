@@ -196,7 +196,7 @@ export type Banner_quang_caoGroupByOutputType = {
   _max: Banner_quang_caoMaxAggregateOutputType | null
 }
 
-type GetBanner_quang_caoGroupByPayload<T extends banner_quang_caoGroupByArgs> = Prisma.PrismaPromise<
+export type GetBanner_quang_caoGroupByPayload<T extends banner_quang_caoGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Banner_quang_caoGroupByOutputType, T['by']> &
       {

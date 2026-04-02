@@ -218,7 +218,7 @@ export type Giao_dich_thanh_toanGroupByOutputType = {
   _max: Giao_dich_thanh_toanMaxAggregateOutputType | null
 }
 
-type GetGiao_dich_thanh_toanGroupByPayload<T extends giao_dich_thanh_toanGroupByArgs> = Prisma.PrismaPromise<
+export type GetGiao_dich_thanh_toanGroupByPayload<T extends giao_dich_thanh_toanGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Giao_dich_thanh_toanGroupByOutputType, T['by']> &
       {

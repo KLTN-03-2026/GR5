@@ -185,7 +185,7 @@ export type Quan_ly_file_tai_lenGroupByOutputType = {
   _max: Quan_ly_file_tai_lenMaxAggregateOutputType | null
 }
 
-type GetQuan_ly_file_tai_lenGroupByPayload<T extends quan_ly_file_tai_lenGroupByArgs> = Prisma.PrismaPromise<
+export type GetQuan_ly_file_tai_lenGroupByPayload<T extends quan_ly_file_tai_lenGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Quan_ly_file_tai_lenGroupByOutputType, T['by']> &
       {

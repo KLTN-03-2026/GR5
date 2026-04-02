@@ -1,5 +1,6 @@
-import prisma from './lib/prisma';
-
+import prisma
+ from "@/lib/prisma";
+ 
 async function main() {
   // ==========================================
   // 1. MODULE TÀI KHOẢN & PHÂN QUYỀN

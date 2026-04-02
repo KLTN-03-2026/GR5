@@ -196,7 +196,7 @@ export type Tin_nhan_chat_aiGroupByOutputType = {
   _max: Tin_nhan_chat_aiMaxAggregateOutputType | null
 }
 
-type GetTin_nhan_chat_aiGroupByPayload<T extends tin_nhan_chat_aiGroupByArgs> = Prisma.PrismaPromise<
+export type GetTin_nhan_chat_aiGroupByPayload<T extends tin_nhan_chat_aiGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Tin_nhan_chat_aiGroupByOutputType, T['by']> &
       {
