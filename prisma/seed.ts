@@ -1,131 +1,100 @@
-import prisma from './lib/prisma';
+import { PrismaClient } from '../src/app/generated/prisma/client';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+
+const adapter = new PrismaMariaDb({
+  host: 'localhost',
+  port: 3307,
+  user: 'root',
+  password: 'rootpassword',
+  database: 'agri_db',
+});
+
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // ==========================================
-  // 1. MODULE TÀI KHOẢN & PHÂN QUYỀN
-  // ==========================================
-  console.log('👤 Đang tạo Vai trò và Người dùng...');
+  console.log('Bắt đầu dọn dẹp dữ liệu cũ...');
+  // Xóa theo thứ tự từ con lên cha để không lỗi khóa ngoại
+  await prisma.chi_tiet_luan_chuyen_kho.deleteMany();
+  await prisma.kien_hang_da_xuat.deleteMany();
+  await prisma.kien_hang_chi_tiet.deleteMany();
+  await prisma.ton_kho_tong.deleteMany();
+  await prisma.canh_bao_lo_hang.deleteMany();
+  await prisma.lo_hang.deleteMany();
+  await prisma.vi_tri_kho.deleteMany();
+  await prisma.kho_hang.deleteMany();
+  await prisma.bien_the_san_pham.deleteMany();
+  await prisma.san_pham.deleteMany();
+  await prisma.nha_cung_cap.deleteMany();
 
-  const roleAdmin = await prisma.vai_tro.create({
-    data: { ten_vai_tro: 'ADMIN', mo_ta: 'Quản trị viên toàn quyền hệ thống' }
-  });
-  const roleKhachHang = await prisma.vai_tro.create({
-    data: { ten_vai_tro: 'KHACH_HANG', mo_ta: 'Khách hàng mua sắm' }
-  });
+  console.log('Tạo dữ liệu Nhà cung cấp...');
+  const ncc1 = await prisma.nha_cung_cap.create({ data: { ten_ncc: 'Nông trại Đà Lạt', so_dien_thoai: '0901234567' } });
+  const ncc2 = await prisma.nha_cung_cap.create({ data: { ten_ncc: 'HTX Rau Sạch', so_dien_thoai: '0987654321' } });
 
-  const admin = await prisma.nguoi_dung.create({
-    data: {
-      email: 'admin@agri.com',
-      mat_khau: 'hashed_password_123', // Thực tế nên dùng bcrypt
-      trang_thai: 1,
-      ho_so_nguoi_dung: {
-        create: { ho_ten: 'Lê Hưng (Admin)', so_dien_thoai: '0901234567' }
-      },
-      vai_tro_nguoi_dung: {
-        create: { ma_vai_tro: roleAdmin.id }
-      }
-    }
-  });
+  console.log('Tạo dữ liệu Sản phẩm & Biến thể...');
+  const sp1 = await prisma.san_pham.create({ data: { ten_san_pham: 'Rau muống', trang_thai: 'DANG_BAN' } });
+  const bt1 = await prisma.bien_the_san_pham.create({ data: { ma_san_pham: sp1.id, ma_sku: 'RM-1KG', ten_bien_the: 'Rau muống 1kg', don_vi_tinh: 'Thùng', gia_ban: 50000 } });
 
-  // ==========================================
-  // 2. MODULE DANH MỤC & SẢN PHẨM
-  // ==========================================
-  console.log('🍎 Đang tạo Danh mục và Sản phẩm nông sản...');
+  const sp2 = await prisma.san_pham.create({ data: { ten_san_pham: 'Cải thảo', trang_thai: 'DANG_BAN' } });
+  const bt2 = await prisma.bien_the_san_pham.create({ data: { ma_san_pham: sp2.id, ma_sku: 'CT-2KG', ten_bien_the: 'Cải thảo 2kg', don_vi_tinh: 'Thùng', gia_ban: 80000 } });
 
-  const cateTraiCay = await prisma.danh_muc.create({
-    data: { ten_danh_muc: 'Trái cây Tươi' }
-  });
-  const cateNguCoc = await prisma.danh_muc.create({
-    data: { ten_danh_muc: 'Lương thực & Ngũ cốc' }
-  });
+  const sp3 = await prisma.san_pham.create({ data: { ten_san_pham: 'Cà rốt Đà Lạt', trang_thai: 'DANG_BAN' } });
+  const bt3 = await prisma.bien_the_san_pham.create({ data: { ma_san_pham: sp3.id, ma_sku: 'CR-1KG', ten_bien_the: 'Cà rốt 1kg', don_vi_tinh: 'Thùng', gia_ban: 45000 } });
 
-  // Sản phẩm 1: Sầu Riêng Ri6
-  const spSauRieng = await prisma.san_pham.create({
-    data: {
-      ma_danh_muc: cateTraiCay.id,
-      ten_san_pham: 'Sầu Riêng Ri6 Hạt Lép',
-      mo_ta: 'Sầu riêng chuẩn VietGAP, cơm vàng hạt lép, thơm ngon nức mũi.',
-      xuat_xu: 'Bến Tre',
-      trang_thai: 'DANG_BAN',
-      bien_the_san_pham: {
-        create: [
-          { ma_sku: 'SR-RI6-1KG', ten_bien_the: 'Trái 1.5 - 2kg', don_vi_tinh: 'Kg', gia_ban: 120000, gia_goc: 100000 },
-          { ma_sku: 'SR-RI6-BOX', ten_bien_the: 'Khay bóc sẵn 500g', don_vi_tinh: 'Hộp', gia_ban: 180000, gia_goc: 150000 }
-        ]
-      },
-      anh_san_pham: {
-        create: { duong_dan_anh: '/images/sau-rieng-ri6.jpg', la_anh_chinh: true }
-      }
-    }
-  });
+  console.log('Tạo dữ liệu Kho & Vị trí...');
+  const kho = await prisma.kho_hang.create({ data: { ten_kho: 'Kho Tổng TP.HCM', dia_chi: 'Quận 12' } });
+  
+  const viTriA11 = await prisma.vi_tri_kho.create({ data: { ma_kho: kho.id, khu_vuc: 'Khu A', day: 'Dãy 1', ke: 'Kệ 1' } });
+  const viTriA12 = await prisma.vi_tri_kho.create({ data: { ma_kho: kho.id, khu_vuc: 'Khu A', day: 'Dãy 1', ke: 'Kệ 2' } });
+  const viTriB21 = await prisma.vi_tri_kho.create({ data: { ma_kho: kho.id, khu_vuc: 'Khu B', day: 'Dãy 2', ke: 'Kệ 1' } });
 
-  // Sản phẩm 2: Gạo ST25
-  const spGao = await prisma.san_pham.create({
-    data: {
-      ma_danh_muc: cateNguCoc.id,
-      ten_san_pham: 'Gạo Ông Cua ST25 Lúa Tôm',
-      mo_ta: 'Gạo ngon nhất thế giới, hạt dài, thơm dẻo.',
-      xuat_xu: 'Sóc Trăng',
-      bien_the_san_pham: {
-        create: [
-          { ma_sku: 'GAO-ST25-5KG', ten_bien_the: 'Túi 5Kg', don_vi_tinh: 'Túi', gia_ban: 190000, gia_goc: 170000 }
-        ]
-      }
-    }
-  });
+  console.log('Tạo dữ liệu Lô hàng...');
+  // Lô 1: Đã hết hạn (HSD: 01/04/2026)
+  const lo1 = await prisma.lo_hang.create({ data: { ma_bien_the: bt1.id, ma_ncc: ncc1.id, ma_lo_hang: 'LO-001', ngay_thu_hoach: new Date('2026-03-25'), ngay_nhap_kho: new Date('2026-03-26'), han_su_dung: new Date('2026-04-01') } });
+  // Lô 2: Còn 2 ngày (HSD: 04/04/2026)
+  const lo2 = await prisma.lo_hang.create({ data: { ma_bien_the: bt2.id, ma_ncc: ncc2.id, ma_lo_hang: 'LO-002', ngay_thu_hoach: new Date('2026-03-28'), ngay_nhap_kho: new Date('2026-03-29'), han_su_dung: new Date('2026-04-04') } });
+  // Lô 3: Bình thường (HSD: 10/04/2026)
+  const lo3 = await prisma.lo_hang.create({ data: { ma_bien_the: bt3.id, ma_ncc: ncc1.id, ma_lo_hang: 'LO-003', ngay_thu_hoach: new Date('2026-04-01'), ngay_nhap_kho: new Date('2026-04-02'), han_su_dung: new Date('2026-04-10') } });
 
-  // ==========================================
-  // 3. MODULE KHO BÃI & NHÀ CUNG CẤP
-  // ==========================================
-  console.log('🏭 Đang thiết lập Nhà cung cấp và Kho hàng...');
-
-  const ncc = await prisma.nha_cung_cap.create({
-    data: { ten_ncc: 'HTX Nông Nghiệp Xanh', so_dien_thoai: '02873001122', dia_chi: 'Miền Tây' }
-  });
-
-  const khoChinh = await prisma.kho_hang.create({
-    data: { ten_kho: 'Kho Tổng Miền Nam', dia_chi: 'KCN Tân Bình, TP.HCM' }
-  });
-
-  const viTri = await prisma.vi_tri_kho.create({
-    data: { ma_kho: khoChinh.id, khu_vuc: 'Khu Lạnh A', day: 'Dãy 1', ke: 'Kệ 3' }
-  });
-
-  // ==========================================
-  // 4. MODULE THANH TOÁN & VẬN CHUYỂN
-  // ==========================================
-  console.log('🚚 Đang tạo Phương thức thanh toán...');
-
-  await prisma.phuong_thuc_thanh_toan.createMany({
+  console.log('Tạo dữ liệu Tồn kho tổng...');
+  await prisma.ton_kho_tong.createMany({
     data: [
-      { ten_phuong_thuc: 'Thanh toán khi nhận hàng (COD)' },
-      { ten_phuong_thuc: 'Chuyển khoản Ngân hàng (VietQR)' },
-      { ten_phuong_thuc: 'Ví MoMo' }
+      { ma_lo_hang: lo1.id, ma_vi_tri: viTriA11.id, so_luong: 3 }, // 3 thùng Rau muống ở Kệ 1
+      { ma_lo_hang: lo2.id, ma_vi_tri: viTriA12.id, so_luong: 2 }, // 2 thùng Cải thảo ở Kệ 2
+      { ma_lo_hang: lo3.id, ma_vi_tri: viTriB21.id, so_luong: 5 }, // 5 thùng Cà rốt ở Khu B
     ]
   });
 
-  await prisma.doi_tac_van_chuyen.create({
-    data: { ten_doi_tac: 'Giao Hàng Tiết Kiệm', so_dien_thoai: '19001008' }
-  });
-
-  // ==========================================
-  // 5. MODULE NHÂN SỰ & CA LÀM VIỆC
-  // ==========================================
-  console.log('⏰ Đang lên lịch Ca làm việc...');
-
-  await prisma.ca_lam_viec.createMany({
+  console.log('Tạo dữ liệu Cảnh báo hết hạn...');
+  await prisma.canh_bao_lo_hang.createMany({
     data: [
-      { ten_ca: 'Ca Sáng (06:00 - 14:00)', gio_bat_dau: new Date('1970-01-01T06:00:00Z'), gio_ket_thuc: new Date('1970-01-01T14:00:00Z') },
-      { ten_ca: 'Ca Chiều (14:00 - 22:00)', gio_bat_dau: new Date('1970-01-01T14:00:00Z'), gio_ket_thuc: new Date('1970-01-01T22:00:00Z') }
+      { ma_lo_hang: lo1.id, loai_canh_bao: 'DA_HET_HAN', so_ngay_con: 0, da_xu_ly: false },
+      { ma_lo_hang: lo2.id, loai_canh_bao: 'CON_2_NGAY', so_ngay_con: 2, da_xu_ly: false },
     ]
   });
 
-  console.log('🎉 Xong! Database đã được nạp đầy đủ dữ liệu mồi.');
+  console.log('Tạo dữ liệu Kiện hàng chi tiết (Thùng hàng thật có QR)...');
+  // 10 Thùng hàng
+  const qrCodes = [
+    { ma_lo_hang: lo1.id, ma_vi_tri: viTriA11.id, ma_vach_quet: 'QR-RM-001' },
+    { ma_lo_hang: lo1.id, ma_vi_tri: viTriA11.id, ma_vach_quet: 'QR-RM-002' },
+    { ma_lo_hang: lo1.id, ma_vi_tri: viTriA11.id, ma_vach_quet: 'QR-RM-003' },
+    { ma_lo_hang: lo2.id, ma_vi_tri: viTriA12.id, ma_vach_quet: 'QR-CT-004' },
+    { ma_lo_hang: lo2.id, ma_vi_tri: viTriA12.id, ma_vach_quet: 'QR-CT-005' },
+    { ma_lo_hang: lo3.id, ma_vi_tri: viTriB21.id, ma_vach_quet: 'QR-CR-006' },
+    { ma_lo_hang: lo3.id, ma_vi_tri: viTriB21.id, ma_vach_quet: 'QR-CR-007' },
+    { ma_lo_hang: lo3.id, ma_vi_tri: viTriB21.id, ma_vach_quet: 'QR-CR-008' },
+    { ma_lo_hang: lo3.id, ma_vi_tri: viTriB21.id, ma_vach_quet: 'QR-CR-009' },
+    { ma_lo_hang: lo3.id, ma_vi_tri: viTriB21.id, ma_vach_quet: 'QR-CR-010' },
+  ];
+
+  await prisma.kien_hang_chi_tiet.createMany({ data: qrCodes });
+
+  console.log('✅ Bơm dữ liệu thành công!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Lỗi trong quá trình Seed:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {

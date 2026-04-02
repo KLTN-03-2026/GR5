@@ -389,6 +389,7 @@ export const ModelName = {
   banner_quang_cao: 'banner_quang_cao',
   bien_the_san_pham: 'bien_the_san_pham',
   ca_lam_viec: 'ca_lam_viec',
+  canh_bao_lo_hang: 'canh_bao_lo_hang',
   chi_tiet_doi_tra: 'chi_tiet_doi_tra',
   chi_tiet_don_hang: 'chi_tiet_don_hang',
   chi_tiet_gio_hang: 'chi_tiet_gio_hang',
@@ -411,6 +412,7 @@ export const ModelName = {
   kho_hang: 'kho_hang',
   kho_tri_thuc_ai: 'kho_tri_thuc_ai',
   kien_hang_chi_tiet: 'kien_hang_chi_tiet',
+  kien_hang_da_xuat: 'kien_hang_da_xuat',
   lich_phan_cong_ca: 'lich_phan_cong_ca',
   lich_su_cham_cong: 'lich_su_cham_cong',
   lich_su_dang_nhap: 'lich_su_dang_nhap',
@@ -455,7 +457,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "anh_danh_gia" | "anh_san_pham" | "banner_quang_cao" | "bien_the_san_pham" | "ca_lam_viec" | "chi_tiet_doi_tra" | "chi_tiet_don_hang" | "chi_tiet_gio_hang" | "chi_tiet_luan_chuyen_kho" | "chi_tiet_phan_quyen" | "chi_tiet_phieu_nhap" | "chi_tiet_phieu_xuat" | "chuc_nang_he_thong" | "chung_chi_san_pham" | "danh_gia_san_pham" | "danh_muc" | "dia_chi_nguoi_dung" | "doi_tac_van_chuyen" | "don_hang" | "don_van_chuyen" | "du_lieu_khuon_mat" | "giao_dich_thanh_toan" | "gio_hang" | "ho_so_nguoi_dung" | "kho_hang" | "kho_tri_thuc_ai" | "kien_hang_chi_tiet" | "lich_phan_cong_ca" | "lich_su_cham_cong" | "lich_su_dang_nhap" | "lich_su_don_hang" | "lich_su_hoan_tien" | "lo_hang" | "ma_giam_gia" | "nguoi_dung" | "nha_cung_cap" | "nhiem_vu_cong_viec" | "phan_he_he_thong" | "phien_chat_ai" | "phieu_kiem_ke_kho" | "phieu_nhap_kho" | "phieu_tra_nha_cung_cap" | "phieu_xuat_kho" | "phuong_thuc_thanh_toan" | "quan_ly_file_tai_len" | "quyen_han" | "san_pham" | "the_san_pham" | "the_tu_khoa" | "thong_bao" | "tin_nhan_chat_ai" | "ton_kho_tong" | "vai_tro" | "vai_tro_nguoi_dung" | "vi_tri_kho" | "yeu_cau_doi_tra"
+    modelProps: "anh_danh_gia" | "anh_san_pham" | "banner_quang_cao" | "bien_the_san_pham" | "ca_lam_viec" | "canh_bao_lo_hang" | "chi_tiet_doi_tra" | "chi_tiet_don_hang" | "chi_tiet_gio_hang" | "chi_tiet_luan_chuyen_kho" | "chi_tiet_phan_quyen" | "chi_tiet_phieu_nhap" | "chi_tiet_phieu_xuat" | "chuc_nang_he_thong" | "chung_chi_san_pham" | "danh_gia_san_pham" | "danh_muc" | "dia_chi_nguoi_dung" | "doi_tac_van_chuyen" | "don_hang" | "don_van_chuyen" | "du_lieu_khuon_mat" | "giao_dich_thanh_toan" | "gio_hang" | "ho_so_nguoi_dung" | "kho_hang" | "kho_tri_thuc_ai" | "kien_hang_chi_tiet" | "kien_hang_da_xuat" | "lich_phan_cong_ca" | "lich_su_cham_cong" | "lich_su_dang_nhap" | "lich_su_don_hang" | "lich_su_hoan_tien" | "lo_hang" | "ma_giam_gia" | "nguoi_dung" | "nha_cung_cap" | "nhiem_vu_cong_viec" | "phan_he_he_thong" | "phien_chat_ai" | "phieu_kiem_ke_kho" | "phieu_nhap_kho" | "phieu_tra_nha_cung_cap" | "phieu_xuat_kho" | "phuong_thuc_thanh_toan" | "quan_ly_file_tai_len" | "quyen_han" | "san_pham" | "the_san_pham" | "the_tu_khoa" | "thong_bao" | "tin_nhan_chat_ai" | "ton_kho_tong" | "vai_tro" | "vai_tro_nguoi_dung" | "vi_tri_kho" | "yeu_cau_doi_tra"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -786,6 +788,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ca_lam_viecCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.Ca_lam_viecCountAggregateOutputType> | number
+        }
+      }
+    }
+    canh_bao_lo_hang: {
+      payload: Prisma.$canh_bao_lo_hangPayload<ExtArgs>
+      fields: Prisma.canh_bao_lo_hangFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.canh_bao_lo_hangFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$canh_bao_lo_hangPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.canh_bao_lo_hangFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$canh_bao_lo_hangPayload>
+        }
+        findFirst: {
+          args: Prisma.canh_bao_lo_hangFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$canh_bao_lo_hangPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.canh_bao_lo_hangFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$canh_bao_lo_hangPayload>
+        }
+        findMany: {
+          args: Prisma.canh_bao_lo_hangFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$canh_bao_lo_hangPayload>[]
+        }
+        create: {
+          args: Prisma.canh_bao_lo_hangCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$canh_bao_lo_hangPayload>
+        }
+        createMany: {
+          args: Prisma.canh_bao_lo_hangCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.canh_bao_lo_hangDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$canh_bao_lo_hangPayload>
+        }
+        update: {
+          args: Prisma.canh_bao_lo_hangUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$canh_bao_lo_hangPayload>
+        }
+        deleteMany: {
+          args: Prisma.canh_bao_lo_hangDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.canh_bao_lo_hangUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.canh_bao_lo_hangUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$canh_bao_lo_hangPayload>
+        }
+        aggregate: {
+          args: Prisma.Canh_bao_lo_hangAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCanh_bao_lo_hang>
+        }
+        groupBy: {
+          args: Prisma.canh_bao_lo_hangGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Canh_bao_lo_hangGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.canh_bao_lo_hangCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Canh_bao_lo_hangCountAggregateOutputType> | number
         }
       }
     }
@@ -2238,6 +2306,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.kien_hang_chi_tietCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.Kien_hang_chi_tietCountAggregateOutputType> | number
+        }
+      }
+    }
+    kien_hang_da_xuat: {
+      payload: Prisma.$kien_hang_da_xuatPayload<ExtArgs>
+      fields: Prisma.kien_hang_da_xuatFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.kien_hang_da_xuatFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$kien_hang_da_xuatPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.kien_hang_da_xuatFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$kien_hang_da_xuatPayload>
+        }
+        findFirst: {
+          args: Prisma.kien_hang_da_xuatFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$kien_hang_da_xuatPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.kien_hang_da_xuatFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$kien_hang_da_xuatPayload>
+        }
+        findMany: {
+          args: Prisma.kien_hang_da_xuatFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$kien_hang_da_xuatPayload>[]
+        }
+        create: {
+          args: Prisma.kien_hang_da_xuatCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$kien_hang_da_xuatPayload>
+        }
+        createMany: {
+          args: Prisma.kien_hang_da_xuatCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.kien_hang_da_xuatDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$kien_hang_da_xuatPayload>
+        }
+        update: {
+          args: Prisma.kien_hang_da_xuatUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$kien_hang_da_xuatPayload>
+        }
+        deleteMany: {
+          args: Prisma.kien_hang_da_xuatDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.kien_hang_da_xuatUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.kien_hang_da_xuatUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$kien_hang_da_xuatPayload>
+        }
+        aggregate: {
+          args: Prisma.Kien_hang_da_xuatAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateKien_hang_da_xuat>
+        }
+        groupBy: {
+          args: Prisma.kien_hang_da_xuatGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Kien_hang_da_xuatGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.kien_hang_da_xuatCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Kien_hang_da_xuatCountAggregateOutputType> | number
         }
       }
     }
@@ -4247,6 +4381,19 @@ export const Ca_lam_viecScalarFieldEnum = {
 export type Ca_lam_viecScalarFieldEnum = (typeof Ca_lam_viecScalarFieldEnum)[keyof typeof Ca_lam_viecScalarFieldEnum]
 
 
+export const Canh_bao_lo_hangScalarFieldEnum = {
+  id: 'id',
+  ma_lo_hang: 'ma_lo_hang',
+  loai_canh_bao: 'loai_canh_bao',
+  so_ngay_con: 'so_ngay_con',
+  da_xu_ly: 'da_xu_ly',
+  ngay_tao: 'ngay_tao',
+  ngay_xu_ly: 'ngay_xu_ly'
+} as const
+
+export type Canh_bao_lo_hangScalarFieldEnum = (typeof Canh_bao_lo_hangScalarFieldEnum)[keyof typeof Canh_bao_lo_hangScalarFieldEnum]
+
+
 export const Chi_tiet_doi_traScalarFieldEnum = {
   id: 'id',
   ma_yeu_cau: 'ma_yeu_cau',
@@ -4484,6 +4631,16 @@ export const Kien_hang_chi_tietScalarFieldEnum = {
 export type Kien_hang_chi_tietScalarFieldEnum = (typeof Kien_hang_chi_tietScalarFieldEnum)[keyof typeof Kien_hang_chi_tietScalarFieldEnum]
 
 
+export const Kien_hang_da_xuatScalarFieldEnum = {
+  id: 'id',
+  ma_chi_tiet_xuat: 'ma_chi_tiet_xuat',
+  ma_kien_hang: 'ma_kien_hang',
+  thoi_gian_xuat: 'thoi_gian_xuat'
+} as const
+
+export type Kien_hang_da_xuatScalarFieldEnum = (typeof Kien_hang_da_xuatScalarFieldEnum)[keyof typeof Kien_hang_da_xuatScalarFieldEnum]
+
+
 export const Lich_phan_cong_caScalarFieldEnum = {
   id: 'id',
   ma_nguoi_dung: 'ma_nguoi_dung',
@@ -4544,6 +4701,7 @@ export const Lo_hangScalarFieldEnum = {
   ma_ncc: 'ma_ncc',
   ma_lo_hang: 'ma_lo_hang',
   ngay_thu_hoach: 'ngay_thu_hoach',
+  ngay_nhap_kho: 'ngay_nhap_kho',
   han_su_dung: 'han_su_dung'
 } as const
 
@@ -4755,7 +4913,8 @@ export const Ton_kho_tongScalarFieldEnum = {
   id: 'id',
   ma_lo_hang: 'ma_lo_hang',
   ma_vi_tri: 'ma_vi_tri',
-  so_luong: 'so_luong'
+  so_luong: 'so_luong',
+  ngay_cap_nhat: 'ngay_cap_nhat'
 } as const
 
 export type Ton_kho_tongScalarFieldEnum = (typeof Ton_kho_tongScalarFieldEnum)[keyof typeof Ton_kho_tongScalarFieldEnum]
@@ -4783,7 +4942,8 @@ export const Vi_tri_khoScalarFieldEnum = {
   ma_kho: 'ma_kho',
   khu_vuc: 'khu_vuc',
   day: 'day',
-  ke: 'ke'
+  ke: 'ke',
+  tang: 'tang'
 } as const
 
 export type Vi_tri_khoScalarFieldEnum = (typeof Vi_tri_khoScalarFieldEnum)[keyof typeof Vi_tri_khoScalarFieldEnum]
@@ -4862,6 +5022,13 @@ export const ca_lam_viecOrderByRelevanceFieldEnum = {
 } as const
 
 export type ca_lam_viecOrderByRelevanceFieldEnum = (typeof ca_lam_viecOrderByRelevanceFieldEnum)[keyof typeof ca_lam_viecOrderByRelevanceFieldEnum]
+
+
+export const canh_bao_lo_hangOrderByRelevanceFieldEnum = {
+  loai_canh_bao: 'loai_canh_bao'
+} as const
+
+export type canh_bao_lo_hangOrderByRelevanceFieldEnum = (typeof canh_bao_lo_hangOrderByRelevanceFieldEnum)[keyof typeof canh_bao_lo_hangOrderByRelevanceFieldEnum]
 
 
 export const chi_tiet_doi_traOrderByRelevanceFieldEnum = {
@@ -5188,7 +5355,8 @@ export type vai_troOrderByRelevanceFieldEnum = (typeof vai_troOrderByRelevanceFi
 export const vi_tri_khoOrderByRelevanceFieldEnum = {
   khu_vuc: 'khu_vuc',
   day: 'day',
-  ke: 'ke'
+  ke: 'ke',
+  tang: 'tang'
 } as const
 
 export type vi_tri_khoOrderByRelevanceFieldEnum = (typeof vi_tri_khoOrderByRelevanceFieldEnum)[keyof typeof vi_tri_khoOrderByRelevanceFieldEnum]
@@ -5363,6 +5531,7 @@ export type GlobalOmitConfig = {
   banner_quang_cao?: Prisma.banner_quang_caoOmit
   bien_the_san_pham?: Prisma.bien_the_san_phamOmit
   ca_lam_viec?: Prisma.ca_lam_viecOmit
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangOmit
   chi_tiet_doi_tra?: Prisma.chi_tiet_doi_traOmit
   chi_tiet_don_hang?: Prisma.chi_tiet_don_hangOmit
   chi_tiet_gio_hang?: Prisma.chi_tiet_gio_hangOmit
@@ -5385,6 +5554,7 @@ export type GlobalOmitConfig = {
   kho_hang?: Prisma.kho_hangOmit
   kho_tri_thuc_ai?: Prisma.kho_tri_thuc_aiOmit
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietOmit
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatOmit
   lich_phan_cong_ca?: Prisma.lich_phan_cong_caOmit
   lich_su_cham_cong?: Prisma.lich_su_cham_congOmit
   lich_su_dang_nhap?: Prisma.lich_su_dang_nhapOmit

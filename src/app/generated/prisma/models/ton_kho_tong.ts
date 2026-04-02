@@ -45,6 +45,7 @@ export type Ton_kho_tongMinAggregateOutputType = {
   ma_lo_hang: number | null
   ma_vi_tri: number | null
   so_luong: number | null
+  ngay_cap_nhat: Date | null
 }
 
 export type Ton_kho_tongMaxAggregateOutputType = {
@@ -52,6 +53,7 @@ export type Ton_kho_tongMaxAggregateOutputType = {
   ma_lo_hang: number | null
   ma_vi_tri: number | null
   so_luong: number | null
+  ngay_cap_nhat: Date | null
 }
 
 export type Ton_kho_tongCountAggregateOutputType = {
@@ -59,6 +61,7 @@ export type Ton_kho_tongCountAggregateOutputType = {
   ma_lo_hang: number
   ma_vi_tri: number
   so_luong: number
+  ngay_cap_nhat: number
   _all: number
 }
 
@@ -82,6 +85,7 @@ export type Ton_kho_tongMinAggregateInputType = {
   ma_lo_hang?: true
   ma_vi_tri?: true
   so_luong?: true
+  ngay_cap_nhat?: true
 }
 
 export type Ton_kho_tongMaxAggregateInputType = {
@@ -89,6 +93,7 @@ export type Ton_kho_tongMaxAggregateInputType = {
   ma_lo_hang?: true
   ma_vi_tri?: true
   so_luong?: true
+  ngay_cap_nhat?: true
 }
 
 export type Ton_kho_tongCountAggregateInputType = {
@@ -96,6 +101,7 @@ export type Ton_kho_tongCountAggregateInputType = {
   ma_lo_hang?: true
   ma_vi_tri?: true
   so_luong?: true
+  ngay_cap_nhat?: true
   _all?: true
 }
 
@@ -190,6 +196,7 @@ export type Ton_kho_tongGroupByOutputType = {
   ma_lo_hang: number | null
   ma_vi_tri: number | null
   so_luong: number | null
+  ngay_cap_nhat: Date
   _count: Ton_kho_tongCountAggregateOutputType | null
   _avg: Ton_kho_tongAvgAggregateOutputType | null
   _sum: Ton_kho_tongSumAggregateOutputType | null
@@ -220,6 +227,7 @@ export type ton_kho_tongWhereInput = {
   ma_lo_hang?: Prisma.IntNullableFilter<"ton_kho_tong"> | number | null
   ma_vi_tri?: Prisma.IntNullableFilter<"ton_kho_tong"> | number | null
   so_luong?: Prisma.IntNullableFilter<"ton_kho_tong"> | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFilter<"ton_kho_tong"> | Date | string
   lo_hang?: Prisma.XOR<Prisma.Lo_hangNullableScalarRelationFilter, Prisma.lo_hangWhereInput> | null
   vi_tri_kho?: Prisma.XOR<Prisma.Vi_tri_khoNullableScalarRelationFilter, Prisma.vi_tri_khoWhereInput> | null
 }
@@ -229,6 +237,7 @@ export type ton_kho_tongOrderByWithRelationInput = {
   ma_lo_hang?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_vi_tri?: Prisma.SortOrderInput | Prisma.SortOrder
   so_luong?: Prisma.SortOrderInput | Prisma.SortOrder
+  ngay_cap_nhat?: Prisma.SortOrder
   lo_hang?: Prisma.lo_hangOrderByWithRelationInput
   vi_tri_kho?: Prisma.vi_tri_khoOrderByWithRelationInput
 }
@@ -241,6 +250,7 @@ export type ton_kho_tongWhereUniqueInput = Prisma.AtLeast<{
   ma_lo_hang?: Prisma.IntNullableFilter<"ton_kho_tong"> | number | null
   ma_vi_tri?: Prisma.IntNullableFilter<"ton_kho_tong"> | number | null
   so_luong?: Prisma.IntNullableFilter<"ton_kho_tong"> | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFilter<"ton_kho_tong"> | Date | string
   lo_hang?: Prisma.XOR<Prisma.Lo_hangNullableScalarRelationFilter, Prisma.lo_hangWhereInput> | null
   vi_tri_kho?: Prisma.XOR<Prisma.Vi_tri_khoNullableScalarRelationFilter, Prisma.vi_tri_khoWhereInput> | null
 }, "id">
@@ -250,6 +260,7 @@ export type ton_kho_tongOrderByWithAggregationInput = {
   ma_lo_hang?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_vi_tri?: Prisma.SortOrderInput | Prisma.SortOrder
   so_luong?: Prisma.SortOrderInput | Prisma.SortOrder
+  ngay_cap_nhat?: Prisma.SortOrder
   _count?: Prisma.ton_kho_tongCountOrderByAggregateInput
   _avg?: Prisma.ton_kho_tongAvgOrderByAggregateInput
   _max?: Prisma.ton_kho_tongMaxOrderByAggregateInput
@@ -265,10 +276,12 @@ export type ton_kho_tongScalarWhereWithAggregatesInput = {
   ma_lo_hang?: Prisma.IntNullableWithAggregatesFilter<"ton_kho_tong"> | number | null
   ma_vi_tri?: Prisma.IntNullableWithAggregatesFilter<"ton_kho_tong"> | number | null
   so_luong?: Prisma.IntNullableWithAggregatesFilter<"ton_kho_tong"> | number | null
+  ngay_cap_nhat?: Prisma.DateTimeWithAggregatesFilter<"ton_kho_tong"> | Date | string
 }
 
 export type ton_kho_tongCreateInput = {
   so_luong?: number | null
+  ngay_cap_nhat?: Date | string
   lo_hang?: Prisma.lo_hangCreateNestedOneWithoutTon_kho_tongInput
   vi_tri_kho?: Prisma.vi_tri_khoCreateNestedOneWithoutTon_kho_tongInput
 }
@@ -278,10 +291,12 @@ export type ton_kho_tongUncheckedCreateInput = {
   ma_lo_hang?: number | null
   ma_vi_tri?: number | null
   so_luong?: number | null
+  ngay_cap_nhat?: Date | string
 }
 
 export type ton_kho_tongUpdateInput = {
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lo_hang?: Prisma.lo_hangUpdateOneWithoutTon_kho_tongNestedInput
   vi_tri_kho?: Prisma.vi_tri_khoUpdateOneWithoutTon_kho_tongNestedInput
 }
@@ -291,6 +306,7 @@ export type ton_kho_tongUncheckedUpdateInput = {
   ma_lo_hang?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_vi_tri?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ton_kho_tongCreateManyInput = {
@@ -298,10 +314,12 @@ export type ton_kho_tongCreateManyInput = {
   ma_lo_hang?: number | null
   ma_vi_tri?: number | null
   so_luong?: number | null
+  ngay_cap_nhat?: Date | string
 }
 
 export type ton_kho_tongUpdateManyMutationInput = {
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ton_kho_tongUncheckedUpdateManyInput = {
@@ -309,6 +327,7 @@ export type ton_kho_tongUncheckedUpdateManyInput = {
   ma_lo_hang?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_vi_tri?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type Ton_kho_tongListRelationFilter = {
@@ -326,6 +345,7 @@ export type ton_kho_tongCountOrderByAggregateInput = {
   ma_lo_hang?: Prisma.SortOrder
   ma_vi_tri?: Prisma.SortOrder
   so_luong?: Prisma.SortOrder
+  ngay_cap_nhat?: Prisma.SortOrder
 }
 
 export type ton_kho_tongAvgOrderByAggregateInput = {
@@ -340,6 +360,7 @@ export type ton_kho_tongMaxOrderByAggregateInput = {
   ma_lo_hang?: Prisma.SortOrder
   ma_vi_tri?: Prisma.SortOrder
   so_luong?: Prisma.SortOrder
+  ngay_cap_nhat?: Prisma.SortOrder
 }
 
 export type ton_kho_tongMinOrderByAggregateInput = {
@@ -347,6 +368,7 @@ export type ton_kho_tongMinOrderByAggregateInput = {
   ma_lo_hang?: Prisma.SortOrder
   ma_vi_tri?: Prisma.SortOrder
   so_luong?: Prisma.SortOrder
+  ngay_cap_nhat?: Prisma.SortOrder
 }
 
 export type ton_kho_tongSumOrderByAggregateInput = {
@@ -442,6 +464,7 @@ export type ton_kho_tongUncheckedUpdateManyWithoutVi_tri_khoNestedInput = {
 
 export type ton_kho_tongCreateWithoutLo_hangInput = {
   so_luong?: number | null
+  ngay_cap_nhat?: Date | string
   vi_tri_kho?: Prisma.vi_tri_khoCreateNestedOneWithoutTon_kho_tongInput
 }
 
@@ -449,6 +472,7 @@ export type ton_kho_tongUncheckedCreateWithoutLo_hangInput = {
   id?: number
   ma_vi_tri?: number | null
   so_luong?: number | null
+  ngay_cap_nhat?: Date | string
 }
 
 export type ton_kho_tongCreateOrConnectWithoutLo_hangInput = {
@@ -485,10 +509,12 @@ export type ton_kho_tongScalarWhereInput = {
   ma_lo_hang?: Prisma.IntNullableFilter<"ton_kho_tong"> | number | null
   ma_vi_tri?: Prisma.IntNullableFilter<"ton_kho_tong"> | number | null
   so_luong?: Prisma.IntNullableFilter<"ton_kho_tong"> | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFilter<"ton_kho_tong"> | Date | string
 }
 
 export type ton_kho_tongCreateWithoutVi_tri_khoInput = {
   so_luong?: number | null
+  ngay_cap_nhat?: Date | string
   lo_hang?: Prisma.lo_hangCreateNestedOneWithoutTon_kho_tongInput
 }
 
@@ -496,6 +522,7 @@ export type ton_kho_tongUncheckedCreateWithoutVi_tri_khoInput = {
   id?: number
   ma_lo_hang?: number | null
   so_luong?: number | null
+  ngay_cap_nhat?: Date | string
 }
 
 export type ton_kho_tongCreateOrConnectWithoutVi_tri_khoInput = {
@@ -528,10 +555,12 @@ export type ton_kho_tongCreateManyLo_hangInput = {
   id?: number
   ma_vi_tri?: number | null
   so_luong?: number | null
+  ngay_cap_nhat?: Date | string
 }
 
 export type ton_kho_tongUpdateWithoutLo_hangInput = {
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   vi_tri_kho?: Prisma.vi_tri_khoUpdateOneWithoutTon_kho_tongNestedInput
 }
 
@@ -539,22 +568,26 @@ export type ton_kho_tongUncheckedUpdateWithoutLo_hangInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   ma_vi_tri?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ton_kho_tongUncheckedUpdateManyWithoutLo_hangInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   ma_vi_tri?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ton_kho_tongCreateManyVi_tri_khoInput = {
   id?: number
   ma_lo_hang?: number | null
   so_luong?: number | null
+  ngay_cap_nhat?: Date | string
 }
 
 export type ton_kho_tongUpdateWithoutVi_tri_khoInput = {
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lo_hang?: Prisma.lo_hangUpdateOneWithoutTon_kho_tongNestedInput
 }
 
@@ -562,12 +595,14 @@ export type ton_kho_tongUncheckedUpdateWithoutVi_tri_khoInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   ma_lo_hang?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ton_kho_tongUncheckedUpdateManyWithoutVi_tri_khoInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   ma_lo_hang?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   so_luong?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_cap_nhat?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
@@ -577,6 +612,7 @@ export type ton_kho_tongSelect<ExtArgs extends runtime.Types.Extensions.Internal
   ma_lo_hang?: boolean
   ma_vi_tri?: boolean
   so_luong?: boolean
+  ngay_cap_nhat?: boolean
   lo_hang?: boolean | Prisma.ton_kho_tong$lo_hangArgs<ExtArgs>
   vi_tri_kho?: boolean | Prisma.ton_kho_tong$vi_tri_khoArgs<ExtArgs>
 }, ExtArgs["result"]["ton_kho_tong"]>
@@ -588,9 +624,10 @@ export type ton_kho_tongSelectScalar = {
   ma_lo_hang?: boolean
   ma_vi_tri?: boolean
   so_luong?: boolean
+  ngay_cap_nhat?: boolean
 }
 
-export type ton_kho_tongOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_lo_hang" | "ma_vi_tri" | "so_luong", ExtArgs["result"]["ton_kho_tong"]>
+export type ton_kho_tongOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_lo_hang" | "ma_vi_tri" | "so_luong" | "ngay_cap_nhat", ExtArgs["result"]["ton_kho_tong"]>
 export type ton_kho_tongInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   lo_hang?: boolean | Prisma.ton_kho_tong$lo_hangArgs<ExtArgs>
   vi_tri_kho?: boolean | Prisma.ton_kho_tong$vi_tri_khoArgs<ExtArgs>
@@ -607,6 +644,7 @@ export type $ton_kho_tongPayload<ExtArgs extends runtime.Types.Extensions.Intern
     ma_lo_hang: number | null
     ma_vi_tri: number | null
     so_luong: number | null
+    ngay_cap_nhat: Date
   }, ExtArgs["result"]["ton_kho_tong"]>
   composites: {}
 }
@@ -982,6 +1020,7 @@ export interface ton_kho_tongFieldRefs {
   readonly ma_lo_hang: Prisma.FieldRef<"ton_kho_tong", 'Int'>
   readonly ma_vi_tri: Prisma.FieldRef<"ton_kho_tong", 'Int'>
   readonly so_luong: Prisma.FieldRef<"ton_kho_tong", 'Int'>
+  readonly ngay_cap_nhat: Prisma.FieldRef<"ton_kho_tong", 'DateTime'>
 }
     
 

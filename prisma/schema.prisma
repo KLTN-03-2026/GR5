@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/app/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/app/generated/prisma"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -60,6 +61,20 @@ model ca_lam_viec {
   gio_ket_thuc      DateTime?           @db.Time(0)
   lich_phan_cong_ca lich_phan_cong_ca[]
   lich_su_cham_cong lich_su_cham_cong[]
+}
+
+model canh_bao_lo_hang {
+  id            Int       @id @default(autoincrement())
+  ma_lo_hang    Int
+  loai_canh_bao String    @db.VarChar(50)
+  so_ngay_con   Int?
+  da_xu_ly      Boolean   @default(false)
+  ngay_tao      DateTime  @default(now())
+  ngay_xu_ly    DateTime?
+  lo_hang       lo_hang   @relation(fields: [ma_lo_hang], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([da_xu_ly])
+  @@index([ma_lo_hang])
 }
 
 model chi_tiet_doi_tra {
@@ -148,13 +163,14 @@ model chi_tiet_phieu_nhap {
 }
 
 model chi_tiet_phieu_xuat {
-  id                 Int               @id @default(autoincrement())
+  id                 Int                 @id @default(autoincrement())
   ma_phieu_xuat      Int
   ma_bien_the        Int
   so_luong_yeu_cau   Int
-  so_luong_thuc_xuat Int?              @default(0)
-  phieu_xuat_kho     phieu_xuat_kho    @relation(fields: [ma_phieu_xuat], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chi_tiet_phieu_xuat_ibfk_1")
-  bien_the_san_pham  bien_the_san_pham @relation(fields: [ma_bien_the], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chi_tiet_phieu_xuat_ibfk_2")
+  so_luong_thuc_xuat Int?                @default(0)
+  phieu_xuat_kho     phieu_xuat_kho      @relation(fields: [ma_phieu_xuat], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chi_tiet_phieu_xuat_ibfk_1")
+  bien_the_san_pham  bien_the_san_pham   @relation(fields: [ma_bien_the], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chi_tiet_phieu_xuat_ibfk_2")
+  kien_hang_da_xuat  kien_hang_da_xuat[]
 
   @@index([ma_bien_the], map: "ma_bien_the")
   @@index([ma_phieu_xuat], map: "ma_phieu_xuat")
@@ -330,11 +346,24 @@ model kien_hang_chi_tiet {
   trang_thai               String?                    @default("TRONG_KHO") @db.VarChar(30)
   ngay_tao                 DateTime?                  @default(now()) @db.DateTime(0)
   chi_tiet_luan_chuyen_kho chi_tiet_luan_chuyen_kho[]
+  kien_hang_da_xuat        kien_hang_da_xuat[]
   lo_hang                  lo_hang                    @relation(fields: [ma_lo_hang], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "kien_hang_chi_tiet_ibfk_1")
   vi_tri_kho               vi_tri_kho?                @relation(fields: [ma_vi_tri], references: [id], onUpdate: NoAction, map: "kien_hang_chi_tiet_ibfk_2")
 
   @@index([ma_lo_hang], map: "ma_lo_hang")
   @@index([ma_vi_tri], map: "ma_vi_tri")
+}
+
+model kien_hang_da_xuat {
+  id                  Int                 @id @default(autoincrement())
+  ma_chi_tiet_xuat    Int
+  ma_kien_hang        Int
+  thoi_gian_xuat      DateTime            @default(now())
+  chi_tiet_phieu_xuat chi_tiet_phieu_xuat @relation(fields: [ma_chi_tiet_xuat], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  kien_hang_chi_tiet  kien_hang_chi_tiet  @relation(fields: [ma_kien_hang], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([ma_chi_tiet_xuat])
+  @@index([ma_kien_hang])
 }
 
 model lich_phan_cong_ca {
@@ -403,7 +432,9 @@ model lo_hang {
   ma_ncc             Int?
   ma_lo_hang         String               @unique(map: "ma_lo_hang") @db.VarChar(50)
   ngay_thu_hoach     DateTime?            @db.Date
+  ngay_nhap_kho      DateTime?            @db.Date
   han_su_dung        DateTime             @db.Date
+  canh_bao_lo_hang   canh_bao_lo_hang[]
   kien_hang_chi_tiet kien_hang_chi_tiet[]
   bien_the_san_pham  bien_the_san_pham?   @relation(fields: [ma_bien_the], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "lo_hang_ibfk_1")
   nha_cung_cap       nha_cung_cap?        @relation(fields: [ma_ncc], references: [id], onUpdate: NoAction, map: "lo_hang_ibfk_2")
@@ -648,12 +679,13 @@ model tin_nhan_chat_ai {
 }
 
 model ton_kho_tong {
-  id         Int         @id @default(autoincrement())
-  ma_lo_hang Int?
-  ma_vi_tri  Int?
-  so_luong   Int?        @default(0)
-  lo_hang    lo_hang?    @relation(fields: [ma_lo_hang], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ton_kho_tong_ibfk_1")
-  vi_tri_kho vi_tri_kho? @relation(fields: [ma_vi_tri], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ton_kho_tong_ibfk_2")
+  id            Int         @id @default(autoincrement())
+  ma_lo_hang    Int?
+  ma_vi_tri     Int?
+  so_luong      Int?        @default(0)
+  ngay_cap_nhat DateTime    @default(now()) @updatedAt
+  lo_hang       lo_hang?    @relation(fields: [ma_lo_hang], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ton_kho_tong_ibfk_1")
+  vi_tri_kho    vi_tri_kho? @relation(fields: [ma_vi_tri], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ton_kho_tong_ibfk_2")
 
   @@index([ma_lo_hang], map: "ma_lo_hang")
   @@index([ma_vi_tri], map: "ma_vi_tri")
@@ -683,6 +715,7 @@ model vi_tri_kho {
   khu_vuc            String?              @db.VarChar(50)
   day                String?              @db.VarChar(50)
   ke                 String?              @db.VarChar(50)
+  tang               String?              @db.VarChar(50)
   kien_hang_chi_tiet kien_hang_chi_tiet[]
   ton_kho_tong       ton_kho_tong[]
   kho_hang           kho_hang?            @relation(fields: [ma_kho], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "vi_tri_kho_ibfk_1")

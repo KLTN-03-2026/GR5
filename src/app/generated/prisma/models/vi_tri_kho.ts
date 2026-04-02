@@ -42,6 +42,7 @@ export type Vi_tri_khoMinAggregateOutputType = {
   khu_vuc: string | null
   day: string | null
   ke: string | null
+  tang: string | null
 }
 
 export type Vi_tri_khoMaxAggregateOutputType = {
@@ -50,6 +51,7 @@ export type Vi_tri_khoMaxAggregateOutputType = {
   khu_vuc: string | null
   day: string | null
   ke: string | null
+  tang: string | null
 }
 
 export type Vi_tri_khoCountAggregateOutputType = {
@@ -58,6 +60,7 @@ export type Vi_tri_khoCountAggregateOutputType = {
   khu_vuc: number
   day: number
   ke: number
+  tang: number
   _all: number
 }
 
@@ -78,6 +81,7 @@ export type Vi_tri_khoMinAggregateInputType = {
   khu_vuc?: true
   day?: true
   ke?: true
+  tang?: true
 }
 
 export type Vi_tri_khoMaxAggregateInputType = {
@@ -86,6 +90,7 @@ export type Vi_tri_khoMaxAggregateInputType = {
   khu_vuc?: true
   day?: true
   ke?: true
+  tang?: true
 }
 
 export type Vi_tri_khoCountAggregateInputType = {
@@ -94,6 +99,7 @@ export type Vi_tri_khoCountAggregateInputType = {
   khu_vuc?: true
   day?: true
   ke?: true
+  tang?: true
   _all?: true
 }
 
@@ -189,6 +195,7 @@ export type Vi_tri_khoGroupByOutputType = {
   khu_vuc: string | null
   day: string | null
   ke: string | null
+  tang: string | null
   _count: Vi_tri_khoCountAggregateOutputType | null
   _avg: Vi_tri_khoAvgAggregateOutputType | null
   _sum: Vi_tri_khoSumAggregateOutputType | null
@@ -220,6 +227,7 @@ export type vi_tri_khoWhereInput = {
   khu_vuc?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
   day?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
   ke?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
+  tang?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
   kien_hang_chi_tiet?: Prisma.Kien_hang_chi_tietListRelationFilter
   ton_kho_tong?: Prisma.Ton_kho_tongListRelationFilter
   kho_hang?: Prisma.XOR<Prisma.Kho_hangNullableScalarRelationFilter, Prisma.kho_hangWhereInput> | null
@@ -231,6 +239,7 @@ export type vi_tri_khoOrderByWithRelationInput = {
   khu_vuc?: Prisma.SortOrderInput | Prisma.SortOrder
   day?: Prisma.SortOrderInput | Prisma.SortOrder
   ke?: Prisma.SortOrderInput | Prisma.SortOrder
+  tang?: Prisma.SortOrderInput | Prisma.SortOrder
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietOrderByRelationAggregateInput
   ton_kho_tong?: Prisma.ton_kho_tongOrderByRelationAggregateInput
   kho_hang?: Prisma.kho_hangOrderByWithRelationInput
@@ -246,6 +255,7 @@ export type vi_tri_khoWhereUniqueInput = Prisma.AtLeast<{
   khu_vuc?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
   day?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
   ke?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
+  tang?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
   kien_hang_chi_tiet?: Prisma.Kien_hang_chi_tietListRelationFilter
   ton_kho_tong?: Prisma.Ton_kho_tongListRelationFilter
   kho_hang?: Prisma.XOR<Prisma.Kho_hangNullableScalarRelationFilter, Prisma.kho_hangWhereInput> | null
@@ -257,6 +267,7 @@ export type vi_tri_khoOrderByWithAggregationInput = {
   khu_vuc?: Prisma.SortOrderInput | Prisma.SortOrder
   day?: Prisma.SortOrderInput | Prisma.SortOrder
   ke?: Prisma.SortOrderInput | Prisma.SortOrder
+  tang?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.vi_tri_khoCountOrderByAggregateInput
   _avg?: Prisma.vi_tri_khoAvgOrderByAggregateInput
   _max?: Prisma.vi_tri_khoMaxOrderByAggregateInput
@@ -273,12 +284,14 @@ export type vi_tri_khoScalarWhereWithAggregatesInput = {
   khu_vuc?: Prisma.StringNullableWithAggregatesFilter<"vi_tri_kho"> | string | null
   day?: Prisma.StringNullableWithAggregatesFilter<"vi_tri_kho"> | string | null
   ke?: Prisma.StringNullableWithAggregatesFilter<"vi_tri_kho"> | string | null
+  tang?: Prisma.StringNullableWithAggregatesFilter<"vi_tri_kho"> | string | null
 }
 
 export type vi_tri_khoCreateInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietCreateNestedManyWithoutVi_tri_khoInput
   ton_kho_tong?: Prisma.ton_kho_tongCreateNestedManyWithoutVi_tri_khoInput
   kho_hang?: Prisma.kho_hangCreateNestedOneWithoutVi_tri_khoInput
@@ -290,6 +303,7 @@ export type vi_tri_khoUncheckedCreateInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedCreateNestedManyWithoutVi_tri_khoInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedCreateNestedManyWithoutVi_tri_khoInput
 }
@@ -298,6 +312,7 @@ export type vi_tri_khoUpdateInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUpdateManyWithoutVi_tri_khoNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUpdateManyWithoutVi_tri_khoNestedInput
   kho_hang?: Prisma.kho_hangUpdateOneWithoutVi_tri_khoNestedInput
@@ -309,6 +324,7 @@ export type vi_tri_khoUncheckedUpdateInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedUpdateManyWithoutVi_tri_khoNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedUpdateManyWithoutVi_tri_khoNestedInput
 }
@@ -319,12 +335,14 @@ export type vi_tri_khoCreateManyInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
 }
 
 export type vi_tri_khoUpdateManyMutationInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type vi_tri_khoUncheckedUpdateManyInput = {
@@ -333,6 +351,7 @@ export type vi_tri_khoUncheckedUpdateManyInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type Vi_tri_khoListRelationFilter = {
@@ -362,6 +381,7 @@ export type vi_tri_khoCountOrderByAggregateInput = {
   khu_vuc?: Prisma.SortOrder
   day?: Prisma.SortOrder
   ke?: Prisma.SortOrder
+  tang?: Prisma.SortOrder
 }
 
 export type vi_tri_khoAvgOrderByAggregateInput = {
@@ -375,6 +395,7 @@ export type vi_tri_khoMaxOrderByAggregateInput = {
   khu_vuc?: Prisma.SortOrder
   day?: Prisma.SortOrder
   ke?: Prisma.SortOrder
+  tang?: Prisma.SortOrder
 }
 
 export type vi_tri_khoMinOrderByAggregateInput = {
@@ -383,6 +404,7 @@ export type vi_tri_khoMinOrderByAggregateInput = {
   khu_vuc?: Prisma.SortOrder
   day?: Prisma.SortOrder
   ke?: Prisma.SortOrder
+  tang?: Prisma.SortOrder
 }
 
 export type vi_tri_khoSumOrderByAggregateInput = {
@@ -468,6 +490,7 @@ export type vi_tri_khoCreateWithoutKho_hangInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietCreateNestedManyWithoutVi_tri_khoInput
   ton_kho_tong?: Prisma.ton_kho_tongCreateNestedManyWithoutVi_tri_khoInput
 }
@@ -477,6 +500,7 @@ export type vi_tri_khoUncheckedCreateWithoutKho_hangInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedCreateNestedManyWithoutVi_tri_khoInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedCreateNestedManyWithoutVi_tri_khoInput
 }
@@ -516,12 +540,14 @@ export type vi_tri_khoScalarWhereInput = {
   khu_vuc?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
   day?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
   ke?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
+  tang?: Prisma.StringNullableFilter<"vi_tri_kho"> | string | null
 }
 
 export type vi_tri_khoCreateWithoutKien_hang_chi_tietInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
   ton_kho_tong?: Prisma.ton_kho_tongCreateNestedManyWithoutVi_tri_khoInput
   kho_hang?: Prisma.kho_hangCreateNestedOneWithoutVi_tri_khoInput
 }
@@ -532,6 +558,7 @@ export type vi_tri_khoUncheckedCreateWithoutKien_hang_chi_tietInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedCreateNestedManyWithoutVi_tri_khoInput
 }
 
@@ -555,6 +582,7 @@ export type vi_tri_khoUpdateWithoutKien_hang_chi_tietInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ton_kho_tong?: Prisma.ton_kho_tongUpdateManyWithoutVi_tri_khoNestedInput
   kho_hang?: Prisma.kho_hangUpdateOneWithoutVi_tri_khoNestedInput
 }
@@ -565,6 +593,7 @@ export type vi_tri_khoUncheckedUpdateWithoutKien_hang_chi_tietInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedUpdateManyWithoutVi_tri_khoNestedInput
 }
 
@@ -572,6 +601,7 @@ export type vi_tri_khoCreateWithoutTon_kho_tongInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietCreateNestedManyWithoutVi_tri_khoInput
   kho_hang?: Prisma.kho_hangCreateNestedOneWithoutVi_tri_khoInput
 }
@@ -582,6 +612,7 @@ export type vi_tri_khoUncheckedCreateWithoutTon_kho_tongInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedCreateNestedManyWithoutVi_tri_khoInput
 }
 
@@ -605,6 +636,7 @@ export type vi_tri_khoUpdateWithoutTon_kho_tongInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUpdateManyWithoutVi_tri_khoNestedInput
   kho_hang?: Prisma.kho_hangUpdateOneWithoutVi_tri_khoNestedInput
 }
@@ -615,6 +647,7 @@ export type vi_tri_khoUncheckedUpdateWithoutTon_kho_tongInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedUpdateManyWithoutVi_tri_khoNestedInput
 }
 
@@ -623,12 +656,14 @@ export type vi_tri_khoCreateManyKho_hangInput = {
   khu_vuc?: string | null
   day?: string | null
   ke?: string | null
+  tang?: string | null
 }
 
 export type vi_tri_khoUpdateWithoutKho_hangInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUpdateManyWithoutVi_tri_khoNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUpdateManyWithoutVi_tri_khoNestedInput
 }
@@ -638,6 +673,7 @@ export type vi_tri_khoUncheckedUpdateWithoutKho_hangInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedUpdateManyWithoutVi_tri_khoNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedUpdateManyWithoutVi_tri_khoNestedInput
 }
@@ -647,6 +683,7 @@ export type vi_tri_khoUncheckedUpdateManyWithoutKho_hangInput = {
   khu_vuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   day?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ke?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tang?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -695,6 +732,7 @@ export type vi_tri_khoSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   khu_vuc?: boolean
   day?: boolean
   ke?: boolean
+  tang?: boolean
   kien_hang_chi_tiet?: boolean | Prisma.vi_tri_kho$kien_hang_chi_tietArgs<ExtArgs>
   ton_kho_tong?: boolean | Prisma.vi_tri_kho$ton_kho_tongArgs<ExtArgs>
   kho_hang?: boolean | Prisma.vi_tri_kho$kho_hangArgs<ExtArgs>
@@ -709,9 +747,10 @@ export type vi_tri_khoSelectScalar = {
   khu_vuc?: boolean
   day?: boolean
   ke?: boolean
+  tang?: boolean
 }
 
-export type vi_tri_khoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_kho" | "khu_vuc" | "day" | "ke", ExtArgs["result"]["vi_tri_kho"]>
+export type vi_tri_khoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_kho" | "khu_vuc" | "day" | "ke" | "tang", ExtArgs["result"]["vi_tri_kho"]>
 export type vi_tri_khoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   kien_hang_chi_tiet?: boolean | Prisma.vi_tri_kho$kien_hang_chi_tietArgs<ExtArgs>
   ton_kho_tong?: boolean | Prisma.vi_tri_kho$ton_kho_tongArgs<ExtArgs>
@@ -732,6 +771,7 @@ export type $vi_tri_khoPayload<ExtArgs extends runtime.Types.Extensions.Internal
     khu_vuc: string | null
     day: string | null
     ke: string | null
+    tang: string | null
   }, ExtArgs["result"]["vi_tri_kho"]>
   composites: {}
 }
@@ -1109,6 +1149,7 @@ export interface vi_tri_khoFieldRefs {
   readonly khu_vuc: Prisma.FieldRef<"vi_tri_kho", 'String'>
   readonly day: Prisma.FieldRef<"vi_tri_kho", 'String'>
   readonly ke: Prisma.FieldRef<"vi_tri_kho", 'String'>
+  readonly tang: Prisma.FieldRef<"vi_tri_kho", 'String'>
 }
     
 

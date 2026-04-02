@@ -234,6 +234,7 @@ export type chi_tiet_phieu_xuatWhereInput = {
   so_luong_thuc_xuat?: Prisma.IntNullableFilter<"chi_tiet_phieu_xuat"> | number | null
   phieu_xuat_kho?: Prisma.XOR<Prisma.Phieu_xuat_khoScalarRelationFilter, Prisma.phieu_xuat_khoWhereInput>
   bien_the_san_pham?: Prisma.XOR<Prisma.Bien_the_san_phamScalarRelationFilter, Prisma.bien_the_san_phamWhereInput>
+  kien_hang_da_xuat?: Prisma.Kien_hang_da_xuatListRelationFilter
 }
 
 export type chi_tiet_phieu_xuatOrderByWithRelationInput = {
@@ -244,6 +245,7 @@ export type chi_tiet_phieu_xuatOrderByWithRelationInput = {
   so_luong_thuc_xuat?: Prisma.SortOrderInput | Prisma.SortOrder
   phieu_xuat_kho?: Prisma.phieu_xuat_khoOrderByWithRelationInput
   bien_the_san_pham?: Prisma.bien_the_san_phamOrderByWithRelationInput
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatOrderByRelationAggregateInput
 }
 
 export type chi_tiet_phieu_xuatWhereUniqueInput = Prisma.AtLeast<{
@@ -257,6 +259,7 @@ export type chi_tiet_phieu_xuatWhereUniqueInput = Prisma.AtLeast<{
   so_luong_thuc_xuat?: Prisma.IntNullableFilter<"chi_tiet_phieu_xuat"> | number | null
   phieu_xuat_kho?: Prisma.XOR<Prisma.Phieu_xuat_khoScalarRelationFilter, Prisma.phieu_xuat_khoWhereInput>
   bien_the_san_pham?: Prisma.XOR<Prisma.Bien_the_san_phamScalarRelationFilter, Prisma.bien_the_san_phamWhereInput>
+  kien_hang_da_xuat?: Prisma.Kien_hang_da_xuatListRelationFilter
 }, "id">
 
 export type chi_tiet_phieu_xuatOrderByWithAggregationInput = {
@@ -288,6 +291,7 @@ export type chi_tiet_phieu_xuatCreateInput = {
   so_luong_thuc_xuat?: number | null
   phieu_xuat_kho: Prisma.phieu_xuat_khoCreateNestedOneWithoutChi_tiet_phieu_xuatInput
   bien_the_san_pham: Prisma.bien_the_san_phamCreateNestedOneWithoutChi_tiet_phieu_xuatInput
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatCreateNestedManyWithoutChi_tiet_phieu_xuatInput
 }
 
 export type chi_tiet_phieu_xuatUncheckedCreateInput = {
@@ -296,6 +300,7 @@ export type chi_tiet_phieu_xuatUncheckedCreateInput = {
   ma_bien_the: number
   so_luong_yeu_cau: number
   so_luong_thuc_xuat?: number | null
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatUncheckedCreateNestedManyWithoutChi_tiet_phieu_xuatInput
 }
 
 export type chi_tiet_phieu_xuatUpdateInput = {
@@ -303,6 +308,7 @@ export type chi_tiet_phieu_xuatUpdateInput = {
   so_luong_thuc_xuat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateOneRequiredWithoutChi_tiet_phieu_xuatNestedInput
   bien_the_san_pham?: Prisma.bien_the_san_phamUpdateOneRequiredWithoutChi_tiet_phieu_xuatNestedInput
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatUpdateManyWithoutChi_tiet_phieu_xuatNestedInput
 }
 
 export type chi_tiet_phieu_xuatUncheckedUpdateInput = {
@@ -311,6 +317,7 @@ export type chi_tiet_phieu_xuatUncheckedUpdateInput = {
   ma_bien_the?: Prisma.IntFieldUpdateOperationsInput | number
   so_luong_yeu_cau?: Prisma.IntFieldUpdateOperationsInput | number
   so_luong_thuc_xuat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatUncheckedUpdateManyWithoutChi_tiet_phieu_xuatNestedInput
 }
 
 export type chi_tiet_phieu_xuatCreateManyInput = {
@@ -384,6 +391,11 @@ export type chi_tiet_phieu_xuatSumOrderByAggregateInput = {
   so_luong_thuc_xuat?: Prisma.SortOrder
 }
 
+export type Chi_tiet_phieu_xuatScalarRelationFilter = {
+  is?: Prisma.chi_tiet_phieu_xuatWhereInput
+  isNot?: Prisma.chi_tiet_phieu_xuatWhereInput
+}
+
 export type chi_tiet_phieu_xuatCreateNestedManyWithoutBien_the_san_phamInput = {
   create?: Prisma.XOR<Prisma.chi_tiet_phieu_xuatCreateWithoutBien_the_san_phamInput, Prisma.chi_tiet_phieu_xuatUncheckedCreateWithoutBien_the_san_phamInput> | Prisma.chi_tiet_phieu_xuatCreateWithoutBien_the_san_phamInput[] | Prisma.chi_tiet_phieu_xuatUncheckedCreateWithoutBien_the_san_phamInput[]
   connectOrCreate?: Prisma.chi_tiet_phieu_xuatCreateOrConnectWithoutBien_the_san_phamInput | Prisma.chi_tiet_phieu_xuatCreateOrConnectWithoutBien_the_san_phamInput[]
@@ -424,6 +436,20 @@ export type chi_tiet_phieu_xuatUncheckedUpdateManyWithoutBien_the_san_phamNested
   update?: Prisma.chi_tiet_phieu_xuatUpdateWithWhereUniqueWithoutBien_the_san_phamInput | Prisma.chi_tiet_phieu_xuatUpdateWithWhereUniqueWithoutBien_the_san_phamInput[]
   updateMany?: Prisma.chi_tiet_phieu_xuatUpdateManyWithWhereWithoutBien_the_san_phamInput | Prisma.chi_tiet_phieu_xuatUpdateManyWithWhereWithoutBien_the_san_phamInput[]
   deleteMany?: Prisma.chi_tiet_phieu_xuatScalarWhereInput | Prisma.chi_tiet_phieu_xuatScalarWhereInput[]
+}
+
+export type chi_tiet_phieu_xuatCreateNestedOneWithoutKien_hang_da_xuatInput = {
+  create?: Prisma.XOR<Prisma.chi_tiet_phieu_xuatCreateWithoutKien_hang_da_xuatInput, Prisma.chi_tiet_phieu_xuatUncheckedCreateWithoutKien_hang_da_xuatInput>
+  connectOrCreate?: Prisma.chi_tiet_phieu_xuatCreateOrConnectWithoutKien_hang_da_xuatInput
+  connect?: Prisma.chi_tiet_phieu_xuatWhereUniqueInput
+}
+
+export type chi_tiet_phieu_xuatUpdateOneRequiredWithoutKien_hang_da_xuatNestedInput = {
+  create?: Prisma.XOR<Prisma.chi_tiet_phieu_xuatCreateWithoutKien_hang_da_xuatInput, Prisma.chi_tiet_phieu_xuatUncheckedCreateWithoutKien_hang_da_xuatInput>
+  connectOrCreate?: Prisma.chi_tiet_phieu_xuatCreateOrConnectWithoutKien_hang_da_xuatInput
+  upsert?: Prisma.chi_tiet_phieu_xuatUpsertWithoutKien_hang_da_xuatInput
+  connect?: Prisma.chi_tiet_phieu_xuatWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.chi_tiet_phieu_xuatUpdateToOneWithWhereWithoutKien_hang_da_xuatInput, Prisma.chi_tiet_phieu_xuatUpdateWithoutKien_hang_da_xuatInput>, Prisma.chi_tiet_phieu_xuatUncheckedUpdateWithoutKien_hang_da_xuatInput>
 }
 
 export type chi_tiet_phieu_xuatCreateNestedManyWithoutPhieu_xuat_khoInput = {
@@ -472,6 +498,7 @@ export type chi_tiet_phieu_xuatCreateWithoutBien_the_san_phamInput = {
   so_luong_yeu_cau: number
   so_luong_thuc_xuat?: number | null
   phieu_xuat_kho: Prisma.phieu_xuat_khoCreateNestedOneWithoutChi_tiet_phieu_xuatInput
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatCreateNestedManyWithoutChi_tiet_phieu_xuatInput
 }
 
 export type chi_tiet_phieu_xuatUncheckedCreateWithoutBien_the_san_phamInput = {
@@ -479,6 +506,7 @@ export type chi_tiet_phieu_xuatUncheckedCreateWithoutBien_the_san_phamInput = {
   ma_phieu_xuat: number
   so_luong_yeu_cau: number
   so_luong_thuc_xuat?: number | null
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatUncheckedCreateNestedManyWithoutChi_tiet_phieu_xuatInput
 }
 
 export type chi_tiet_phieu_xuatCreateOrConnectWithoutBien_the_san_phamInput = {
@@ -518,10 +546,57 @@ export type chi_tiet_phieu_xuatScalarWhereInput = {
   so_luong_thuc_xuat?: Prisma.IntNullableFilter<"chi_tiet_phieu_xuat"> | number | null
 }
 
+export type chi_tiet_phieu_xuatCreateWithoutKien_hang_da_xuatInput = {
+  so_luong_yeu_cau: number
+  so_luong_thuc_xuat?: number | null
+  phieu_xuat_kho: Prisma.phieu_xuat_khoCreateNestedOneWithoutChi_tiet_phieu_xuatInput
+  bien_the_san_pham: Prisma.bien_the_san_phamCreateNestedOneWithoutChi_tiet_phieu_xuatInput
+}
+
+export type chi_tiet_phieu_xuatUncheckedCreateWithoutKien_hang_da_xuatInput = {
+  id?: number
+  ma_phieu_xuat: number
+  ma_bien_the: number
+  so_luong_yeu_cau: number
+  so_luong_thuc_xuat?: number | null
+}
+
+export type chi_tiet_phieu_xuatCreateOrConnectWithoutKien_hang_da_xuatInput = {
+  where: Prisma.chi_tiet_phieu_xuatWhereUniqueInput
+  create: Prisma.XOR<Prisma.chi_tiet_phieu_xuatCreateWithoutKien_hang_da_xuatInput, Prisma.chi_tiet_phieu_xuatUncheckedCreateWithoutKien_hang_da_xuatInput>
+}
+
+export type chi_tiet_phieu_xuatUpsertWithoutKien_hang_da_xuatInput = {
+  update: Prisma.XOR<Prisma.chi_tiet_phieu_xuatUpdateWithoutKien_hang_da_xuatInput, Prisma.chi_tiet_phieu_xuatUncheckedUpdateWithoutKien_hang_da_xuatInput>
+  create: Prisma.XOR<Prisma.chi_tiet_phieu_xuatCreateWithoutKien_hang_da_xuatInput, Prisma.chi_tiet_phieu_xuatUncheckedCreateWithoutKien_hang_da_xuatInput>
+  where?: Prisma.chi_tiet_phieu_xuatWhereInput
+}
+
+export type chi_tiet_phieu_xuatUpdateToOneWithWhereWithoutKien_hang_da_xuatInput = {
+  where?: Prisma.chi_tiet_phieu_xuatWhereInput
+  data: Prisma.XOR<Prisma.chi_tiet_phieu_xuatUpdateWithoutKien_hang_da_xuatInput, Prisma.chi_tiet_phieu_xuatUncheckedUpdateWithoutKien_hang_da_xuatInput>
+}
+
+export type chi_tiet_phieu_xuatUpdateWithoutKien_hang_da_xuatInput = {
+  so_luong_yeu_cau?: Prisma.IntFieldUpdateOperationsInput | number
+  so_luong_thuc_xuat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateOneRequiredWithoutChi_tiet_phieu_xuatNestedInput
+  bien_the_san_pham?: Prisma.bien_the_san_phamUpdateOneRequiredWithoutChi_tiet_phieu_xuatNestedInput
+}
+
+export type chi_tiet_phieu_xuatUncheckedUpdateWithoutKien_hang_da_xuatInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu_xuat?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_bien_the?: Prisma.IntFieldUpdateOperationsInput | number
+  so_luong_yeu_cau?: Prisma.IntFieldUpdateOperationsInput | number
+  so_luong_thuc_xuat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
 export type chi_tiet_phieu_xuatCreateWithoutPhieu_xuat_khoInput = {
   so_luong_yeu_cau: number
   so_luong_thuc_xuat?: number | null
   bien_the_san_pham: Prisma.bien_the_san_phamCreateNestedOneWithoutChi_tiet_phieu_xuatInput
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatCreateNestedManyWithoutChi_tiet_phieu_xuatInput
 }
 
 export type chi_tiet_phieu_xuatUncheckedCreateWithoutPhieu_xuat_khoInput = {
@@ -529,6 +604,7 @@ export type chi_tiet_phieu_xuatUncheckedCreateWithoutPhieu_xuat_khoInput = {
   ma_bien_the: number
   so_luong_yeu_cau: number
   so_luong_thuc_xuat?: number | null
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatUncheckedCreateNestedManyWithoutChi_tiet_phieu_xuatInput
 }
 
 export type chi_tiet_phieu_xuatCreateOrConnectWithoutPhieu_xuat_khoInput = {
@@ -568,6 +644,7 @@ export type chi_tiet_phieu_xuatUpdateWithoutBien_the_san_phamInput = {
   so_luong_yeu_cau?: Prisma.IntFieldUpdateOperationsInput | number
   so_luong_thuc_xuat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateOneRequiredWithoutChi_tiet_phieu_xuatNestedInput
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatUpdateManyWithoutChi_tiet_phieu_xuatNestedInput
 }
 
 export type chi_tiet_phieu_xuatUncheckedUpdateWithoutBien_the_san_phamInput = {
@@ -575,6 +652,7 @@ export type chi_tiet_phieu_xuatUncheckedUpdateWithoutBien_the_san_phamInput = {
   ma_phieu_xuat?: Prisma.IntFieldUpdateOperationsInput | number
   so_luong_yeu_cau?: Prisma.IntFieldUpdateOperationsInput | number
   so_luong_thuc_xuat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatUncheckedUpdateManyWithoutChi_tiet_phieu_xuatNestedInput
 }
 
 export type chi_tiet_phieu_xuatUncheckedUpdateManyWithoutBien_the_san_phamInput = {
@@ -595,6 +673,7 @@ export type chi_tiet_phieu_xuatUpdateWithoutPhieu_xuat_khoInput = {
   so_luong_yeu_cau?: Prisma.IntFieldUpdateOperationsInput | number
   so_luong_thuc_xuat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bien_the_san_pham?: Prisma.bien_the_san_phamUpdateOneRequiredWithoutChi_tiet_phieu_xuatNestedInput
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatUpdateManyWithoutChi_tiet_phieu_xuatNestedInput
 }
 
 export type chi_tiet_phieu_xuatUncheckedUpdateWithoutPhieu_xuat_khoInput = {
@@ -602,6 +681,7 @@ export type chi_tiet_phieu_xuatUncheckedUpdateWithoutPhieu_xuat_khoInput = {
   ma_bien_the?: Prisma.IntFieldUpdateOperationsInput | number
   so_luong_yeu_cau?: Prisma.IntFieldUpdateOperationsInput | number
   so_luong_thuc_xuat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  kien_hang_da_xuat?: Prisma.kien_hang_da_xuatUncheckedUpdateManyWithoutChi_tiet_phieu_xuatNestedInput
 }
 
 export type chi_tiet_phieu_xuatUncheckedUpdateManyWithoutPhieu_xuat_khoInput = {
@@ -612,6 +692,35 @@ export type chi_tiet_phieu_xuatUncheckedUpdateManyWithoutPhieu_xuat_khoInput = {
 }
 
 
+/**
+ * Count Type Chi_tiet_phieu_xuatCountOutputType
+ */
+
+export type Chi_tiet_phieu_xuatCountOutputType = {
+  kien_hang_da_xuat: number
+}
+
+export type Chi_tiet_phieu_xuatCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  kien_hang_da_xuat?: boolean | Chi_tiet_phieu_xuatCountOutputTypeCountKien_hang_da_xuatArgs
+}
+
+/**
+ * Chi_tiet_phieu_xuatCountOutputType without action
+ */
+export type Chi_tiet_phieu_xuatCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Chi_tiet_phieu_xuatCountOutputType
+   */
+  select?: Prisma.Chi_tiet_phieu_xuatCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * Chi_tiet_phieu_xuatCountOutputType without action
+ */
+export type Chi_tiet_phieu_xuatCountOutputTypeCountKien_hang_da_xuatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.kien_hang_da_xuatWhereInput
+}
+
 
 export type chi_tiet_phieu_xuatSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -621,6 +730,8 @@ export type chi_tiet_phieu_xuatSelect<ExtArgs extends runtime.Types.Extensions.I
   so_luong_thuc_xuat?: boolean
   phieu_xuat_kho?: boolean | Prisma.phieu_xuat_khoDefaultArgs<ExtArgs>
   bien_the_san_pham?: boolean | Prisma.bien_the_san_phamDefaultArgs<ExtArgs>
+  kien_hang_da_xuat?: boolean | Prisma.chi_tiet_phieu_xuat$kien_hang_da_xuatArgs<ExtArgs>
+  _count?: boolean | Prisma.Chi_tiet_phieu_xuatCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["chi_tiet_phieu_xuat"]>
 
 
@@ -637,6 +748,8 @@ export type chi_tiet_phieu_xuatOmit<ExtArgs extends runtime.Types.Extensions.Int
 export type chi_tiet_phieu_xuatInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   phieu_xuat_kho?: boolean | Prisma.phieu_xuat_khoDefaultArgs<ExtArgs>
   bien_the_san_pham?: boolean | Prisma.bien_the_san_phamDefaultArgs<ExtArgs>
+  kien_hang_da_xuat?: boolean | Prisma.chi_tiet_phieu_xuat$kien_hang_da_xuatArgs<ExtArgs>
+  _count?: boolean | Prisma.Chi_tiet_phieu_xuatCountOutputTypeDefaultArgs<ExtArgs>
 }
 
 export type $chi_tiet_phieu_xuatPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -644,6 +757,7 @@ export type $chi_tiet_phieu_xuatPayload<ExtArgs extends runtime.Types.Extensions
   objects: {
     phieu_xuat_kho: Prisma.$phieu_xuat_khoPayload<ExtArgs>
     bien_the_san_pham: Prisma.$bien_the_san_phamPayload<ExtArgs>
+    kien_hang_da_xuat: Prisma.$kien_hang_da_xuatPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -993,6 +1107,7 @@ export interface Prisma__chi_tiet_phieu_xuatClient<T, Null = never, ExtArgs exte
   readonly [Symbol.toStringTag]: "PrismaPromise"
   phieu_xuat_kho<T extends Prisma.phieu_xuat_khoDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.phieu_xuat_khoDefaultArgs<ExtArgs>>): Prisma.Prisma__phieu_xuat_khoClient<runtime.Types.Result.GetResult<Prisma.$phieu_xuat_khoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   bien_the_san_pham<T extends Prisma.bien_the_san_phamDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.bien_the_san_phamDefaultArgs<ExtArgs>>): Prisma.Prisma__bien_the_san_phamClient<runtime.Types.Result.GetResult<Prisma.$bien_the_san_phamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  kien_hang_da_xuat<T extends Prisma.chi_tiet_phieu_xuat$kien_hang_da_xuatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.chi_tiet_phieu_xuat$kien_hang_da_xuatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$kien_hang_da_xuatPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1372,6 +1487,30 @@ export type chi_tiet_phieu_xuatDeleteManyArgs<ExtArgs extends runtime.Types.Exte
    * Limit how many chi_tiet_phieu_xuats to delete.
    */
   limit?: number
+}
+
+/**
+ * chi_tiet_phieu_xuat.kien_hang_da_xuat
+ */
+export type chi_tiet_phieu_xuat$kien_hang_da_xuatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the kien_hang_da_xuat
+   */
+  select?: Prisma.kien_hang_da_xuatSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the kien_hang_da_xuat
+   */
+  omit?: Prisma.kien_hang_da_xuatOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.kien_hang_da_xuatInclude<ExtArgs> | null
+  where?: Prisma.kien_hang_da_xuatWhereInput
+  orderBy?: Prisma.kien_hang_da_xuatOrderByWithRelationInput | Prisma.kien_hang_da_xuatOrderByWithRelationInput[]
+  cursor?: Prisma.kien_hang_da_xuatWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Kien_hang_da_xuatScalarFieldEnum | Prisma.Kien_hang_da_xuatScalarFieldEnum[]
 }
 
 /**
