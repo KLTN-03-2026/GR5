@@ -44,32 +44,41 @@ export type Phieu_nhap_khoSumAggregateOutputType = {
 
 export type Phieu_nhap_khoMinAggregateOutputType = {
   id: number | null
+  ma_phieu: string | null
   ma_ncc: number | null
   ma_nguoi_tao: number | null
   ma_kho: number | null
   tong_tien: runtime.Decimal | null
-  trang_thai: string | null
+  trang_thai: $Enums.TrangThaiPhieuNhap | null
   ngay_tao: Date | null
+  ngay_duyet: Date | null
+  ghi_chu: string | null
 }
 
 export type Phieu_nhap_khoMaxAggregateOutputType = {
   id: number | null
+  ma_phieu: string | null
   ma_ncc: number | null
   ma_nguoi_tao: number | null
   ma_kho: number | null
   tong_tien: runtime.Decimal | null
-  trang_thai: string | null
+  trang_thai: $Enums.TrangThaiPhieuNhap | null
   ngay_tao: Date | null
+  ngay_duyet: Date | null
+  ghi_chu: string | null
 }
 
 export type Phieu_nhap_khoCountAggregateOutputType = {
   id: number
+  ma_phieu: number
   ma_ncc: number
   ma_nguoi_tao: number
   ma_kho: number
   tong_tien: number
   trang_thai: number
   ngay_tao: number
+  ngay_duyet: number
+  ghi_chu: number
   _all: number
 }
 
@@ -92,32 +101,41 @@ export type Phieu_nhap_khoSumAggregateInputType = {
 
 export type Phieu_nhap_khoMinAggregateInputType = {
   id?: true
+  ma_phieu?: true
   ma_ncc?: true
   ma_nguoi_tao?: true
   ma_kho?: true
   tong_tien?: true
   trang_thai?: true
   ngay_tao?: true
+  ngay_duyet?: true
+  ghi_chu?: true
 }
 
 export type Phieu_nhap_khoMaxAggregateInputType = {
   id?: true
+  ma_phieu?: true
   ma_ncc?: true
   ma_nguoi_tao?: true
   ma_kho?: true
   tong_tien?: true
   trang_thai?: true
   ngay_tao?: true
+  ngay_duyet?: true
+  ghi_chu?: true
 }
 
 export type Phieu_nhap_khoCountAggregateInputType = {
   id?: true
+  ma_phieu?: true
   ma_ncc?: true
   ma_nguoi_tao?: true
   ma_kho?: true
   tong_tien?: true
   trang_thai?: true
   ngay_tao?: true
+  ngay_duyet?: true
+  ghi_chu?: true
   _all?: true
 }
 
@@ -209,12 +227,15 @@ export type phieu_nhap_khoGroupByArgs<ExtArgs extends runtime.Types.Extensions.I
 
 export type Phieu_nhap_khoGroupByOutputType = {
   id: number
+  ma_phieu: string | null
   ma_ncc: number | null
   ma_nguoi_tao: number | null
   ma_kho: number | null
   tong_tien: runtime.Decimal | null
-  trang_thai: string | null
+  trang_thai: $Enums.TrangThaiPhieuNhap | null
   ngay_tao: Date | null
+  ngay_duyet: Date | null
+  ghi_chu: string | null
   _count: Phieu_nhap_khoCountAggregateOutputType | null
   _avg: Phieu_nhap_khoAvgAggregateOutputType | null
   _sum: Phieu_nhap_khoSumAggregateOutputType | null
@@ -242,14 +263,18 @@ export type phieu_nhap_khoWhereInput = {
   OR?: Prisma.phieu_nhap_khoWhereInput[]
   NOT?: Prisma.phieu_nhap_khoWhereInput | Prisma.phieu_nhap_khoWhereInput[]
   id?: Prisma.IntFilter<"phieu_nhap_kho"> | number
+  ma_phieu?: Prisma.StringNullableFilter<"phieu_nhap_kho"> | string | null
   ma_ncc?: Prisma.IntNullableFilter<"phieu_nhap_kho"> | number | null
   ma_nguoi_tao?: Prisma.IntNullableFilter<"phieu_nhap_kho"> | number | null
   ma_kho?: Prisma.IntNullableFilter<"phieu_nhap_kho"> | number | null
   tong_tien?: Prisma.DecimalNullableFilter<"phieu_nhap_kho"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.StringNullableFilter<"phieu_nhap_kho"> | string | null
+  trang_thai?: Prisma.EnumTrangThaiPhieuNhapNullableFilter<"phieu_nhap_kho"> | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.DateTimeNullableFilter<"phieu_nhap_kho"> | Date | string | null
+  ngay_duyet?: Prisma.DateTimeNullableFilter<"phieu_nhap_kho"> | Date | string | null
+  ghi_chu?: Prisma.StringNullableFilter<"phieu_nhap_kho"> | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.Chi_tiet_luan_chuyen_khoListRelationFilter
-  chi_tiet_phieu_nhap?: Prisma.Chi_tiet_phieu_nhapListRelationFilter
+  chi_tiet?: Prisma.Chi_tiet_phieu_nhapListRelationFilter
+  lo_hang_sinh_ra?: Prisma.Lo_hangListRelationFilter
   nha_cung_cap?: Prisma.XOR<Prisma.Nha_cung_capNullableScalarRelationFilter, Prisma.nha_cung_capWhereInput> | null
   nguoi_dung?: Prisma.XOR<Prisma.Nguoi_dungNullableScalarRelationFilter, Prisma.nguoi_dungWhereInput> | null
   kho_hang?: Prisma.XOR<Prisma.Kho_hangNullableScalarRelationFilter, Prisma.kho_hangWhereInput> | null
@@ -257,14 +282,18 @@ export type phieu_nhap_khoWhereInput = {
 
 export type phieu_nhap_khoOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  ma_phieu?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_ncc?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_nguoi_tao?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_kho?: Prisma.SortOrderInput | Prisma.SortOrder
   tong_tien?: Prisma.SortOrderInput | Prisma.SortOrder
   trang_thai?: Prisma.SortOrderInput | Prisma.SortOrder
   ngay_tao?: Prisma.SortOrderInput | Prisma.SortOrder
+  ngay_duyet?: Prisma.SortOrderInput | Prisma.SortOrder
+  ghi_chu?: Prisma.SortOrderInput | Prisma.SortOrder
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoOrderByRelationAggregateInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapOrderByRelationAggregateInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapOrderByRelationAggregateInput
+  lo_hang_sinh_ra?: Prisma.lo_hangOrderByRelationAggregateInput
   nha_cung_cap?: Prisma.nha_cung_capOrderByWithRelationInput
   nguoi_dung?: Prisma.nguoi_dungOrderByWithRelationInput
   kho_hang?: Prisma.kho_hangOrderByWithRelationInput
@@ -273,6 +302,7 @@ export type phieu_nhap_khoOrderByWithRelationInput = {
 
 export type phieu_nhap_khoWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  ma_phieu?: string
   AND?: Prisma.phieu_nhap_khoWhereInput | Prisma.phieu_nhap_khoWhereInput[]
   OR?: Prisma.phieu_nhap_khoWhereInput[]
   NOT?: Prisma.phieu_nhap_khoWhereInput | Prisma.phieu_nhap_khoWhereInput[]
@@ -280,23 +310,29 @@ export type phieu_nhap_khoWhereUniqueInput = Prisma.AtLeast<{
   ma_nguoi_tao?: Prisma.IntNullableFilter<"phieu_nhap_kho"> | number | null
   ma_kho?: Prisma.IntNullableFilter<"phieu_nhap_kho"> | number | null
   tong_tien?: Prisma.DecimalNullableFilter<"phieu_nhap_kho"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.StringNullableFilter<"phieu_nhap_kho"> | string | null
+  trang_thai?: Prisma.EnumTrangThaiPhieuNhapNullableFilter<"phieu_nhap_kho"> | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.DateTimeNullableFilter<"phieu_nhap_kho"> | Date | string | null
+  ngay_duyet?: Prisma.DateTimeNullableFilter<"phieu_nhap_kho"> | Date | string | null
+  ghi_chu?: Prisma.StringNullableFilter<"phieu_nhap_kho"> | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.Chi_tiet_luan_chuyen_khoListRelationFilter
-  chi_tiet_phieu_nhap?: Prisma.Chi_tiet_phieu_nhapListRelationFilter
+  chi_tiet?: Prisma.Chi_tiet_phieu_nhapListRelationFilter
+  lo_hang_sinh_ra?: Prisma.Lo_hangListRelationFilter
   nha_cung_cap?: Prisma.XOR<Prisma.Nha_cung_capNullableScalarRelationFilter, Prisma.nha_cung_capWhereInput> | null
   nguoi_dung?: Prisma.XOR<Prisma.Nguoi_dungNullableScalarRelationFilter, Prisma.nguoi_dungWhereInput> | null
   kho_hang?: Prisma.XOR<Prisma.Kho_hangNullableScalarRelationFilter, Prisma.kho_hangWhereInput> | null
-}, "id">
+}, "id" | "ma_phieu">
 
 export type phieu_nhap_khoOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  ma_phieu?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_ncc?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_nguoi_tao?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_kho?: Prisma.SortOrderInput | Prisma.SortOrder
   tong_tien?: Prisma.SortOrderInput | Prisma.SortOrder
   trang_thai?: Prisma.SortOrderInput | Prisma.SortOrder
   ngay_tao?: Prisma.SortOrderInput | Prisma.SortOrder
+  ngay_duyet?: Prisma.SortOrderInput | Prisma.SortOrder
+  ghi_chu?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.phieu_nhap_khoCountOrderByAggregateInput
   _avg?: Prisma.phieu_nhap_khoAvgOrderByAggregateInput
   _max?: Prisma.phieu_nhap_khoMaxOrderByAggregateInput
@@ -309,20 +345,27 @@ export type phieu_nhap_khoScalarWhereWithAggregatesInput = {
   OR?: Prisma.phieu_nhap_khoScalarWhereWithAggregatesInput[]
   NOT?: Prisma.phieu_nhap_khoScalarWhereWithAggregatesInput | Prisma.phieu_nhap_khoScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"phieu_nhap_kho"> | number
+  ma_phieu?: Prisma.StringNullableWithAggregatesFilter<"phieu_nhap_kho"> | string | null
   ma_ncc?: Prisma.IntNullableWithAggregatesFilter<"phieu_nhap_kho"> | number | null
   ma_nguoi_tao?: Prisma.IntNullableWithAggregatesFilter<"phieu_nhap_kho"> | number | null
   ma_kho?: Prisma.IntNullableWithAggregatesFilter<"phieu_nhap_kho"> | number | null
   tong_tien?: Prisma.DecimalNullableWithAggregatesFilter<"phieu_nhap_kho"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.StringNullableWithAggregatesFilter<"phieu_nhap_kho"> | string | null
+  trang_thai?: Prisma.EnumTrangThaiPhieuNhapNullableWithAggregatesFilter<"phieu_nhap_kho"> | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.DateTimeNullableWithAggregatesFilter<"phieu_nhap_kho"> | Date | string | null
+  ngay_duyet?: Prisma.DateTimeNullableWithAggregatesFilter<"phieu_nhap_kho"> | Date | string | null
+  ghi_chu?: Prisma.StringNullableWithAggregatesFilter<"phieu_nhap_kho"> | string | null
 }
 
 export type phieu_nhap_khoCreateInput = {
+  ma_phieu?: string | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoCreateNestedManyWithoutPhieu_nhap_khoInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangCreateNestedManyWithoutPhieu_nhap_khoInput
   nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutPhieu_nhap_khoInput
   nguoi_dung?: Prisma.nguoi_dungCreateNestedOneWithoutPhieu_nhap_khoInput
   kho_hang?: Prisma.kho_hangCreateNestedOneWithoutPhieu_nhap_khoInput
@@ -330,22 +373,30 @@ export type phieu_nhap_khoCreateInput = {
 
 export type phieu_nhap_khoUncheckedCreateInput = {
   id?: number
+  ma_phieu?: string | null
   ma_ncc?: number | null
   ma_nguoi_tao?: number | null
   ma_kho?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
 }
 
 export type phieu_nhap_khoUpdateInput = {
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUpdateManyWithoutPhieu_nhap_khoNestedInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUpdateManyWithoutPhieu_nhap_khoNestedInput
   nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutPhieu_nhap_khoNestedInput
   nguoi_dung?: Prisma.nguoi_dungUpdateOneWithoutPhieu_nhap_khoNestedInput
   kho_hang?: Prisma.kho_hangUpdateOneWithoutPhieu_nhap_khoNestedInput
@@ -353,40 +404,53 @@ export type phieu_nhap_khoUpdateInput = {
 
 export type phieu_nhap_khoUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_nguoi_tao?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_kho?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
 }
 
 export type phieu_nhap_khoCreateManyInput = {
   id?: number
+  ma_phieu?: string | null
   ma_ncc?: number | null
   ma_nguoi_tao?: number | null
   ma_kho?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
 }
 
 export type phieu_nhap_khoUpdateManyMutationInput = {
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type phieu_nhap_khoUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_nguoi_tao?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_kho?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type Phieu_nhap_khoNullableScalarRelationFilter = {
@@ -417,12 +481,15 @@ export type phieu_nhap_khoOrderByRelevanceInput = {
 
 export type phieu_nhap_khoCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  ma_phieu?: Prisma.SortOrder
   ma_ncc?: Prisma.SortOrder
   ma_nguoi_tao?: Prisma.SortOrder
   ma_kho?: Prisma.SortOrder
   tong_tien?: Prisma.SortOrder
   trang_thai?: Prisma.SortOrder
   ngay_tao?: Prisma.SortOrder
+  ngay_duyet?: Prisma.SortOrder
+  ghi_chu?: Prisma.SortOrder
 }
 
 export type phieu_nhap_khoAvgOrderByAggregateInput = {
@@ -435,22 +502,28 @@ export type phieu_nhap_khoAvgOrderByAggregateInput = {
 
 export type phieu_nhap_khoMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  ma_phieu?: Prisma.SortOrder
   ma_ncc?: Prisma.SortOrder
   ma_nguoi_tao?: Prisma.SortOrder
   ma_kho?: Prisma.SortOrder
   tong_tien?: Prisma.SortOrder
   trang_thai?: Prisma.SortOrder
   ngay_tao?: Prisma.SortOrder
+  ngay_duyet?: Prisma.SortOrder
+  ghi_chu?: Prisma.SortOrder
 }
 
 export type phieu_nhap_khoMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  ma_phieu?: Prisma.SortOrder
   ma_ncc?: Prisma.SortOrder
   ma_nguoi_tao?: Prisma.SortOrder
   ma_kho?: Prisma.SortOrder
   tong_tien?: Prisma.SortOrder
   trang_thai?: Prisma.SortOrder
   ngay_tao?: Prisma.SortOrder
+  ngay_duyet?: Prisma.SortOrder
+  ghi_chu?: Prisma.SortOrder
 }
 
 export type phieu_nhap_khoSumOrderByAggregateInput = {
@@ -477,18 +550,18 @@ export type phieu_nhap_khoUpdateOneWithoutChi_tiet_luan_chuyen_khoNestedInput = 
   update?: Prisma.XOR<Prisma.XOR<Prisma.phieu_nhap_khoUpdateToOneWithWhereWithoutChi_tiet_luan_chuyen_khoInput, Prisma.phieu_nhap_khoUpdateWithoutChi_tiet_luan_chuyen_khoInput>, Prisma.phieu_nhap_khoUncheckedUpdateWithoutChi_tiet_luan_chuyen_khoInput>
 }
 
-export type phieu_nhap_khoCreateNestedOneWithoutChi_tiet_phieu_nhapInput = {
-  create?: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutChi_tiet_phieu_nhapInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutChi_tiet_phieu_nhapInput>
-  connectOrCreate?: Prisma.phieu_nhap_khoCreateOrConnectWithoutChi_tiet_phieu_nhapInput
+export type phieu_nhap_khoCreateNestedOneWithoutChi_tietInput = {
+  create?: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutChi_tietInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutChi_tietInput>
+  connectOrCreate?: Prisma.phieu_nhap_khoCreateOrConnectWithoutChi_tietInput
   connect?: Prisma.phieu_nhap_khoWhereUniqueInput
 }
 
-export type phieu_nhap_khoUpdateOneRequiredWithoutChi_tiet_phieu_nhapNestedInput = {
-  create?: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutChi_tiet_phieu_nhapInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutChi_tiet_phieu_nhapInput>
-  connectOrCreate?: Prisma.phieu_nhap_khoCreateOrConnectWithoutChi_tiet_phieu_nhapInput
-  upsert?: Prisma.phieu_nhap_khoUpsertWithoutChi_tiet_phieu_nhapInput
+export type phieu_nhap_khoUpdateOneRequiredWithoutChi_tietNestedInput = {
+  create?: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutChi_tietInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutChi_tietInput>
+  connectOrCreate?: Prisma.phieu_nhap_khoCreateOrConnectWithoutChi_tietInput
+  upsert?: Prisma.phieu_nhap_khoUpsertWithoutChi_tietInput
   connect?: Prisma.phieu_nhap_khoWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.phieu_nhap_khoUpdateToOneWithWhereWithoutChi_tiet_phieu_nhapInput, Prisma.phieu_nhap_khoUpdateWithoutChi_tiet_phieu_nhapInput>, Prisma.phieu_nhap_khoUncheckedUpdateWithoutChi_tiet_phieu_nhapInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.phieu_nhap_khoUpdateToOneWithWhereWithoutChi_tietInput, Prisma.phieu_nhap_khoUpdateWithoutChi_tietInput>, Prisma.phieu_nhap_khoUncheckedUpdateWithoutChi_tietInput>
 }
 
 export type phieu_nhap_khoCreateNestedManyWithoutKho_hangInput = {
@@ -531,6 +604,22 @@ export type phieu_nhap_khoUncheckedUpdateManyWithoutKho_hangNestedInput = {
   update?: Prisma.phieu_nhap_khoUpdateWithWhereUniqueWithoutKho_hangInput | Prisma.phieu_nhap_khoUpdateWithWhereUniqueWithoutKho_hangInput[]
   updateMany?: Prisma.phieu_nhap_khoUpdateManyWithWhereWithoutKho_hangInput | Prisma.phieu_nhap_khoUpdateManyWithWhereWithoutKho_hangInput[]
   deleteMany?: Prisma.phieu_nhap_khoScalarWhereInput | Prisma.phieu_nhap_khoScalarWhereInput[]
+}
+
+export type phieu_nhap_khoCreateNestedOneWithoutLo_hang_sinh_raInput = {
+  create?: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutLo_hang_sinh_raInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutLo_hang_sinh_raInput>
+  connectOrCreate?: Prisma.phieu_nhap_khoCreateOrConnectWithoutLo_hang_sinh_raInput
+  connect?: Prisma.phieu_nhap_khoWhereUniqueInput
+}
+
+export type phieu_nhap_khoUpdateOneWithoutLo_hang_sinh_raNestedInput = {
+  create?: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutLo_hang_sinh_raInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutLo_hang_sinh_raInput>
+  connectOrCreate?: Prisma.phieu_nhap_khoCreateOrConnectWithoutLo_hang_sinh_raInput
+  upsert?: Prisma.phieu_nhap_khoUpsertWithoutLo_hang_sinh_raInput
+  disconnect?: Prisma.phieu_nhap_khoWhereInput | boolean
+  delete?: Prisma.phieu_nhap_khoWhereInput | boolean
+  connect?: Prisma.phieu_nhap_khoWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.phieu_nhap_khoUpdateToOneWithWhereWithoutLo_hang_sinh_raInput, Prisma.phieu_nhap_khoUpdateWithoutLo_hang_sinh_raInput>, Prisma.phieu_nhap_khoUncheckedUpdateWithoutLo_hang_sinh_raInput>
 }
 
 export type phieu_nhap_khoCreateNestedManyWithoutNguoi_dungInput = {
@@ -617,11 +706,19 @@ export type phieu_nhap_khoUncheckedUpdateManyWithoutNha_cung_capNestedInput = {
   deleteMany?: Prisma.phieu_nhap_khoScalarWhereInput | Prisma.phieu_nhap_khoScalarWhereInput[]
 }
 
+export type NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput = {
+  set?: $Enums.TrangThaiPhieuNhap | null
+}
+
 export type phieu_nhap_khoCreateWithoutChi_tiet_luan_chuyen_khoInput = {
+  ma_phieu?: string | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangCreateNestedManyWithoutPhieu_nhap_khoInput
   nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutPhieu_nhap_khoInput
   nguoi_dung?: Prisma.nguoi_dungCreateNestedOneWithoutPhieu_nhap_khoInput
   kho_hang?: Prisma.kho_hangCreateNestedOneWithoutPhieu_nhap_khoInput
@@ -629,13 +726,17 @@ export type phieu_nhap_khoCreateWithoutChi_tiet_luan_chuyen_khoInput = {
 
 export type phieu_nhap_khoUncheckedCreateWithoutChi_tiet_luan_chuyen_khoInput = {
   id?: number
+  ma_phieu?: string | null
   ma_ncc?: number | null
   ma_nguoi_tao?: number | null
   ma_kho?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
 }
 
 export type phieu_nhap_khoCreateOrConnectWithoutChi_tiet_luan_chuyen_khoInput = {
@@ -655,10 +756,14 @@ export type phieu_nhap_khoUpdateToOneWithWhereWithoutChi_tiet_luan_chuyen_khoInp
 }
 
 export type phieu_nhap_khoUpdateWithoutChi_tiet_luan_chuyen_khoInput = {
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUpdateManyWithoutPhieu_nhap_khoNestedInput
   nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutPhieu_nhap_khoNestedInput
   nguoi_dung?: Prisma.nguoi_dungUpdateOneWithoutPhieu_nhap_khoNestedInput
   kho_hang?: Prisma.kho_hangUpdateOneWithoutPhieu_nhap_khoNestedInput
@@ -666,92 +771,120 @@ export type phieu_nhap_khoUpdateWithoutChi_tiet_luan_chuyen_khoInput = {
 
 export type phieu_nhap_khoUncheckedUpdateWithoutChi_tiet_luan_chuyen_khoInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_nguoi_tao?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_kho?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
 }
 
-export type phieu_nhap_khoCreateWithoutChi_tiet_phieu_nhapInput = {
+export type phieu_nhap_khoCreateWithoutChi_tietInput = {
+  ma_phieu?: string | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangCreateNestedManyWithoutPhieu_nhap_khoInput
   nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutPhieu_nhap_khoInput
   nguoi_dung?: Prisma.nguoi_dungCreateNestedOneWithoutPhieu_nhap_khoInput
   kho_hang?: Prisma.kho_hangCreateNestedOneWithoutPhieu_nhap_khoInput
 }
 
-export type phieu_nhap_khoUncheckedCreateWithoutChi_tiet_phieu_nhapInput = {
+export type phieu_nhap_khoUncheckedCreateWithoutChi_tietInput = {
   id?: number
+  ma_phieu?: string | null
   ma_ncc?: number | null
   ma_nguoi_tao?: number | null
   ma_kho?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
 }
 
-export type phieu_nhap_khoCreateOrConnectWithoutChi_tiet_phieu_nhapInput = {
+export type phieu_nhap_khoCreateOrConnectWithoutChi_tietInput = {
   where: Prisma.phieu_nhap_khoWhereUniqueInput
-  create: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutChi_tiet_phieu_nhapInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutChi_tiet_phieu_nhapInput>
+  create: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutChi_tietInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutChi_tietInput>
 }
 
-export type phieu_nhap_khoUpsertWithoutChi_tiet_phieu_nhapInput = {
-  update: Prisma.XOR<Prisma.phieu_nhap_khoUpdateWithoutChi_tiet_phieu_nhapInput, Prisma.phieu_nhap_khoUncheckedUpdateWithoutChi_tiet_phieu_nhapInput>
-  create: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutChi_tiet_phieu_nhapInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutChi_tiet_phieu_nhapInput>
+export type phieu_nhap_khoUpsertWithoutChi_tietInput = {
+  update: Prisma.XOR<Prisma.phieu_nhap_khoUpdateWithoutChi_tietInput, Prisma.phieu_nhap_khoUncheckedUpdateWithoutChi_tietInput>
+  create: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutChi_tietInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutChi_tietInput>
   where?: Prisma.phieu_nhap_khoWhereInput
 }
 
-export type phieu_nhap_khoUpdateToOneWithWhereWithoutChi_tiet_phieu_nhapInput = {
+export type phieu_nhap_khoUpdateToOneWithWhereWithoutChi_tietInput = {
   where?: Prisma.phieu_nhap_khoWhereInput
-  data: Prisma.XOR<Prisma.phieu_nhap_khoUpdateWithoutChi_tiet_phieu_nhapInput, Prisma.phieu_nhap_khoUncheckedUpdateWithoutChi_tiet_phieu_nhapInput>
+  data: Prisma.XOR<Prisma.phieu_nhap_khoUpdateWithoutChi_tietInput, Prisma.phieu_nhap_khoUncheckedUpdateWithoutChi_tietInput>
 }
 
-export type phieu_nhap_khoUpdateWithoutChi_tiet_phieu_nhapInput = {
+export type phieu_nhap_khoUpdateWithoutChi_tietInput = {
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUpdateManyWithoutPhieu_nhap_khoNestedInput
   nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutPhieu_nhap_khoNestedInput
   nguoi_dung?: Prisma.nguoi_dungUpdateOneWithoutPhieu_nhap_khoNestedInput
   kho_hang?: Prisma.kho_hangUpdateOneWithoutPhieu_nhap_khoNestedInput
 }
 
-export type phieu_nhap_khoUncheckedUpdateWithoutChi_tiet_phieu_nhapInput = {
+export type phieu_nhap_khoUncheckedUpdateWithoutChi_tietInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_nguoi_tao?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_kho?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
 }
 
 export type phieu_nhap_khoCreateWithoutKho_hangInput = {
+  ma_phieu?: string | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoCreateNestedManyWithoutPhieu_nhap_khoInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangCreateNestedManyWithoutPhieu_nhap_khoInput
   nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutPhieu_nhap_khoInput
   nguoi_dung?: Prisma.nguoi_dungCreateNestedOneWithoutPhieu_nhap_khoInput
 }
 
 export type phieu_nhap_khoUncheckedCreateWithoutKho_hangInput = {
   id?: number
+  ma_phieu?: string | null
   ma_ncc?: number | null
   ma_nguoi_tao?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
 }
 
 export type phieu_nhap_khoCreateOrConnectWithoutKho_hangInput = {
@@ -785,33 +918,118 @@ export type phieu_nhap_khoScalarWhereInput = {
   OR?: Prisma.phieu_nhap_khoScalarWhereInput[]
   NOT?: Prisma.phieu_nhap_khoScalarWhereInput | Prisma.phieu_nhap_khoScalarWhereInput[]
   id?: Prisma.IntFilter<"phieu_nhap_kho"> | number
+  ma_phieu?: Prisma.StringNullableFilter<"phieu_nhap_kho"> | string | null
   ma_ncc?: Prisma.IntNullableFilter<"phieu_nhap_kho"> | number | null
   ma_nguoi_tao?: Prisma.IntNullableFilter<"phieu_nhap_kho"> | number | null
   ma_kho?: Prisma.IntNullableFilter<"phieu_nhap_kho"> | number | null
   tong_tien?: Prisma.DecimalNullableFilter<"phieu_nhap_kho"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.StringNullableFilter<"phieu_nhap_kho"> | string | null
+  trang_thai?: Prisma.EnumTrangThaiPhieuNhapNullableFilter<"phieu_nhap_kho"> | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.DateTimeNullableFilter<"phieu_nhap_kho"> | Date | string | null
+  ngay_duyet?: Prisma.DateTimeNullableFilter<"phieu_nhap_kho"> | Date | string | null
+  ghi_chu?: Prisma.StringNullableFilter<"phieu_nhap_kho"> | string | null
+}
+
+export type phieu_nhap_khoCreateWithoutLo_hang_sinh_raInput = {
+  ma_phieu?: string | null
+  tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
+  ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
+  chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutPhieu_nhap_khoInput
+  nguoi_dung?: Prisma.nguoi_dungCreateNestedOneWithoutPhieu_nhap_khoInput
+  kho_hang?: Prisma.kho_hangCreateNestedOneWithoutPhieu_nhap_khoInput
+}
+
+export type phieu_nhap_khoUncheckedCreateWithoutLo_hang_sinh_raInput = {
+  id?: number
+  ma_phieu?: string | null
+  ma_ncc?: number | null
+  ma_nguoi_tao?: number | null
+  ma_kho?: number | null
+  tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
+  ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
+  chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+}
+
+export type phieu_nhap_khoCreateOrConnectWithoutLo_hang_sinh_raInput = {
+  where: Prisma.phieu_nhap_khoWhereUniqueInput
+  create: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutLo_hang_sinh_raInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutLo_hang_sinh_raInput>
+}
+
+export type phieu_nhap_khoUpsertWithoutLo_hang_sinh_raInput = {
+  update: Prisma.XOR<Prisma.phieu_nhap_khoUpdateWithoutLo_hang_sinh_raInput, Prisma.phieu_nhap_khoUncheckedUpdateWithoutLo_hang_sinh_raInput>
+  create: Prisma.XOR<Prisma.phieu_nhap_khoCreateWithoutLo_hang_sinh_raInput, Prisma.phieu_nhap_khoUncheckedCreateWithoutLo_hang_sinh_raInput>
+  where?: Prisma.phieu_nhap_khoWhereInput
+}
+
+export type phieu_nhap_khoUpdateToOneWithWhereWithoutLo_hang_sinh_raInput = {
+  where?: Prisma.phieu_nhap_khoWhereInput
+  data: Prisma.XOR<Prisma.phieu_nhap_khoUpdateWithoutLo_hang_sinh_raInput, Prisma.phieu_nhap_khoUncheckedUpdateWithoutLo_hang_sinh_raInput>
+}
+
+export type phieu_nhap_khoUpdateWithoutLo_hang_sinh_raInput = {
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutPhieu_nhap_khoNestedInput
+  nguoi_dung?: Prisma.nguoi_dungUpdateOneWithoutPhieu_nhap_khoNestedInput
+  kho_hang?: Prisma.kho_hangUpdateOneWithoutPhieu_nhap_khoNestedInput
+}
+
+export type phieu_nhap_khoUncheckedUpdateWithoutLo_hang_sinh_raInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ma_nguoi_tao?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ma_kho?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
 }
 
 export type phieu_nhap_khoCreateWithoutNguoi_dungInput = {
+  ma_phieu?: string | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoCreateNestedManyWithoutPhieu_nhap_khoInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangCreateNestedManyWithoutPhieu_nhap_khoInput
   nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutPhieu_nhap_khoInput
   kho_hang?: Prisma.kho_hangCreateNestedOneWithoutPhieu_nhap_khoInput
 }
 
 export type phieu_nhap_khoUncheckedCreateWithoutNguoi_dungInput = {
   id?: number
+  ma_phieu?: string | null
   ma_ncc?: number | null
   ma_kho?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
 }
 
 export type phieu_nhap_khoCreateOrConnectWithoutNguoi_dungInput = {
@@ -841,24 +1059,32 @@ export type phieu_nhap_khoUpdateManyWithWhereWithoutNguoi_dungInput = {
 }
 
 export type phieu_nhap_khoCreateWithoutNha_cung_capInput = {
+  ma_phieu?: string | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoCreateNestedManyWithoutPhieu_nhap_khoInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangCreateNestedManyWithoutPhieu_nhap_khoInput
   nguoi_dung?: Prisma.nguoi_dungCreateNestedOneWithoutPhieu_nhap_khoInput
   kho_hang?: Prisma.kho_hangCreateNestedOneWithoutPhieu_nhap_khoInput
 }
 
 export type phieu_nhap_khoUncheckedCreateWithoutNha_cung_capInput = {
   id?: number
+  ma_phieu?: string | null
   ma_nguoi_tao?: number | null
   ma_kho?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput
 }
 
 export type phieu_nhap_khoCreateOrConnectWithoutNha_cung_capInput = {
@@ -889,119 +1115,161 @@ export type phieu_nhap_khoUpdateManyWithWhereWithoutNha_cung_capInput = {
 
 export type phieu_nhap_khoCreateManyKho_hangInput = {
   id?: number
+  ma_phieu?: string | null
   ma_ncc?: number | null
   ma_nguoi_tao?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
 }
 
 export type phieu_nhap_khoUpdateWithoutKho_hangInput = {
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUpdateManyWithoutPhieu_nhap_khoNestedInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUpdateManyWithoutPhieu_nhap_khoNestedInput
   nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutPhieu_nhap_khoNestedInput
   nguoi_dung?: Prisma.nguoi_dungUpdateOneWithoutPhieu_nhap_khoNestedInput
 }
 
 export type phieu_nhap_khoUncheckedUpdateWithoutKho_hangInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_nguoi_tao?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
 }
 
 export type phieu_nhap_khoUncheckedUpdateManyWithoutKho_hangInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_nguoi_tao?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type phieu_nhap_khoCreateManyNguoi_dungInput = {
   id?: number
+  ma_phieu?: string | null
   ma_ncc?: number | null
   ma_kho?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
 }
 
 export type phieu_nhap_khoUpdateWithoutNguoi_dungInput = {
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUpdateManyWithoutPhieu_nhap_khoNestedInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUpdateManyWithoutPhieu_nhap_khoNestedInput
   nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutPhieu_nhap_khoNestedInput
   kho_hang?: Prisma.kho_hangUpdateOneWithoutPhieu_nhap_khoNestedInput
 }
 
 export type phieu_nhap_khoUncheckedUpdateWithoutNguoi_dungInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_kho?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
 }
 
 export type phieu_nhap_khoUncheckedUpdateManyWithoutNguoi_dungInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_kho?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type phieu_nhap_khoCreateManyNha_cung_capInput = {
   id?: number
+  ma_phieu?: string | null
   ma_nguoi_tao?: number | null
   ma_kho?: number | null
   tong_tien?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: string | null
+  trang_thai?: $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Date | string | null
+  ngay_duyet?: Date | string | null
+  ghi_chu?: string | null
 }
 
 export type phieu_nhap_khoUpdateWithoutNha_cung_capInput = {
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUpdateManyWithoutPhieu_nhap_khoNestedInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUpdateManyWithoutPhieu_nhap_khoNestedInput
   nguoi_dung?: Prisma.nguoi_dungUpdateOneWithoutPhieu_nhap_khoNestedInput
   kho_hang?: Prisma.kho_hangUpdateOneWithoutPhieu_nhap_khoNestedInput
 }
 
 export type phieu_nhap_khoUncheckedUpdateWithoutNha_cung_capInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_nguoi_tao?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_kho?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   chi_tiet_luan_chuyen_kho?: Prisma.chi_tiet_luan_chuyen_khoUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
-  chi_tiet_phieu_nhap?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  chi_tiet?: Prisma.chi_tiet_phieu_nhapUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
+  lo_hang_sinh_ra?: Prisma.lo_hangUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput
 }
 
 export type phieu_nhap_khoUncheckedUpdateManyWithoutNha_cung_capInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_phieu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ma_nguoi_tao?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_kho?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tong_tien?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableEnumTrangThaiPhieuNhapFieldUpdateOperationsInput | $Enums.TrangThaiPhieuNhap | null
   ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_duyet?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ghi_chu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -1011,12 +1279,14 @@ export type phieu_nhap_khoUncheckedUpdateManyWithoutNha_cung_capInput = {
 
 export type Phieu_nhap_khoCountOutputType = {
   chi_tiet_luan_chuyen_kho: number
-  chi_tiet_phieu_nhap: number
+  chi_tiet: number
+  lo_hang_sinh_ra: number
 }
 
 export type Phieu_nhap_khoCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   chi_tiet_luan_chuyen_kho?: boolean | Phieu_nhap_khoCountOutputTypeCountChi_tiet_luan_chuyen_khoArgs
-  chi_tiet_phieu_nhap?: boolean | Phieu_nhap_khoCountOutputTypeCountChi_tiet_phieu_nhapArgs
+  chi_tiet?: boolean | Phieu_nhap_khoCountOutputTypeCountChi_tietArgs
+  lo_hang_sinh_ra?: boolean | Phieu_nhap_khoCountOutputTypeCountLo_hang_sinh_raArgs
 }
 
 /**
@@ -1039,21 +1309,32 @@ export type Phieu_nhap_khoCountOutputTypeCountChi_tiet_luan_chuyen_khoArgs<ExtAr
 /**
  * Phieu_nhap_khoCountOutputType without action
  */
-export type Phieu_nhap_khoCountOutputTypeCountChi_tiet_phieu_nhapArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Phieu_nhap_khoCountOutputTypeCountChi_tietArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.chi_tiet_phieu_nhapWhereInput
+}
+
+/**
+ * Phieu_nhap_khoCountOutputType without action
+ */
+export type Phieu_nhap_khoCountOutputTypeCountLo_hang_sinh_raArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.lo_hangWhereInput
 }
 
 
 export type phieu_nhap_khoSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  ma_phieu?: boolean
   ma_ncc?: boolean
   ma_nguoi_tao?: boolean
   ma_kho?: boolean
   tong_tien?: boolean
   trang_thai?: boolean
   ngay_tao?: boolean
+  ngay_duyet?: boolean
+  ghi_chu?: boolean
   chi_tiet_luan_chuyen_kho?: boolean | Prisma.phieu_nhap_kho$chi_tiet_luan_chuyen_khoArgs<ExtArgs>
-  chi_tiet_phieu_nhap?: boolean | Prisma.phieu_nhap_kho$chi_tiet_phieu_nhapArgs<ExtArgs>
+  chi_tiet?: boolean | Prisma.phieu_nhap_kho$chi_tietArgs<ExtArgs>
+  lo_hang_sinh_ra?: boolean | Prisma.phieu_nhap_kho$lo_hang_sinh_raArgs<ExtArgs>
   nha_cung_cap?: boolean | Prisma.phieu_nhap_kho$nha_cung_capArgs<ExtArgs>
   nguoi_dung?: boolean | Prisma.phieu_nhap_kho$nguoi_dungArgs<ExtArgs>
   kho_hang?: boolean | Prisma.phieu_nhap_kho$kho_hangArgs<ExtArgs>
@@ -1064,18 +1345,22 @@ export type phieu_nhap_khoSelect<ExtArgs extends runtime.Types.Extensions.Intern
 
 export type phieu_nhap_khoSelectScalar = {
   id?: boolean
+  ma_phieu?: boolean
   ma_ncc?: boolean
   ma_nguoi_tao?: boolean
   ma_kho?: boolean
   tong_tien?: boolean
   trang_thai?: boolean
   ngay_tao?: boolean
+  ngay_duyet?: boolean
+  ghi_chu?: boolean
 }
 
-export type phieu_nhap_khoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_ncc" | "ma_nguoi_tao" | "ma_kho" | "tong_tien" | "trang_thai" | "ngay_tao", ExtArgs["result"]["phieu_nhap_kho"]>
+export type phieu_nhap_khoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_phieu" | "ma_ncc" | "ma_nguoi_tao" | "ma_kho" | "tong_tien" | "trang_thai" | "ngay_tao" | "ngay_duyet" | "ghi_chu", ExtArgs["result"]["phieu_nhap_kho"]>
 export type phieu_nhap_khoInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   chi_tiet_luan_chuyen_kho?: boolean | Prisma.phieu_nhap_kho$chi_tiet_luan_chuyen_khoArgs<ExtArgs>
-  chi_tiet_phieu_nhap?: boolean | Prisma.phieu_nhap_kho$chi_tiet_phieu_nhapArgs<ExtArgs>
+  chi_tiet?: boolean | Prisma.phieu_nhap_kho$chi_tietArgs<ExtArgs>
+  lo_hang_sinh_ra?: boolean | Prisma.phieu_nhap_kho$lo_hang_sinh_raArgs<ExtArgs>
   nha_cung_cap?: boolean | Prisma.phieu_nhap_kho$nha_cung_capArgs<ExtArgs>
   nguoi_dung?: boolean | Prisma.phieu_nhap_kho$nguoi_dungArgs<ExtArgs>
   kho_hang?: boolean | Prisma.phieu_nhap_kho$kho_hangArgs<ExtArgs>
@@ -1086,19 +1371,23 @@ export type $phieu_nhap_khoPayload<ExtArgs extends runtime.Types.Extensions.Inte
   name: "phieu_nhap_kho"
   objects: {
     chi_tiet_luan_chuyen_kho: Prisma.$chi_tiet_luan_chuyen_khoPayload<ExtArgs>[]
-    chi_tiet_phieu_nhap: Prisma.$chi_tiet_phieu_nhapPayload<ExtArgs>[]
+    chi_tiet: Prisma.$chi_tiet_phieu_nhapPayload<ExtArgs>[]
+    lo_hang_sinh_ra: Prisma.$lo_hangPayload<ExtArgs>[]
     nha_cung_cap: Prisma.$nha_cung_capPayload<ExtArgs> | null
     nguoi_dung: Prisma.$nguoi_dungPayload<ExtArgs> | null
     kho_hang: Prisma.$kho_hangPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
+    ma_phieu: string | null
     ma_ncc: number | null
     ma_nguoi_tao: number | null
     ma_kho: number | null
     tong_tien: runtime.Decimal | null
-    trang_thai: string | null
+    trang_thai: $Enums.TrangThaiPhieuNhap | null
     ngay_tao: Date | null
+    ngay_duyet: Date | null
+    ghi_chu: string | null
   }, ExtArgs["result"]["phieu_nhap_kho"]>
   composites: {}
 }
@@ -1440,7 +1729,8 @@ readonly fields: phieu_nhap_khoFieldRefs;
 export interface Prisma__phieu_nhap_khoClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   chi_tiet_luan_chuyen_kho<T extends Prisma.phieu_nhap_kho$chi_tiet_luan_chuyen_khoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.phieu_nhap_kho$chi_tiet_luan_chuyen_khoArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$chi_tiet_luan_chuyen_khoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  chi_tiet_phieu_nhap<T extends Prisma.phieu_nhap_kho$chi_tiet_phieu_nhapArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.phieu_nhap_kho$chi_tiet_phieu_nhapArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$chi_tiet_phieu_nhapPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  chi_tiet<T extends Prisma.phieu_nhap_kho$chi_tietArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.phieu_nhap_kho$chi_tietArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$chi_tiet_phieu_nhapPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lo_hang_sinh_ra<T extends Prisma.phieu_nhap_kho$lo_hang_sinh_raArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.phieu_nhap_kho$lo_hang_sinh_raArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$lo_hangPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   nha_cung_cap<T extends Prisma.phieu_nhap_kho$nha_cung_capArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.phieu_nhap_kho$nha_cung_capArgs<ExtArgs>>): Prisma.Prisma__nha_cung_capClient<runtime.Types.Result.GetResult<Prisma.$nha_cung_capPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   nguoi_dung<T extends Prisma.phieu_nhap_kho$nguoi_dungArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.phieu_nhap_kho$nguoi_dungArgs<ExtArgs>>): Prisma.Prisma__nguoi_dungClient<runtime.Types.Result.GetResult<Prisma.$nguoi_dungPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   kho_hang<T extends Prisma.phieu_nhap_kho$kho_hangArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.phieu_nhap_kho$kho_hangArgs<ExtArgs>>): Prisma.Prisma__kho_hangClient<runtime.Types.Result.GetResult<Prisma.$kho_hangPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -1474,12 +1764,15 @@ export interface Prisma__phieu_nhap_khoClient<T, Null = never, ExtArgs extends r
  */
 export interface phieu_nhap_khoFieldRefs {
   readonly id: Prisma.FieldRef<"phieu_nhap_kho", 'Int'>
+  readonly ma_phieu: Prisma.FieldRef<"phieu_nhap_kho", 'String'>
   readonly ma_ncc: Prisma.FieldRef<"phieu_nhap_kho", 'Int'>
   readonly ma_nguoi_tao: Prisma.FieldRef<"phieu_nhap_kho", 'Int'>
   readonly ma_kho: Prisma.FieldRef<"phieu_nhap_kho", 'Int'>
   readonly tong_tien: Prisma.FieldRef<"phieu_nhap_kho", 'Decimal'>
-  readonly trang_thai: Prisma.FieldRef<"phieu_nhap_kho", 'String'>
+  readonly trang_thai: Prisma.FieldRef<"phieu_nhap_kho", 'TrangThaiPhieuNhap'>
   readonly ngay_tao: Prisma.FieldRef<"phieu_nhap_kho", 'DateTime'>
+  readonly ngay_duyet: Prisma.FieldRef<"phieu_nhap_kho", 'DateTime'>
+  readonly ghi_chu: Prisma.FieldRef<"phieu_nhap_kho", 'String'>
 }
     
 
@@ -1852,9 +2145,9 @@ export type phieu_nhap_kho$chi_tiet_luan_chuyen_khoArgs<ExtArgs extends runtime.
 }
 
 /**
- * phieu_nhap_kho.chi_tiet_phieu_nhap
+ * phieu_nhap_kho.chi_tiet
  */
-export type phieu_nhap_kho$chi_tiet_phieu_nhapArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type phieu_nhap_kho$chi_tietArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the chi_tiet_phieu_nhap
    */
@@ -1873,6 +2166,30 @@ export type phieu_nhap_kho$chi_tiet_phieu_nhapArgs<ExtArgs extends runtime.Types
   take?: number
   skip?: number
   distinct?: Prisma.Chi_tiet_phieu_nhapScalarFieldEnum | Prisma.Chi_tiet_phieu_nhapScalarFieldEnum[]
+}
+
+/**
+ * phieu_nhap_kho.lo_hang_sinh_ra
+ */
+export type phieu_nhap_kho$lo_hang_sinh_raArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the lo_hang
+   */
+  select?: Prisma.lo_hangSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the lo_hang
+   */
+  omit?: Prisma.lo_hangOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.lo_hangInclude<ExtArgs> | null
+  where?: Prisma.lo_hangWhereInput
+  orderBy?: Prisma.lo_hangOrderByWithRelationInput | Prisma.lo_hangOrderByWithRelationInput[]
+  cursor?: Prisma.lo_hangWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Lo_hangScalarFieldEnum | Prisma.Lo_hangScalarFieldEnum[]
 }
 
 /**

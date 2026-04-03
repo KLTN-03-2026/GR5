@@ -9,7 +9,11 @@
 * 🟢 You can import this file directly.
 */
 
+export const TrangThaiPhieuNhap = {
+  CHO_DUYET: 'CHO_DUYET',
+  DA_DUYET: 'DA_DUYET',
+  DA_HUY: 'DA_HUY',
+  HOAN_THANH: 'HOAN_THANH'
+} as const
 
-
-// This file is empty because there are no enums in the schema.
-export {}
+export type TrangThaiPhieuNhap = (typeof TrangThaiPhieuNhap)[keyof typeof TrangThaiPhieuNhap]
