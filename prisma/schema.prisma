@@ -6,6 +6,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  
 }
 
 model anh_danh_gia {

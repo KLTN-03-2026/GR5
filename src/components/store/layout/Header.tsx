@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Search, ShoppingCart, User } from 'lucide-react';
+import {  ShoppingCart, User, LogIn } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Header() {
@@ -14,36 +14,56 @@ export default function Header() {
   }, []);
 
   return (
-    <header className={`bg-[#FDFEFC] fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? ' backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between ">
+    <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+      scrolled 
+        ? 'bg-white/80 backdrop-blur-md shadow-sm py-3' 
+        : 'bg-transparent py-5'
+    }`}>
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        
+        {/* Bên trái: Logo & Nav */}
         <div className="flex items-center gap-12">
-          <Link href="/" className="text-2xl font-headline font-bold text-primary tracking-tight">
+          <Link href="/" className="text-2xl font-bold text-[#007832] tracking-tighter">
             Verdant Curator
           </Link>
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-sm font-semibold text-primary border-b-2 border-primary pb-1">Trang chủ</Link>
-            <Link href="/products" className="text-sm font-medium text-gray-500 hover:text-primary transition-colors">Sản phẩm</Link>
-            <Link href="/farmers" className="text-sm font-medium text-gray-500 hover:text-primary transition-colors">Nhà vườn</Link>
-            <Link href="/about" className="text-sm font-medium text-gray-500 hover:text-primary transition-colors">Câu chuyện</Link>
+          <nav className="hidden lg:flex items-center gap-8">
+            <Link href="/" className="text-sm font-bold text-[#007832] border-b-2 border-[#007832] pb-1">Trang chủ</Link>
+            <Link href="/products" className="text-sm font-semibold text-gray-500 hover:text-[#007832] transition-colors">Sản phẩm</Link>
+            <Link href="/farmers" className="text-sm font-semibold text-gray-500 hover:text-[#007832] transition-colors">Nhà vườn</Link>
+            <Link href="/about" className="text-sm font-semibold text-gray-500 hover:text-[#007832] transition-colors">Câu chuyện</Link>
           </nav>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="hidden lg:flex items-center bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
-            <Search className="w-4 h-4 text-gray-400 mr-2" />
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm nông sản..." 
-              className="bg-transparent border-none focus:ring-0 text-sm w-48 font-body outline-none"
-            />
+
+        {/* Bên phải: Search, Cart & Auth */}
+        <div className="flex items-center gap-2 md:gap-6">
+          
+          {/* Icons Group */}
+          <div className="flex items-center gap-2 border-r border-gray-200 pr-4 mr-2">
+            <button className="p-2 text-gray-600 hover:bg-emerald-50 hover:text-[#007832] rounded-full transition-all">
+             
+            </button>
+            <Link href="/cart" className="p-2 text-gray-600 hover:bg-emerald-50 hover:text-[#007832] rounded-full transition-all relative">
+              <ShoppingCart size={20} />
+              <span className="absolute top-1 right-1 w-4 h-4 bg-[#007832] text-white text-[10px] font-bold flex items-center justify-center rounded-full">0</span>
+            </Link>
           </div>
-          <button className="p-2 text-gray-500 hover:text-primary transition-colors">
-            <ShoppingCart className="w-6 h-6" />
-          </button>
-          <button className="p-2 text-gray-500 hover:text-primary transition-colors">
-            <User className="w-6 h-6" />
-          </button>
+
+          {/* Auth Buttons */}
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="hidden md:block text-sm font-bold text-gray-600 hover:text-[#007832] transition-colors px-2">
+              Đăng nhập
+            </Link>
+            
+            <Link href="/register">
+              <button className="bg-[#007832] text-white px-6 py-2.5 rounded-full text-sm font-black shadow-lg shadow-emerald-900/10 hover:bg-[#006028] hover:shadow-emerald-900/20 transition-all active:scale-95 flex items-center gap-2">
+                <User size={16} fill="white" />
+                Đăng ký
+              </button>
+            </Link>
+          </div>
+
         </div>
+        
       </div>
     </header>
   );

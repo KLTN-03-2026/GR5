@@ -68,7 +68,7 @@ export default function HomePage() {
       </section>
 
       {/* Categories */}
-      <section className="py-16 px-6 max-w-7xl mx-auto">
+      <section className="py-12 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-headline font-bold text-gray-900 mb-4">Danh Mục Tuyển Chọn</h2>
           <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full" />
