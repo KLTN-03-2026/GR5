@@ -67,6 +67,11 @@ export type bien_the_san_pham = Prisma.bien_the_san_phamModel
  */
 export type ca_lam_viec = Prisma.ca_lam_viecModel
 /**
+ * Model canh_bao_lo_hang
+ * 
+ */
+export type canh_bao_lo_hang = Prisma.canh_bao_lo_hangModel
+/**
  * Model chi_tiet_doi_tra
  * 
  */
@@ -176,6 +181,11 @@ export type kho_tri_thuc_ai = Prisma.kho_tri_thuc_aiModel
  * 
  */
 export type kien_hang_chi_tiet = Prisma.kien_hang_chi_tietModel
+/**
+ * Model kien_hang_da_xuat
+ * 
+ */
+export type kien_hang_da_xuat = Prisma.kien_hang_da_xuatModel
 /**
  * Model lich_phan_cong_ca
  * 

@@ -14,12 +14,14 @@ import {
   FileText,
   Settings,
   LogOut,
+  Warehouse,
 } from "lucide-react";
 
 const menuItems = [
   { name: "Tổng quan", path: "/admin/overview", icon: LayoutDashboard },
   { name: "Thống kê", path: "/admin/analytics", icon: BarChart2 },
   { name: "Sản phẩm", path: "/admin/products", icon: Package },
+  { name: "Kho Hàng", path: "/admin/warehouse", icon: Warehouse },
   { name: "Nhà cung cấp", path: "/admin/suppliers", icon: Truck },
   { name: "Đơn hàng", path: "/admin/orders", icon: ShoppingCart },
   { name: "Khách hàng", path: "/admin/customers", icon: Users },

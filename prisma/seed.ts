@@ -1,131 +1,127 @@
-import prisma from './lib/prisma';
+import { PrismaClient } from '../src/app/generated/prisma/client';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+
+// Cấu hình Adapter theo đúng yêu cầu của bạn
+const adapter = new PrismaMariaDb({
+  host: 'localhost',
+  port: 3307,
+  user: 'root',
+  password: 'rootpassword',
+  database: 'agri_db',
+});
+
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // ==========================================
-  // 1. MODULE TÀI KHOẢN & PHÂN QUYỀN
-  // ==========================================
-  console.log('👤 Đang tạo Vai trò và Người dùng...');
-
-  const roleAdmin = await prisma.vai_tro.create({
-    data: { ten_vai_tro: 'ADMIN', mo_ta: 'Quản trị viên toàn quyền hệ thống' }
-  });
-  const roleKhachHang = await prisma.vai_tro.create({
-    data: { ten_vai_tro: 'KHACH_HANG', mo_ta: 'Khách hàng mua sắm' }
-  });
-
-  const admin = await prisma.nguoi_dung.create({
-    data: {
-      email: 'admin@agri.com',
-      mat_khau: 'hashed_password_123', // Thực tế nên dùng bcrypt
-      trang_thai: 1,
-      ho_so_nguoi_dung: {
-        create: { ho_ten: 'Lê Hưng (Admin)', so_dien_thoai: '0901234567' }
-      },
-      vai_tro_nguoi_dung: {
-        create: { ma_vai_tro: roleAdmin.id }
-      }
-    }
-  });
+  console.log('🌱 Đang bắt đầu bơm (seed) dữ liệu cho Module Kho...');
 
   // ==========================================
-  // 2. MODULE DANH MỤC & SẢN PHẨM
+  // 1. TẠO DATA CƠ BẢN (Nhà cung cấp, Danh mục, Sản phẩm)
   // ==========================================
-  console.log('🍎 Đang tạo Danh mục và Sản phẩm nông sản...');
-
-  const cateTraiCay = await prisma.danh_muc.create({
-    data: { ten_danh_muc: 'Trái cây Tươi' }
-  });
-  const cateNguCoc = await prisma.danh_muc.create({
-    data: { ten_danh_muc: 'Lương thực & Ngũ cốc' }
-  });
-
-  // Sản phẩm 1: Sầu Riêng Ri6
-  const spSauRieng = await prisma.san_pham.create({
-    data: {
-      ma_danh_muc: cateTraiCay.id,
-      ten_san_pham: 'Sầu Riêng Ri6 Hạt Lép',
-      mo_ta: 'Sầu riêng chuẩn VietGAP, cơm vàng hạt lép, thơm ngon nức mũi.',
-      xuat_xu: 'Bến Tre',
-      trang_thai: 'DANG_BAN',
-      bien_the_san_pham: {
-        create: [
-          { ma_sku: 'SR-RI6-1KG', ten_bien_the: 'Trái 1.5 - 2kg', don_vi_tinh: 'Kg', gia_ban: 120000, gia_goc: 100000 },
-          { ma_sku: 'SR-RI6-BOX', ten_bien_the: 'Khay bóc sẵn 500g', don_vi_tinh: 'Hộp', gia_ban: 180000, gia_goc: 150000 }
-        ]
-      },
-      anh_san_pham: {
-        create: { duong_dan_anh: '/images/sau-rieng-ri6.jpg', la_anh_chinh: true }
-      }
-    }
-  });
-
-  // Sản phẩm 2: Gạo ST25
-  const spGao = await prisma.san_pham.create({
-    data: {
-      ma_danh_muc: cateNguCoc.id,
-      ten_san_pham: 'Gạo Ông Cua ST25 Lúa Tôm',
-      mo_ta: 'Gạo ngon nhất thế giới, hạt dài, thơm dẻo.',
-      xuat_xu: 'Sóc Trăng',
-      bien_the_san_pham: {
-        create: [
-          { ma_sku: 'GAO-ST25-5KG', ten_bien_the: 'Túi 5Kg', don_vi_tinh: 'Túi', gia_ban: 190000, gia_goc: 170000 }
-        ]
-      }
-    }
-  });
-
-  // ==========================================
-  // 3. MODULE KHO BÃI & NHÀ CUNG CẤP
-  // ==========================================
-  console.log('🏭 Đang thiết lập Nhà cung cấp và Kho hàng...');
-
   const ncc = await prisma.nha_cung_cap.create({
-    data: { ten_ncc: 'HTX Nông Nghiệp Xanh', so_dien_thoai: '02873001122', dia_chi: 'Miền Tây' }
+    data: { ten_ncc: 'Nông Trại Đà Lạt', so_dien_thoai: '0901234567', email: 'contact@dalatfarm.vn' }
   });
 
-  const khoChinh = await prisma.kho_hang.create({
-    data: { ten_kho: 'Kho Tổng Miền Nam', dia_chi: 'KCN Tân Bình, TP.HCM' }
+  const danhMuc = await prisma.danh_muc.create({
+    data: { ten_danh_muc: 'Rau củ quả sạch' }
   });
 
-  const viTri = await prisma.vi_tri_kho.create({
-    data: { ma_kho: khoChinh.id, khu_vuc: 'Khu Lạnh A', day: 'Dãy 1', ke: 'Kệ 3' }
+  const sanPham = await prisma.san_pham.create({
+    data: { ten_san_pham: 'Rau Muống Thủy Canh', ma_danh_muc: danhMuc.id, trang_thai: 'DANG_BAN' }
+  });
+
+  const bienThe = await prisma.bien_the_san_pham.create({
+    data: { 
+      ma_san_pham: sanPham.id, 
+      ma_sku: `RM-500G-${Date.now()}`, 
+      ten_bien_the: 'Rau Muống Thủy Canh (Gói 500g)', 
+      don_vi_tinh: 'Gói', 
+      gia_ban: 15000 
+    }
   });
 
   // ==========================================
-  // 4. MODULE THANH TOÁN & VẬN CHUYỂN
+  // 2. TẠO KHO HÀNG & VỊ TRÍ
   // ==========================================
-  console.log('🚚 Đang tạo Phương thức thanh toán...');
+  const kho = await prisma.kho_hang.create({
+    data: { ten_kho: 'Tổng Kho Đà Nẵng', dia_chi: 'Hòa Khánh, Liên Chiểu, Đà Nẵng' }
+  });
 
-  await prisma.phuong_thuc_thanh_toan.createMany({
+  const viTriA = await prisma.vi_tri_kho.create({ data: { ma_kho: kho.id, khu_vuc: 'Khu A', day: 'D1', ke: 'K1', tang: 'T1' }});
+  const viTriB = await prisma.vi_tri_kho.create({ data: { ma_kho: kho.id, khu_vuc: 'Khu B', day: 'D2', ke: 'K1', tang: 'T1' }});
+
+  // ==========================================
+  // 3. TẠO LÔ HÀNG 1 (Bình thường - Tồn kho nhiều)
+  // ==========================================
+  const loHang1 = await prisma.lo_hang.create({
+    data: {
+      ma_lo_hang: `LO-RM-SAFE-${Date.now()}`,
+      ma_ncc: ncc.id,
+      ma_bien_the: bienThe.id,
+      ngay_nhap_kho: new Date(),
+      han_su_dung: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // HSD: 30 ngày tới
+    }
+  });
+
+  await prisma.ton_kho_tong.create({
+    data: { ma_lo_hang: loHang1.id, ma_vi_tri: viTriA.id, so_luong: 80 }
+  });
+
+  // Đẻ 5 mã QR mẫu cho lô này
+  for(let i=1; i<=5; i++) {
+    await prisma.kien_hang_chi_tiet.create({
+      data: { ma_lo_hang: loHang1.id, ma_vi_tri: viTriA.id, ma_vach_quet: `QR-${loHang1.ma_lo_hang}-00${i}`, trang_thai: 'TRONG_KHO' }
+    });
+  }
+
+  // ==========================================
+  // 4. TẠO LÔ HÀNG 2 (Sắp hết hạn - Để test chuông cảnh báo)
+  // ==========================================
+  const loHang2 = await prisma.lo_hang.create({
+    data: {
+      ma_lo_hang: `LO-RM-WARNING-${Date.now()}`,
+      ma_ncc: ncc.id,
+      ma_bien_the: bienThe.id,
+      ngay_nhap_kho: new Date(),
+      han_su_dung: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // HSD: Chỉ còn 2 ngày
+    }
+  });
+
+  await prisma.ton_kho_tong.create({
+    data: { ma_lo_hang: loHang2.id, ma_vi_tri: viTriB.id, so_luong: 25 }
+  });
+
+  for(let i=1; i<=3; i++) {
+    await prisma.kien_hang_chi_tiet.create({
+      data: { ma_lo_hang: loHang2.id, ma_vi_tri: viTriB.id, ma_vach_quet: `QR-${loHang2.ma_lo_hang}-00${i}`, trang_thai: 'TRONG_KHO' }
+    });
+  }
+
+  // Đẻ 1 record vào bảng cảnh báo
+  await prisma.canh_bao_lo_hang.create({
+    data: { ma_lo_hang: loHang2.id, loai_canh_bao: 'CON_2_NGAY', da_xu_ly: false, so_ngay_con: 2 }
+  });
+
+  // ==========================================
+  // 5. TẠO LỊCH SỬ XUẤT KHO MẪU
+  // ==========================================
+  const phieuXuat = await prisma.phieu_xuat_kho.create({
+    data: { ma_kho: kho.id, ly_do_xuat: 'Xuất giao hàng Winmart', trang_thai: 'HOAN_THANH' }
+  });
+
+  await prisma.kien_hang_da_xuat.createMany({
     data: [
-      { ten_phuong_thuc: 'Thanh toán khi nhận hàng (COD)' },
-      { ten_phuong_thuc: 'Chuyển khoản Ngân hàng (VietQR)' },
-      { ten_phuong_thuc: 'Ví MoMo' }
+      { ma_phieu_xuat: phieuXuat.id, ma_vach_quet: `QR-OLD-001`, ma_bien_the: bienThe.id, ngay_xuat: new Date() },
+      { ma_phieu_xuat: phieuXuat.id, ma_vach_quet: `QR-OLD-002`, ma_bien_the: bienThe.id, ngay_xuat: new Date(Date.now() - 3600000) } // Xuất cách đây 1 tiếng
     ]
   });
 
-  await prisma.doi_tac_van_chuyen.create({
-    data: { ten_doi_tac: 'Giao Hàng Tiết Kiệm', so_dien_thoai: '19001008' }
-  });
-
-  // ==========================================
-  // 5. MODULE NHÂN SỰ & CA LÀM VIỆC
-  // ==========================================
-  console.log('⏰ Đang lên lịch Ca làm việc...');
-
-  await prisma.ca_lam_viec.createMany({
-    data: [
-      { ten_ca: 'Ca Sáng (06:00 - 14:00)', gio_bat_dau: new Date('1970-01-01T06:00:00Z'), gio_ket_thuc: new Date('1970-01-01T14:00:00Z') },
-      { ten_ca: 'Ca Chiều (14:00 - 22:00)', gio_bat_dau: new Date('1970-01-01T14:00:00Z'), gio_ket_thuc: new Date('1970-01-01T22:00:00Z') }
-    ]
-  });
-
-  console.log('🎉 Xong! Database đã được nạp đầy đủ dữ liệu mồi.');
+  console.log('✅ Seed dữ liệu Kho thành công! Mọi thứ đã sẵn sàng!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Lỗi trong quá trình Seed:', e);
+    console.error('❌ Có lỗi xảy ra trong lúc seed:', e);
     process.exit(1);
   })
   .finally(async () => {

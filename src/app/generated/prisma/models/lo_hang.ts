@@ -30,12 +30,14 @@ export type Lo_hangAvgAggregateOutputType = {
   id: number | null
   ma_bien_the: number | null
   ma_ncc: number | null
+  ma_phieu_nhap: number | null
 }
 
 export type Lo_hangSumAggregateOutputType = {
   id: number | null
   ma_bien_the: number | null
   ma_ncc: number | null
+  ma_phieu_nhap: number | null
 }
 
 export type Lo_hangMinAggregateOutputType = {
@@ -44,7 +46,9 @@ export type Lo_hangMinAggregateOutputType = {
   ma_ncc: number | null
   ma_lo_hang: string | null
   ngay_thu_hoach: Date | null
+  ngay_nhap_kho: Date | null
   han_su_dung: Date | null
+  ma_phieu_nhap: number | null
 }
 
 export type Lo_hangMaxAggregateOutputType = {
@@ -53,7 +57,9 @@ export type Lo_hangMaxAggregateOutputType = {
   ma_ncc: number | null
   ma_lo_hang: string | null
   ngay_thu_hoach: Date | null
+  ngay_nhap_kho: Date | null
   han_su_dung: Date | null
+  ma_phieu_nhap: number | null
 }
 
 export type Lo_hangCountAggregateOutputType = {
@@ -62,7 +68,9 @@ export type Lo_hangCountAggregateOutputType = {
   ma_ncc: number
   ma_lo_hang: number
   ngay_thu_hoach: number
+  ngay_nhap_kho: number
   han_su_dung: number
+  ma_phieu_nhap: number
   _all: number
 }
 
@@ -71,12 +79,14 @@ export type Lo_hangAvgAggregateInputType = {
   id?: true
   ma_bien_the?: true
   ma_ncc?: true
+  ma_phieu_nhap?: true
 }
 
 export type Lo_hangSumAggregateInputType = {
   id?: true
   ma_bien_the?: true
   ma_ncc?: true
+  ma_phieu_nhap?: true
 }
 
 export type Lo_hangMinAggregateInputType = {
@@ -85,7 +95,9 @@ export type Lo_hangMinAggregateInputType = {
   ma_ncc?: true
   ma_lo_hang?: true
   ngay_thu_hoach?: true
+  ngay_nhap_kho?: true
   han_su_dung?: true
+  ma_phieu_nhap?: true
 }
 
 export type Lo_hangMaxAggregateInputType = {
@@ -94,7 +106,9 @@ export type Lo_hangMaxAggregateInputType = {
   ma_ncc?: true
   ma_lo_hang?: true
   ngay_thu_hoach?: true
+  ngay_nhap_kho?: true
   han_su_dung?: true
+  ma_phieu_nhap?: true
 }
 
 export type Lo_hangCountAggregateInputType = {
@@ -103,7 +117,9 @@ export type Lo_hangCountAggregateInputType = {
   ma_ncc?: true
   ma_lo_hang?: true
   ngay_thu_hoach?: true
+  ngay_nhap_kho?: true
   han_su_dung?: true
+  ma_phieu_nhap?: true
   _all?: true
 }
 
@@ -199,7 +215,9 @@ export type Lo_hangGroupByOutputType = {
   ma_ncc: number | null
   ma_lo_hang: string
   ngay_thu_hoach: Date | null
+  ngay_nhap_kho: Date | null
   han_su_dung: Date
+  ma_phieu_nhap: number | null
   _count: Lo_hangCountAggregateOutputType | null
   _avg: Lo_hangAvgAggregateOutputType | null
   _sum: Lo_hangSumAggregateOutputType | null
@@ -231,10 +249,14 @@ export type lo_hangWhereInput = {
   ma_ncc?: Prisma.IntNullableFilter<"lo_hang"> | number | null
   ma_lo_hang?: Prisma.StringFilter<"lo_hang"> | string
   ngay_thu_hoach?: Prisma.DateTimeNullableFilter<"lo_hang"> | Date | string | null
+  ngay_nhap_kho?: Prisma.DateTimeNullableFilter<"lo_hang"> | Date | string | null
   han_su_dung?: Prisma.DateTimeFilter<"lo_hang"> | Date | string
+  ma_phieu_nhap?: Prisma.IntNullableFilter<"lo_hang"> | number | null
+  canh_bao_lo_hang?: Prisma.Canh_bao_lo_hangListRelationFilter
   kien_hang_chi_tiet?: Prisma.Kien_hang_chi_tietListRelationFilter
   bien_the_san_pham?: Prisma.XOR<Prisma.Bien_the_san_phamNullableScalarRelationFilter, Prisma.bien_the_san_phamWhereInput> | null
   nha_cung_cap?: Prisma.XOR<Prisma.Nha_cung_capNullableScalarRelationFilter, Prisma.nha_cung_capWhereInput> | null
+  phieu_nhap_kho?: Prisma.XOR<Prisma.Phieu_nhap_khoNullableScalarRelationFilter, Prisma.phieu_nhap_khoWhereInput> | null
   ton_kho_tong?: Prisma.Ton_kho_tongListRelationFilter
 }
 
@@ -244,10 +266,14 @@ export type lo_hangOrderByWithRelationInput = {
   ma_ncc?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_lo_hang?: Prisma.SortOrder
   ngay_thu_hoach?: Prisma.SortOrderInput | Prisma.SortOrder
+  ngay_nhap_kho?: Prisma.SortOrderInput | Prisma.SortOrder
   han_su_dung?: Prisma.SortOrder
+  ma_phieu_nhap?: Prisma.SortOrderInput | Prisma.SortOrder
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangOrderByRelationAggregateInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietOrderByRelationAggregateInput
   bien_the_san_pham?: Prisma.bien_the_san_phamOrderByWithRelationInput
   nha_cung_cap?: Prisma.nha_cung_capOrderByWithRelationInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoOrderByWithRelationInput
   ton_kho_tong?: Prisma.ton_kho_tongOrderByRelationAggregateInput
   _relevance?: Prisma.lo_hangOrderByRelevanceInput
 }
@@ -261,10 +287,14 @@ export type lo_hangWhereUniqueInput = Prisma.AtLeast<{
   ma_bien_the?: Prisma.IntNullableFilter<"lo_hang"> | number | null
   ma_ncc?: Prisma.IntNullableFilter<"lo_hang"> | number | null
   ngay_thu_hoach?: Prisma.DateTimeNullableFilter<"lo_hang"> | Date | string | null
+  ngay_nhap_kho?: Prisma.DateTimeNullableFilter<"lo_hang"> | Date | string | null
   han_su_dung?: Prisma.DateTimeFilter<"lo_hang"> | Date | string
+  ma_phieu_nhap?: Prisma.IntNullableFilter<"lo_hang"> | number | null
+  canh_bao_lo_hang?: Prisma.Canh_bao_lo_hangListRelationFilter
   kien_hang_chi_tiet?: Prisma.Kien_hang_chi_tietListRelationFilter
   bien_the_san_pham?: Prisma.XOR<Prisma.Bien_the_san_phamNullableScalarRelationFilter, Prisma.bien_the_san_phamWhereInput> | null
   nha_cung_cap?: Prisma.XOR<Prisma.Nha_cung_capNullableScalarRelationFilter, Prisma.nha_cung_capWhereInput> | null
+  phieu_nhap_kho?: Prisma.XOR<Prisma.Phieu_nhap_khoNullableScalarRelationFilter, Prisma.phieu_nhap_khoWhereInput> | null
   ton_kho_tong?: Prisma.Ton_kho_tongListRelationFilter
 }, "id" | "ma_lo_hang">
 
@@ -274,7 +304,9 @@ export type lo_hangOrderByWithAggregationInput = {
   ma_ncc?: Prisma.SortOrderInput | Prisma.SortOrder
   ma_lo_hang?: Prisma.SortOrder
   ngay_thu_hoach?: Prisma.SortOrderInput | Prisma.SortOrder
+  ngay_nhap_kho?: Prisma.SortOrderInput | Prisma.SortOrder
   han_su_dung?: Prisma.SortOrder
+  ma_phieu_nhap?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.lo_hangCountOrderByAggregateInput
   _avg?: Prisma.lo_hangAvgOrderByAggregateInput
   _max?: Prisma.lo_hangMaxOrderByAggregateInput
@@ -291,16 +323,21 @@ export type lo_hangScalarWhereWithAggregatesInput = {
   ma_ncc?: Prisma.IntNullableWithAggregatesFilter<"lo_hang"> | number | null
   ma_lo_hang?: Prisma.StringWithAggregatesFilter<"lo_hang"> | string
   ngay_thu_hoach?: Prisma.DateTimeNullableWithAggregatesFilter<"lo_hang"> | Date | string | null
+  ngay_nhap_kho?: Prisma.DateTimeNullableWithAggregatesFilter<"lo_hang"> | Date | string | null
   han_su_dung?: Prisma.DateTimeWithAggregatesFilter<"lo_hang"> | Date | string
+  ma_phieu_nhap?: Prisma.IntNullableWithAggregatesFilter<"lo_hang"> | number | null
 }
 
 export type lo_hangCreateInput = {
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangCreateNestedManyWithoutLo_hangInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietCreateNestedManyWithoutLo_hangInput
   bien_the_san_pham?: Prisma.bien_the_san_phamCreateNestedOneWithoutLo_hangInput
   nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutLo_hangInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedOneWithoutLo_hang_sinh_raInput
   ton_kho_tong?: Prisma.ton_kho_tongCreateNestedManyWithoutLo_hangInput
 }
 
@@ -310,7 +347,10 @@ export type lo_hangUncheckedCreateInput = {
   ma_ncc?: number | null
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  ma_phieu_nhap?: number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedCreateNestedManyWithoutLo_hangInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedCreateNestedManyWithoutLo_hangInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedCreateNestedManyWithoutLo_hangInput
 }
@@ -318,10 +358,13 @@ export type lo_hangUncheckedCreateInput = {
 export type lo_hangUpdateInput = {
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUpdateManyWithoutLo_hangNestedInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUpdateManyWithoutLo_hangNestedInput
   bien_the_san_pham?: Prisma.bien_the_san_phamUpdateOneWithoutLo_hangNestedInput
   nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutLo_hangNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateOneWithoutLo_hang_sinh_raNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUpdateManyWithoutLo_hangNestedInput
 }
 
@@ -331,7 +374,10 @@ export type lo_hangUncheckedUpdateInput = {
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ma_phieu_nhap?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedUpdateManyWithoutLo_hangNestedInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedUpdateManyWithoutLo_hangNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedUpdateManyWithoutLo_hangNestedInput
 }
@@ -342,12 +388,15 @@ export type lo_hangCreateManyInput = {
   ma_ncc?: number | null
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  ma_phieu_nhap?: number | null
 }
 
 export type lo_hangUpdateManyMutationInput = {
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -357,7 +406,9 @@ export type lo_hangUncheckedUpdateManyInput = {
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ma_phieu_nhap?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type Lo_hangListRelationFilter = {
@@ -387,13 +438,16 @@ export type lo_hangCountOrderByAggregateInput = {
   ma_ncc?: Prisma.SortOrder
   ma_lo_hang?: Prisma.SortOrder
   ngay_thu_hoach?: Prisma.SortOrder
+  ngay_nhap_kho?: Prisma.SortOrder
   han_su_dung?: Prisma.SortOrder
+  ma_phieu_nhap?: Prisma.SortOrder
 }
 
 export type lo_hangAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   ma_bien_the?: Prisma.SortOrder
   ma_ncc?: Prisma.SortOrder
+  ma_phieu_nhap?: Prisma.SortOrder
 }
 
 export type lo_hangMaxOrderByAggregateInput = {
@@ -402,7 +456,9 @@ export type lo_hangMaxOrderByAggregateInput = {
   ma_ncc?: Prisma.SortOrder
   ma_lo_hang?: Prisma.SortOrder
   ngay_thu_hoach?: Prisma.SortOrder
+  ngay_nhap_kho?: Prisma.SortOrder
   han_su_dung?: Prisma.SortOrder
+  ma_phieu_nhap?: Prisma.SortOrder
 }
 
 export type lo_hangMinOrderByAggregateInput = {
@@ -411,13 +467,16 @@ export type lo_hangMinOrderByAggregateInput = {
   ma_ncc?: Prisma.SortOrder
   ma_lo_hang?: Prisma.SortOrder
   ngay_thu_hoach?: Prisma.SortOrder
+  ngay_nhap_kho?: Prisma.SortOrder
   han_su_dung?: Prisma.SortOrder
+  ma_phieu_nhap?: Prisma.SortOrder
 }
 
 export type lo_hangSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   ma_bien_the?: Prisma.SortOrder
   ma_ncc?: Prisma.SortOrder
+  ma_phieu_nhap?: Prisma.SortOrder
 }
 
 export type Lo_hangNullableScalarRelationFilter = {
@@ -467,6 +526,20 @@ export type lo_hangUncheckedUpdateManyWithoutBien_the_san_phamNestedInput = {
   deleteMany?: Prisma.lo_hangScalarWhereInput | Prisma.lo_hangScalarWhereInput[]
 }
 
+export type lo_hangCreateNestedOneWithoutCanh_bao_lo_hangInput = {
+  create?: Prisma.XOR<Prisma.lo_hangCreateWithoutCanh_bao_lo_hangInput, Prisma.lo_hangUncheckedCreateWithoutCanh_bao_lo_hangInput>
+  connectOrCreate?: Prisma.lo_hangCreateOrConnectWithoutCanh_bao_lo_hangInput
+  connect?: Prisma.lo_hangWhereUniqueInput
+}
+
+export type lo_hangUpdateOneRequiredWithoutCanh_bao_lo_hangNestedInput = {
+  create?: Prisma.XOR<Prisma.lo_hangCreateWithoutCanh_bao_lo_hangInput, Prisma.lo_hangUncheckedCreateWithoutCanh_bao_lo_hangInput>
+  connectOrCreate?: Prisma.lo_hangCreateOrConnectWithoutCanh_bao_lo_hangInput
+  upsert?: Prisma.lo_hangUpsertWithoutCanh_bao_lo_hangInput
+  connect?: Prisma.lo_hangWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.lo_hangUpdateToOneWithWhereWithoutCanh_bao_lo_hangInput, Prisma.lo_hangUpdateWithoutCanh_bao_lo_hangInput>, Prisma.lo_hangUncheckedUpdateWithoutCanh_bao_lo_hangInput>
+}
+
 export type lo_hangCreateNestedOneWithoutKien_hang_chi_tietInput = {
   create?: Prisma.XOR<Prisma.lo_hangCreateWithoutKien_hang_chi_tietInput, Prisma.lo_hangUncheckedCreateWithoutKien_hang_chi_tietInput>
   connectOrCreate?: Prisma.lo_hangCreateOrConnectWithoutKien_hang_chi_tietInput
@@ -479,10 +552,6 @@ export type lo_hangUpdateOneRequiredWithoutKien_hang_chi_tietNestedInput = {
   upsert?: Prisma.lo_hangUpsertWithoutKien_hang_chi_tietInput
   connect?: Prisma.lo_hangWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.lo_hangUpdateToOneWithWhereWithoutKien_hang_chi_tietInput, Prisma.lo_hangUpdateWithoutKien_hang_chi_tietInput>, Prisma.lo_hangUncheckedUpdateWithoutKien_hang_chi_tietInput>
-}
-
-export type DateTimeFieldUpdateOperationsInput = {
-  set?: Date | string
 }
 
 export type lo_hangCreateNestedManyWithoutNha_cung_capInput = {
@@ -527,6 +596,48 @@ export type lo_hangUncheckedUpdateManyWithoutNha_cung_capNestedInput = {
   deleteMany?: Prisma.lo_hangScalarWhereInput | Prisma.lo_hangScalarWhereInput[]
 }
 
+export type lo_hangCreateNestedManyWithoutPhieu_nhap_khoInput = {
+  create?: Prisma.XOR<Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput, Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput> | Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput[] | Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput[]
+  connectOrCreate?: Prisma.lo_hangCreateOrConnectWithoutPhieu_nhap_khoInput | Prisma.lo_hangCreateOrConnectWithoutPhieu_nhap_khoInput[]
+  createMany?: Prisma.lo_hangCreateManyPhieu_nhap_khoInputEnvelope
+  connect?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+}
+
+export type lo_hangUncheckedCreateNestedManyWithoutPhieu_nhap_khoInput = {
+  create?: Prisma.XOR<Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput, Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput> | Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput[] | Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput[]
+  connectOrCreate?: Prisma.lo_hangCreateOrConnectWithoutPhieu_nhap_khoInput | Prisma.lo_hangCreateOrConnectWithoutPhieu_nhap_khoInput[]
+  createMany?: Prisma.lo_hangCreateManyPhieu_nhap_khoInputEnvelope
+  connect?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+}
+
+export type lo_hangUpdateManyWithoutPhieu_nhap_khoNestedInput = {
+  create?: Prisma.XOR<Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput, Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput> | Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput[] | Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput[]
+  connectOrCreate?: Prisma.lo_hangCreateOrConnectWithoutPhieu_nhap_khoInput | Prisma.lo_hangCreateOrConnectWithoutPhieu_nhap_khoInput[]
+  upsert?: Prisma.lo_hangUpsertWithWhereUniqueWithoutPhieu_nhap_khoInput | Prisma.lo_hangUpsertWithWhereUniqueWithoutPhieu_nhap_khoInput[]
+  createMany?: Prisma.lo_hangCreateManyPhieu_nhap_khoInputEnvelope
+  set?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+  disconnect?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+  delete?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+  connect?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+  update?: Prisma.lo_hangUpdateWithWhereUniqueWithoutPhieu_nhap_khoInput | Prisma.lo_hangUpdateWithWhereUniqueWithoutPhieu_nhap_khoInput[]
+  updateMany?: Prisma.lo_hangUpdateManyWithWhereWithoutPhieu_nhap_khoInput | Prisma.lo_hangUpdateManyWithWhereWithoutPhieu_nhap_khoInput[]
+  deleteMany?: Prisma.lo_hangScalarWhereInput | Prisma.lo_hangScalarWhereInput[]
+}
+
+export type lo_hangUncheckedUpdateManyWithoutPhieu_nhap_khoNestedInput = {
+  create?: Prisma.XOR<Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput, Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput> | Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput[] | Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput[]
+  connectOrCreate?: Prisma.lo_hangCreateOrConnectWithoutPhieu_nhap_khoInput | Prisma.lo_hangCreateOrConnectWithoutPhieu_nhap_khoInput[]
+  upsert?: Prisma.lo_hangUpsertWithWhereUniqueWithoutPhieu_nhap_khoInput | Prisma.lo_hangUpsertWithWhereUniqueWithoutPhieu_nhap_khoInput[]
+  createMany?: Prisma.lo_hangCreateManyPhieu_nhap_khoInputEnvelope
+  set?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+  disconnect?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+  delete?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+  connect?: Prisma.lo_hangWhereUniqueInput | Prisma.lo_hangWhereUniqueInput[]
+  update?: Prisma.lo_hangUpdateWithWhereUniqueWithoutPhieu_nhap_khoInput | Prisma.lo_hangUpdateWithWhereUniqueWithoutPhieu_nhap_khoInput[]
+  updateMany?: Prisma.lo_hangUpdateManyWithWhereWithoutPhieu_nhap_khoInput | Prisma.lo_hangUpdateManyWithWhereWithoutPhieu_nhap_khoInput[]
+  deleteMany?: Prisma.lo_hangScalarWhereInput | Prisma.lo_hangScalarWhereInput[]
+}
+
 export type lo_hangCreateNestedOneWithoutTon_kho_tongInput = {
   create?: Prisma.XOR<Prisma.lo_hangCreateWithoutTon_kho_tongInput, Prisma.lo_hangUncheckedCreateWithoutTon_kho_tongInput>
   connectOrCreate?: Prisma.lo_hangCreateOrConnectWithoutTon_kho_tongInput
@@ -546,9 +657,12 @@ export type lo_hangUpdateOneWithoutTon_kho_tongNestedInput = {
 export type lo_hangCreateWithoutBien_the_san_phamInput = {
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangCreateNestedManyWithoutLo_hangInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietCreateNestedManyWithoutLo_hangInput
   nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutLo_hangInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedOneWithoutLo_hang_sinh_raInput
   ton_kho_tong?: Prisma.ton_kho_tongCreateNestedManyWithoutLo_hangInput
 }
 
@@ -557,7 +671,10 @@ export type lo_hangUncheckedCreateWithoutBien_the_san_phamInput = {
   ma_ncc?: number | null
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  ma_phieu_nhap?: number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedCreateNestedManyWithoutLo_hangInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedCreateNestedManyWithoutLo_hangInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedCreateNestedManyWithoutLo_hangInput
 }
@@ -597,15 +714,86 @@ export type lo_hangScalarWhereInput = {
   ma_ncc?: Prisma.IntNullableFilter<"lo_hang"> | number | null
   ma_lo_hang?: Prisma.StringFilter<"lo_hang"> | string
   ngay_thu_hoach?: Prisma.DateTimeNullableFilter<"lo_hang"> | Date | string | null
+  ngay_nhap_kho?: Prisma.DateTimeNullableFilter<"lo_hang"> | Date | string | null
   han_su_dung?: Prisma.DateTimeFilter<"lo_hang"> | Date | string
+  ma_phieu_nhap?: Prisma.IntNullableFilter<"lo_hang"> | number | null
+}
+
+export type lo_hangCreateWithoutCanh_bao_lo_hangInput = {
+  ma_lo_hang: string
+  ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
+  han_su_dung: Date | string
+  kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietCreateNestedManyWithoutLo_hangInput
+  bien_the_san_pham?: Prisma.bien_the_san_phamCreateNestedOneWithoutLo_hangInput
+  nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutLo_hangInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedOneWithoutLo_hang_sinh_raInput
+  ton_kho_tong?: Prisma.ton_kho_tongCreateNestedManyWithoutLo_hangInput
+}
+
+export type lo_hangUncheckedCreateWithoutCanh_bao_lo_hangInput = {
+  id?: number
+  ma_bien_the?: number | null
+  ma_ncc?: number | null
+  ma_lo_hang: string
+  ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
+  han_su_dung: Date | string
+  ma_phieu_nhap?: number | null
+  kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedCreateNestedManyWithoutLo_hangInput
+  ton_kho_tong?: Prisma.ton_kho_tongUncheckedCreateNestedManyWithoutLo_hangInput
+}
+
+export type lo_hangCreateOrConnectWithoutCanh_bao_lo_hangInput = {
+  where: Prisma.lo_hangWhereUniqueInput
+  create: Prisma.XOR<Prisma.lo_hangCreateWithoutCanh_bao_lo_hangInput, Prisma.lo_hangUncheckedCreateWithoutCanh_bao_lo_hangInput>
+}
+
+export type lo_hangUpsertWithoutCanh_bao_lo_hangInput = {
+  update: Prisma.XOR<Prisma.lo_hangUpdateWithoutCanh_bao_lo_hangInput, Prisma.lo_hangUncheckedUpdateWithoutCanh_bao_lo_hangInput>
+  create: Prisma.XOR<Prisma.lo_hangCreateWithoutCanh_bao_lo_hangInput, Prisma.lo_hangUncheckedCreateWithoutCanh_bao_lo_hangInput>
+  where?: Prisma.lo_hangWhereInput
+}
+
+export type lo_hangUpdateToOneWithWhereWithoutCanh_bao_lo_hangInput = {
+  where?: Prisma.lo_hangWhereInput
+  data: Prisma.XOR<Prisma.lo_hangUpdateWithoutCanh_bao_lo_hangInput, Prisma.lo_hangUncheckedUpdateWithoutCanh_bao_lo_hangInput>
+}
+
+export type lo_hangUpdateWithoutCanh_bao_lo_hangInput = {
+  ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
+  ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUpdateManyWithoutLo_hangNestedInput
+  bien_the_san_pham?: Prisma.bien_the_san_phamUpdateOneWithoutLo_hangNestedInput
+  nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutLo_hangNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateOneWithoutLo_hang_sinh_raNestedInput
+  ton_kho_tong?: Prisma.ton_kho_tongUpdateManyWithoutLo_hangNestedInput
+}
+
+export type lo_hangUncheckedUpdateWithoutCanh_bao_lo_hangInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_bien_the?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
+  ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ma_phieu_nhap?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedUpdateManyWithoutLo_hangNestedInput
+  ton_kho_tong?: Prisma.ton_kho_tongUncheckedUpdateManyWithoutLo_hangNestedInput
 }
 
 export type lo_hangCreateWithoutKien_hang_chi_tietInput = {
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangCreateNestedManyWithoutLo_hangInput
   bien_the_san_pham?: Prisma.bien_the_san_phamCreateNestedOneWithoutLo_hangInput
   nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutLo_hangInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedOneWithoutLo_hang_sinh_raInput
   ton_kho_tong?: Prisma.ton_kho_tongCreateNestedManyWithoutLo_hangInput
 }
 
@@ -615,7 +803,10 @@ export type lo_hangUncheckedCreateWithoutKien_hang_chi_tietInput = {
   ma_ncc?: number | null
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  ma_phieu_nhap?: number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedCreateNestedManyWithoutLo_hangInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedCreateNestedManyWithoutLo_hangInput
 }
 
@@ -638,9 +829,12 @@ export type lo_hangUpdateToOneWithWhereWithoutKien_hang_chi_tietInput = {
 export type lo_hangUpdateWithoutKien_hang_chi_tietInput = {
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUpdateManyWithoutLo_hangNestedInput
   bien_the_san_pham?: Prisma.bien_the_san_phamUpdateOneWithoutLo_hangNestedInput
   nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutLo_hangNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateOneWithoutLo_hang_sinh_raNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUpdateManyWithoutLo_hangNestedInput
 }
 
@@ -650,16 +844,22 @@ export type lo_hangUncheckedUpdateWithoutKien_hang_chi_tietInput = {
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ma_phieu_nhap?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedUpdateManyWithoutLo_hangNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedUpdateManyWithoutLo_hangNestedInput
 }
 
 export type lo_hangCreateWithoutNha_cung_capInput = {
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangCreateNestedManyWithoutLo_hangInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietCreateNestedManyWithoutLo_hangInput
   bien_the_san_pham?: Prisma.bien_the_san_phamCreateNestedOneWithoutLo_hangInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedOneWithoutLo_hang_sinh_raInput
   ton_kho_tong?: Prisma.ton_kho_tongCreateNestedManyWithoutLo_hangInput
 }
 
@@ -668,7 +868,10 @@ export type lo_hangUncheckedCreateWithoutNha_cung_capInput = {
   ma_bien_the?: number | null
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  ma_phieu_nhap?: number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedCreateNestedManyWithoutLo_hangInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedCreateNestedManyWithoutLo_hangInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedCreateNestedManyWithoutLo_hangInput
 }
@@ -699,13 +902,67 @@ export type lo_hangUpdateManyWithWhereWithoutNha_cung_capInput = {
   data: Prisma.XOR<Prisma.lo_hangUpdateManyMutationInput, Prisma.lo_hangUncheckedUpdateManyWithoutNha_cung_capInput>
 }
 
-export type lo_hangCreateWithoutTon_kho_tongInput = {
+export type lo_hangCreateWithoutPhieu_nhap_khoInput = {
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangCreateNestedManyWithoutLo_hangInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietCreateNestedManyWithoutLo_hangInput
   bien_the_san_pham?: Prisma.bien_the_san_phamCreateNestedOneWithoutLo_hangInput
   nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutLo_hangInput
+  ton_kho_tong?: Prisma.ton_kho_tongCreateNestedManyWithoutLo_hangInput
+}
+
+export type lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput = {
+  id?: number
+  ma_bien_the?: number | null
+  ma_ncc?: number | null
+  ma_lo_hang: string
+  ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
+  han_su_dung: Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedCreateNestedManyWithoutLo_hangInput
+  kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedCreateNestedManyWithoutLo_hangInput
+  ton_kho_tong?: Prisma.ton_kho_tongUncheckedCreateNestedManyWithoutLo_hangInput
+}
+
+export type lo_hangCreateOrConnectWithoutPhieu_nhap_khoInput = {
+  where: Prisma.lo_hangWhereUniqueInput
+  create: Prisma.XOR<Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput, Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput>
+}
+
+export type lo_hangCreateManyPhieu_nhap_khoInputEnvelope = {
+  data: Prisma.lo_hangCreateManyPhieu_nhap_khoInput | Prisma.lo_hangCreateManyPhieu_nhap_khoInput[]
+  skipDuplicates?: boolean
+}
+
+export type lo_hangUpsertWithWhereUniqueWithoutPhieu_nhap_khoInput = {
+  where: Prisma.lo_hangWhereUniqueInput
+  update: Prisma.XOR<Prisma.lo_hangUpdateWithoutPhieu_nhap_khoInput, Prisma.lo_hangUncheckedUpdateWithoutPhieu_nhap_khoInput>
+  create: Prisma.XOR<Prisma.lo_hangCreateWithoutPhieu_nhap_khoInput, Prisma.lo_hangUncheckedCreateWithoutPhieu_nhap_khoInput>
+}
+
+export type lo_hangUpdateWithWhereUniqueWithoutPhieu_nhap_khoInput = {
+  where: Prisma.lo_hangWhereUniqueInput
+  data: Prisma.XOR<Prisma.lo_hangUpdateWithoutPhieu_nhap_khoInput, Prisma.lo_hangUncheckedUpdateWithoutPhieu_nhap_khoInput>
+}
+
+export type lo_hangUpdateManyWithWhereWithoutPhieu_nhap_khoInput = {
+  where: Prisma.lo_hangScalarWhereInput
+  data: Prisma.XOR<Prisma.lo_hangUpdateManyMutationInput, Prisma.lo_hangUncheckedUpdateManyWithoutPhieu_nhap_khoInput>
+}
+
+export type lo_hangCreateWithoutTon_kho_tongInput = {
+  ma_lo_hang: string
+  ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
+  han_su_dung: Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangCreateNestedManyWithoutLo_hangInput
+  kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietCreateNestedManyWithoutLo_hangInput
+  bien_the_san_pham?: Prisma.bien_the_san_phamCreateNestedOneWithoutLo_hangInput
+  nha_cung_cap?: Prisma.nha_cung_capCreateNestedOneWithoutLo_hangInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedOneWithoutLo_hang_sinh_raInput
 }
 
 export type lo_hangUncheckedCreateWithoutTon_kho_tongInput = {
@@ -714,7 +971,10 @@ export type lo_hangUncheckedCreateWithoutTon_kho_tongInput = {
   ma_ncc?: number | null
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  ma_phieu_nhap?: number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedCreateNestedManyWithoutLo_hangInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedCreateNestedManyWithoutLo_hangInput
 }
 
@@ -737,10 +997,13 @@ export type lo_hangUpdateToOneWithWhereWithoutTon_kho_tongInput = {
 export type lo_hangUpdateWithoutTon_kho_tongInput = {
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUpdateManyWithoutLo_hangNestedInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUpdateManyWithoutLo_hangNestedInput
   bien_the_san_pham?: Prisma.bien_the_san_phamUpdateOneWithoutLo_hangNestedInput
   nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutLo_hangNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateOneWithoutLo_hang_sinh_raNestedInput
 }
 
 export type lo_hangUncheckedUpdateWithoutTon_kho_tongInput = {
@@ -749,7 +1012,10 @@ export type lo_hangUncheckedUpdateWithoutTon_kho_tongInput = {
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ma_phieu_nhap?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedUpdateManyWithoutLo_hangNestedInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedUpdateManyWithoutLo_hangNestedInput
 }
 
@@ -758,15 +1024,20 @@ export type lo_hangCreateManyBien_the_san_phamInput = {
   ma_ncc?: number | null
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  ma_phieu_nhap?: number | null
 }
 
 export type lo_hangUpdateWithoutBien_the_san_phamInput = {
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUpdateManyWithoutLo_hangNestedInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUpdateManyWithoutLo_hangNestedInput
   nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutLo_hangNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateOneWithoutLo_hang_sinh_raNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUpdateManyWithoutLo_hangNestedInput
 }
 
@@ -775,7 +1046,10 @@ export type lo_hangUncheckedUpdateWithoutBien_the_san_phamInput = {
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ma_phieu_nhap?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedUpdateManyWithoutLo_hangNestedInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedUpdateManyWithoutLo_hangNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedUpdateManyWithoutLo_hangNestedInput
 }
@@ -785,7 +1059,9 @@ export type lo_hangUncheckedUpdateManyWithoutBien_the_san_phamInput = {
   ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ma_phieu_nhap?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type lo_hangCreateManyNha_cung_capInput = {
@@ -793,15 +1069,20 @@ export type lo_hangCreateManyNha_cung_capInput = {
   ma_bien_the?: number | null
   ma_lo_hang: string
   ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
   han_su_dung: Date | string
+  ma_phieu_nhap?: number | null
 }
 
 export type lo_hangUpdateWithoutNha_cung_capInput = {
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUpdateManyWithoutLo_hangNestedInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUpdateManyWithoutLo_hangNestedInput
   bien_the_san_pham?: Prisma.bien_the_san_phamUpdateOneWithoutLo_hangNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateOneWithoutLo_hang_sinh_raNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUpdateManyWithoutLo_hangNestedInput
 }
 
@@ -810,7 +1091,10 @@ export type lo_hangUncheckedUpdateWithoutNha_cung_capInput = {
   ma_bien_the?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ma_phieu_nhap?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedUpdateManyWithoutLo_hangNestedInput
   kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedUpdateManyWithoutLo_hangNestedInput
   ton_kho_tong?: Prisma.ton_kho_tongUncheckedUpdateManyWithoutLo_hangNestedInput
 }
@@ -820,6 +1104,53 @@ export type lo_hangUncheckedUpdateManyWithoutNha_cung_capInput = {
   ma_bien_the?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
   ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ma_phieu_nhap?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type lo_hangCreateManyPhieu_nhap_khoInput = {
+  id?: number
+  ma_bien_the?: number | null
+  ma_ncc?: number | null
+  ma_lo_hang: string
+  ngay_thu_hoach?: Date | string | null
+  ngay_nhap_kho?: Date | string | null
+  han_su_dung: Date | string
+}
+
+export type lo_hangUpdateWithoutPhieu_nhap_khoInput = {
+  ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
+  ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUpdateManyWithoutLo_hangNestedInput
+  kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUpdateManyWithoutLo_hangNestedInput
+  bien_the_san_pham?: Prisma.bien_the_san_phamUpdateOneWithoutLo_hangNestedInput
+  nha_cung_cap?: Prisma.nha_cung_capUpdateOneWithoutLo_hangNestedInput
+  ton_kho_tong?: Prisma.ton_kho_tongUpdateManyWithoutLo_hangNestedInput
+}
+
+export type lo_hangUncheckedUpdateWithoutPhieu_nhap_khoInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_bien_the?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
+  ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  canh_bao_lo_hang?: Prisma.canh_bao_lo_hangUncheckedUpdateManyWithoutLo_hangNestedInput
+  kien_hang_chi_tiet?: Prisma.kien_hang_chi_tietUncheckedUpdateManyWithoutLo_hangNestedInput
+  ton_kho_tong?: Prisma.ton_kho_tongUncheckedUpdateManyWithoutLo_hangNestedInput
+}
+
+export type lo_hangUncheckedUpdateManyWithoutPhieu_nhap_khoInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  ma_bien_the?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ma_ncc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ma_lo_hang?: Prisma.StringFieldUpdateOperationsInput | string
+  ngay_thu_hoach?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  ngay_nhap_kho?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   han_su_dung?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -829,11 +1160,13 @@ export type lo_hangUncheckedUpdateManyWithoutNha_cung_capInput = {
  */
 
 export type Lo_hangCountOutputType = {
+  canh_bao_lo_hang: number
   kien_hang_chi_tiet: number
   ton_kho_tong: number
 }
 
 export type Lo_hangCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  canh_bao_lo_hang?: boolean | Lo_hangCountOutputTypeCountCanh_bao_lo_hangArgs
   kien_hang_chi_tiet?: boolean | Lo_hangCountOutputTypeCountKien_hang_chi_tietArgs
   ton_kho_tong?: boolean | Lo_hangCountOutputTypeCountTon_kho_tongArgs
 }
@@ -846,6 +1179,13 @@ export type Lo_hangCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exte
    * Select specific fields to fetch from the Lo_hangCountOutputType
    */
   select?: Prisma.Lo_hangCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * Lo_hangCountOutputType without action
+ */
+export type Lo_hangCountOutputTypeCountCanh_bao_lo_hangArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.canh_bao_lo_hangWhereInput
 }
 
 /**
@@ -869,10 +1209,14 @@ export type lo_hangSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   ma_ncc?: boolean
   ma_lo_hang?: boolean
   ngay_thu_hoach?: boolean
+  ngay_nhap_kho?: boolean
   han_su_dung?: boolean
+  ma_phieu_nhap?: boolean
+  canh_bao_lo_hang?: boolean | Prisma.lo_hang$canh_bao_lo_hangArgs<ExtArgs>
   kien_hang_chi_tiet?: boolean | Prisma.lo_hang$kien_hang_chi_tietArgs<ExtArgs>
   bien_the_san_pham?: boolean | Prisma.lo_hang$bien_the_san_phamArgs<ExtArgs>
   nha_cung_cap?: boolean | Prisma.lo_hang$nha_cung_capArgs<ExtArgs>
+  phieu_nhap_kho?: boolean | Prisma.lo_hang$phieu_nhap_khoArgs<ExtArgs>
   ton_kho_tong?: boolean | Prisma.lo_hang$ton_kho_tongArgs<ExtArgs>
   _count?: boolean | Prisma.Lo_hangCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["lo_hang"]>
@@ -885,14 +1229,18 @@ export type lo_hangSelectScalar = {
   ma_ncc?: boolean
   ma_lo_hang?: boolean
   ngay_thu_hoach?: boolean
+  ngay_nhap_kho?: boolean
   han_su_dung?: boolean
+  ma_phieu_nhap?: boolean
 }
 
-export type lo_hangOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_bien_the" | "ma_ncc" | "ma_lo_hang" | "ngay_thu_hoach" | "han_su_dung", ExtArgs["result"]["lo_hang"]>
+export type lo_hangOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_bien_the" | "ma_ncc" | "ma_lo_hang" | "ngay_thu_hoach" | "ngay_nhap_kho" | "han_su_dung" | "ma_phieu_nhap", ExtArgs["result"]["lo_hang"]>
 export type lo_hangInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  canh_bao_lo_hang?: boolean | Prisma.lo_hang$canh_bao_lo_hangArgs<ExtArgs>
   kien_hang_chi_tiet?: boolean | Prisma.lo_hang$kien_hang_chi_tietArgs<ExtArgs>
   bien_the_san_pham?: boolean | Prisma.lo_hang$bien_the_san_phamArgs<ExtArgs>
   nha_cung_cap?: boolean | Prisma.lo_hang$nha_cung_capArgs<ExtArgs>
+  phieu_nhap_kho?: boolean | Prisma.lo_hang$phieu_nhap_khoArgs<ExtArgs>
   ton_kho_tong?: boolean | Prisma.lo_hang$ton_kho_tongArgs<ExtArgs>
   _count?: boolean | Prisma.Lo_hangCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -900,9 +1248,11 @@ export type lo_hangInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
 export type $lo_hangPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "lo_hang"
   objects: {
+    canh_bao_lo_hang: Prisma.$canh_bao_lo_hangPayload<ExtArgs>[]
     kien_hang_chi_tiet: Prisma.$kien_hang_chi_tietPayload<ExtArgs>[]
     bien_the_san_pham: Prisma.$bien_the_san_phamPayload<ExtArgs> | null
     nha_cung_cap: Prisma.$nha_cung_capPayload<ExtArgs> | null
+    phieu_nhap_kho: Prisma.$phieu_nhap_khoPayload<ExtArgs> | null
     ton_kho_tong: Prisma.$ton_kho_tongPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -911,7 +1261,9 @@ export type $lo_hangPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     ma_ncc: number | null
     ma_lo_hang: string
     ngay_thu_hoach: Date | null
+    ngay_nhap_kho: Date | null
     han_su_dung: Date
+    ma_phieu_nhap: number | null
   }, ExtArgs["result"]["lo_hang"]>
   composites: {}
 }
@@ -1252,9 +1604,11 @@ readonly fields: lo_hangFieldRefs;
  */
 export interface Prisma__lo_hangClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  canh_bao_lo_hang<T extends Prisma.lo_hang$canh_bao_lo_hangArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lo_hang$canh_bao_lo_hangArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$canh_bao_lo_hangPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   kien_hang_chi_tiet<T extends Prisma.lo_hang$kien_hang_chi_tietArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lo_hang$kien_hang_chi_tietArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$kien_hang_chi_tietPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   bien_the_san_pham<T extends Prisma.lo_hang$bien_the_san_phamArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lo_hang$bien_the_san_phamArgs<ExtArgs>>): Prisma.Prisma__bien_the_san_phamClient<runtime.Types.Result.GetResult<Prisma.$bien_the_san_phamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   nha_cung_cap<T extends Prisma.lo_hang$nha_cung_capArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lo_hang$nha_cung_capArgs<ExtArgs>>): Prisma.Prisma__nha_cung_capClient<runtime.Types.Result.GetResult<Prisma.$nha_cung_capPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  phieu_nhap_kho<T extends Prisma.lo_hang$phieu_nhap_khoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lo_hang$phieu_nhap_khoArgs<ExtArgs>>): Prisma.Prisma__phieu_nhap_khoClient<runtime.Types.Result.GetResult<Prisma.$phieu_nhap_khoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   ton_kho_tong<T extends Prisma.lo_hang$ton_kho_tongArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lo_hang$ton_kho_tongArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ton_kho_tongPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1290,7 +1644,9 @@ export interface lo_hangFieldRefs {
   readonly ma_ncc: Prisma.FieldRef<"lo_hang", 'Int'>
   readonly ma_lo_hang: Prisma.FieldRef<"lo_hang", 'String'>
   readonly ngay_thu_hoach: Prisma.FieldRef<"lo_hang", 'DateTime'>
+  readonly ngay_nhap_kho: Prisma.FieldRef<"lo_hang", 'DateTime'>
   readonly han_su_dung: Prisma.FieldRef<"lo_hang", 'DateTime'>
+  readonly ma_phieu_nhap: Prisma.FieldRef<"lo_hang", 'Int'>
 }
     
 
@@ -1639,6 +1995,30 @@ export type lo_hangDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
 }
 
 /**
+ * lo_hang.canh_bao_lo_hang
+ */
+export type lo_hang$canh_bao_lo_hangArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the canh_bao_lo_hang
+   */
+  select?: Prisma.canh_bao_lo_hangSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the canh_bao_lo_hang
+   */
+  omit?: Prisma.canh_bao_lo_hangOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.canh_bao_lo_hangInclude<ExtArgs> | null
+  where?: Prisma.canh_bao_lo_hangWhereInput
+  orderBy?: Prisma.canh_bao_lo_hangOrderByWithRelationInput | Prisma.canh_bao_lo_hangOrderByWithRelationInput[]
+  cursor?: Prisma.canh_bao_lo_hangWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Canh_bao_lo_hangScalarFieldEnum | Prisma.Canh_bao_lo_hangScalarFieldEnum[]
+}
+
+/**
  * lo_hang.kien_hang_chi_tiet
  */
 export type lo_hang$kien_hang_chi_tietArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1698,6 +2078,25 @@ export type lo_hang$nha_cung_capArgs<ExtArgs extends runtime.Types.Extensions.In
    */
   include?: Prisma.nha_cung_capInclude<ExtArgs> | null
   where?: Prisma.nha_cung_capWhereInput
+}
+
+/**
+ * lo_hang.phieu_nhap_kho
+ */
+export type lo_hang$phieu_nhap_khoArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the phieu_nhap_kho
+   */
+  select?: Prisma.phieu_nhap_khoSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the phieu_nhap_kho
+   */
+  omit?: Prisma.phieu_nhap_khoOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.phieu_nhap_khoInclude<ExtArgs> | null
+  where?: Prisma.phieu_nhap_khoWhereInput
 }
 
 /**

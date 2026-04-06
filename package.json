@@ -13,26 +13,32 @@
     "db:reset": "prisma migrate reset --force"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "npx tsx --tsconfig tsconfig.seed.json prisma/seed.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "^5.2.2",
+    "@prisma/adapter-libsql": "^7.6.0",
     "@prisma/adapter-mariadb": "^7.5.0",
     "@prisma/client": "^7.5.0",
-    "axios": "^1.13.6",
+    "axios": "^1.14.0",
+    "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
     "framer-motion": "^12.38.0",
+    "face-api.js": "^0.22.2",
     "gsap": "^3.14.2",
     "lucide-react": "^1.7.0",
     "mariadb": "^3.5.2",
+    "motion": "^12.38.0",
     "next": "16.1.7",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.2",
     "react-hot-toast": "^2.6.0",
     "react-icons": "^5.6.0",
+    "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -48,7 +54,7 @@
     "tailwindcss": "^4.2.2",
     "typescript": "^5"
   },
-  "description": "agricultural-products/\r ├── prisma/\r │   ├── schema.prisma          # Định nghĩa toàn bộ DB schema (BE phụ trách)\r │   ├── seed.ts                # Dữ liệu mẫu để dev/test\r │   └── migrations/            # Auto-generated bởi prisma migrate\r │\r ├── public/\r │   ├── images/                # Ảnh tĩnh (logo, placeholder)\r │   └── mockServiceWorker.js   # MSW worker (nếu dùng sau này)\r │\r └── src/\r     ├── app/                           # Next.js App Router — FE phụ trách\r     │   ├── layout.tsx                 # Root layout (font, metadata)\r     │   ├── page.tsx                   # Trang chủ (redirect về dashboard)\r     │   ├── globals.css                # Global styles\r     │   │\r     │   ├── (auth)/                    # Route group: không có sidebar\r     │   │   ├── login/\r     │   │   │   └── page.tsx\r     │   │   └── layout.tsx             # Auth layout (centered, no sidebar)\r     │   │\r     │   ├── (dashboard)/               # Route group: có sidebar admin\r     │   │   ├── layout.tsx             # Dashboard layout (sidebar + topbar)\r     │   │   ├── overview/\r     │   │   │   └── page.tsx           # Trang tổng quan\r     │   │   ├── products/\r     │   │   │   ├── page.tsx           # Danh sách sản phẩm\r     │   │   │   └── [id]/\r     │   │   │       └── page.tsx       # Chi tiết / chỉnh sửa sản phẩm\r     │   │   ├── suppliers/\r     │   │   │   ├── page.tsx\r     │   │   │   └── [id]/page.tsx\r     │   │   ├── orders/\r     │   │   │   ├── page.tsx\r     │   │   │   └── [id]/page.tsx\r     │   │   ├── customers/\r     │   │   │   ├── page.tsx\r     │   │   │   └── [id]/page.tsx\r     │   │   ├── categories/\r     │   │   │   └── page.tsx\r     │   │   ├── analytics/\r     │   │   │   └── page.tsx           # Thống kê & báo cáo\r     │   │   ├── payments/\r     │   │   │   └── page.tsx\r     │   │   ├── content/\r     │   │   │   └── page.tsx           # Banner & nội dung\r     │   │   └── settings/\r     │   │       └── page.tsx\r     │   │\r     │   └── api/                       # API Routes — BE phụ trách\r     │       ├── auth/\r     │       │   └── [...nextauth]/\r     │       │       └── route.ts       # NextAuth handler\r     │       ├── products/\r     │       │   ├── route.ts           # GET /api/products, POST /api/products\r     │       │   └── [id]/\r     │       │       └── route.ts       # GET PUT DELETE /api/products/:id\r     │       ├── suppliers/\r     │       │   ├── route.ts\r     │       │   └── [id]/route.ts\r     │       ├── orders/\r     │       │   ├── route.ts\r     │       │   └── [id]/route.ts\r     │       ├── customers/\r     │       │   ├── route.ts\r     │       │   └── [id]/route.ts\r     │       ├── categories/\r     │       │   ├── route.ts\r     │       │   └── [id]/route.ts\r     │       ├── analytics/\r     │       │   └── route.ts           # GET thống kê tổng hợp\r     │       ├── payments/\r     │       │   ├── route.ts\r     │       │   └── refunds/route.ts\r     │       └── chatbot/\r     │           └── route.ts           # POST /api/chatbot (RAG + LLM)\r     │\r     ├── components/                    # FE phụ trách\r     │   ├── ui/                        # Atomic components tái sử dụng\r     │   │   ├── Button.tsx\r     │   │   ├── Input.tsx\r     │   │   ├── Badge.tsx\r     │   │   ├── Card.tsx\r     │   │   ├── Modal.tsx\r     │   │   ├── Table.tsx\r     │   │   ├── Pagination.tsx\r     │   │   ├── Select.tsx\r     │   │   ├── Toggle.tsx\r     │   │   └── index.ts               # Re-export tất cả\r     │   │\r     │   ├── layout/                    # Layout components\r     │   │   ├── Sidebar.tsx            # Sidebar với nav items\r     │   │   ├── Topbar.tsx             # Header bar\r     │   │   └── DashboardShell.tsx     # Wrapper sidebar + topbar\r     │   │\r     │   ├── charts/                    # Chart components (Recharts)\r     │   │   ├── RevenueLineChart.tsx\r     │   │   ├── OrderStatusDonut.tsx\r     │   │   ├── TopProductsBar.tsx\r     │   │   └── CategoryRevenueBar.tsx\r     │   │\r     │   ├── dashboard/                 # Components cho từng trang\r     │   │   ├── overview/\r     │   │   │   ├── KpiCards.tsx\r     │   │   │   ├── RecentOrders.tsx\r     │   │   │   ├── LowStockTable.tsx\r     │   │   │   └── ActivityFeed.tsx\r     │   │   ├── products/\r     │   │   │   ├── ProductTable.tsx\r     │   │   │   ├── ProductFilter.tsx\r     │   │   │   └── ProductFormModal.tsx\r     │   │   ├── suppliers/\r     │   │   │   ├── SupplierGrid.tsx\r     │   │   │   ├── SupplierCard.tsx\r     │   │   │   └── SupplierDetailPanel.tsx\r     │   │   ├── orders/\r     │   │   │   ├── OrderTable.tsx\r     │   │   │   ├── OrderStatusTabs.tsx\r     │   │   │   └── OrderDetailModal.tsx\r     │   │   ├── customers/\r     │   │   │   ├── CustomerTable.tsx\r     │   │   │   └── CustomerSidePanel.tsx\r     │   │   ├── analytics/\r     │   │   │   └── AnalyticsKpiCards.tsx\r     │   │   └── settings/\r     │   │       ├── StoreInfoForm.tsx\r     │   │       ├── ChatbotConfigForm.tsx\r     │   │       └── PermissionsTable.tsx\r     │   │\r     │   └── shared/                    # Dùng chung nhiều trang\r     │       ├── PageHeader.tsx         # Title + action button row\r     │       ├── FilterBar.tsx          # Search + select + button lọc\r     │       ├── EmptyState.tsx         # UI khi không có data\r     │       ├── LoadingSkeleton.tsx    # Loading placeholder\r     │       └── ConfirmDialog.tsx      # Modal xác nhận xoá\r     │\r     ├── hooks/                         # Custom React hooks — FE phụ trách\r     │   ├── useProducts.ts             # Fetch + mutate products\r     │   ├── useOrders.ts\r     │   ├── useSuppliers.ts\r     │   ├── useCustomers.ts\r     │   ├── useCategories.ts\r     │   ├── useAnalytics.ts\r     │   ├── useDebounce.ts             # Debounce search input\r     │   └── useLocalStorage.ts        # Lưu filter state\r     │\r     ├── services/                      # Gọi API — cầu nối FE ↔ BE\r     │   ├── product.service.ts         # fetch('/api/products', ...)\r     │   ├── supplier.service.ts\r     │   ├── order.service.ts\r     │   ├── customer.service.ts\r     │   ├── category.service.ts\r     │   ├── analytics.service.ts\r     │   ├── payment.service.ts\r     │   └── chatbot.service.ts\r     │\r     ├── lib/                           # Utilities — Full-stack phụ trách\r     │   ├── prisma.ts                  # Prisma client singleton\r     │   ├── auth.ts                    # NextAuth config\r     │   ├── api-response.ts            # Helper: chuẩn hoá JSON response\r     │   ├── format.ts                  # Format tiền VND, ngày tháng VN\r     │   ├── constants.ts               # ORDER_STATUS, ROLES, v.v.\r     │   └── utils.ts                   # Các hàm nhỏ tái sử dụng\r     │\r     ├── schemas/                       # Zod schemas — Full-stack phụ trách\r     │   ├── product.schema.ts\r     │   ├── supplier.schema.ts\r     │   ├── order.schema.ts\r     │   ├── customer.schema.ts\r     │   ├── category.schema.ts\r     │   └── index.ts                   # Re-export tất cả\r     │\r     └── types/                         # TypeScript types toàn cục\r         ├── api.types.ts               # Request / Response types\r         ├── auth.types.ts              # User, Session\r         └── index.ts                   # Re-export",
+  "description": "agricultural-products-trading",
   "main": "setup.js",
   "repository": {
     "type": "git",
