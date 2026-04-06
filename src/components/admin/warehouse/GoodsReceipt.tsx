@@ -1,139 +1,305 @@
 "use client";
 
 import React, { useState } from "react";
-import { ScanBarcode, CheckCircle, Printer, Download } from "lucide-react";
-import { FormInput } from "./WarehouseUI";
+import {
+  Package,
+  Calendar,
+  MapPin,
+  CheckCircle,
+  AlertTriangle,
+  FileText,
+} from "lucide-react";
 
-export default function GoodsReceipt() {
-  const [isCreated, setIsCreated] = useState(false);
+export default function GoodsReceipt({ formOptions }: { formOptions: any }) {
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [message, setMessage] = useState("");
+  const [qrCount, setQrCount] = useState(0);
+
+  // Khởi tạo state cho form
+  const [formData, setFormData] = useState({
+    ma_ncc: "",
+    ma_bien_the: "",
+    so_luong_thung: "",
+    ngay_thu_hoach: "",
+    ngay_nhap_kho: new Date().toISOString().split("T")[0], // Mặc định hôm nay
+    han_su_dung: "",
+    vi_tri: { khu: "", day: "", ke: "", tang: "" },
+  });
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    if (["khu", "day", "ke", "tang"].includes(name)) {
+      setFormData((prev) => ({
+        ...prev,
+        vi_tri: { ...prev.vi_tri, [name]: value },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      // Ép kiểu dữ liệu trước khi gửi
+      const payload = {
+        ...formData,
+        ma_ncc: parseInt(formData.ma_ncc),
+        ma_bien_the: parseInt(formData.ma_bien_the),
+        so_luong_thung: parseInt(formData.so_luong_thung),
+      };
+
+      const response = await fetch("/api/admin/warehouse/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Có lỗi xảy ra khi tạo phiếu nhập");
+      }
+
+      // Xử lý thành công
+      setStatus("success");
+      setMessage(`Đã nhập hàng trực tiếp vào kho!`);
+      setQrCount(data.data.qrCodes?.length || 0);
+
+      // Reset form nhưng giữ lại một số thông tin tiện cho việc nhập tiếp
+      setFormData((prev) => ({
+        ...prev,
+        so_luong_thung: "",
+        vi_tri: { khu: "", day: "", ke: "", tang: "" },
+      }));
+    } catch (error: any) {
+      setStatus("error");
+      setMessage(error.message);
+    }
+  };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-      <div className="lg:col-span-3 bg-[#FFFFFF] p-6 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-lg font-semibold mb-5">
-          Tạo phiếu nhập & Sinh mã QR
+    <div className="bg-[#FFFFFF] p-6 rounded-xl shadow-sm border border-gray-100 animate-in fade-in zoom-in duration-300">
+      <div className="mb-6 border-b border-gray-100 pb-4">
+        <h2 className="text-xl font-bold text-[#2C2C2A] flex items-center gap-2">
+          <FileText className="text-[#1D9E75]" /> Tạo Phiếu Nhập Kho (Lô hàng
+          mới)
         </h2>
-        <form
-          className="space-y-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setIsCreated(true);
-          }}
-        >
-          <div className="grid grid-cols-2 gap-4">
-            <FormInput
-              label="Nhà cung cấp"
-              type="select"
-              options={["Nông trại Đà Lạt", "HTX Rau Sạch"]}
-            />
-            <FormInput
-              label="Sản phẩm (Biến thể)"
-              type="select"
-              options={["Xoài cát Hoà Lộc - Loại 1", "Rau muống - 1kg"]}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <FormInput label="Ngày thu hoạch" type="date" />
-            <FormInput
-              label="Hạn sử dụng (Phải sau ngày thu hoạch)"
-              type="date"
-            />
-          </div>
-          <div>
-            <label className="block text-[13px] font-medium text-[#888780] mb-1.5">
-              Vị trí lưu kho (Kho → Khu → Dãy → Kệ)
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              <select className="border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-[#1D9E75]">
-                <option>Kho Tổng</option>
-              </select>
-              <select className="border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-[#1D9E75]">
-                <option>Khu A</option>
-              </select>
-              <select className="border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-[#1D9E75]">
-                <option>Dãy 1</option>
-              </select>
-              <select className="border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-[#1D9E75]">
-                <option>Kệ 2</option>
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <FormInput
-              label="Số lượng thùng (Sẽ sinh N mã QR)"
-              type="number"
-              defaultValue="15"
-            />
-          </div>
-          <div>
-            <label className="block text-[13px] font-medium text-[#888780] mb-1.5">
-              Ghi chú
-            </label>
-            <textarea
-              rows={2}
-              className="w-full border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-[#1D9E75]"
-              placeholder="Nhập ghi chú..."
-            ></textarea>
-          </div>
-          <button
-            type="submit"
-            className="w-full py-3 bg-[#1D9E75] hover:bg-teal-700 text-white font-medium rounded-lg transition-colors mt-2"
-          >
-            Tạo phiếu nhập
-          </button>
-        </form>
+        <p className="text-sm text-[#888780] mt-1">
+          Hệ thống sẽ tạo phiếu nháp chờ quản lý duyệt trước khi sinh mã QR.
+        </p>
       </div>
 
-      <div className="lg:col-span-2 bg-[#FFFFFF] p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-        <h2 className="text-lg font-semibold mb-5">
-          Danh sách mã QR (Preview)
-        </h2>
-        {!isCreated ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-            <ScanBarcode className="text-gray-300 w-16 h-16 mb-3" />
-            <p className="text-sm text-[#888780]">
-              Nhập số lượng thùng để hệ thống tính toán mã QR.
+      {status === "success" && (
+        <div className="mb-6 p-4 bg-[#1D9E75]/10 border border-[#1D9E75]/20 rounded-lg flex items-start gap-3 text-[#1D9E75]">
+          <CheckCircle className="mt-0.5 shrink-0" size={20} />
+          <div>
+            <h3 className="font-bold">Nhập kho thành công!</h3>
+            <p className="text-sm mt-1 text-gray-600">
+              Hệ thống đã tự động duyệt và sinh ra <strong>{qrCount}</strong> mã
+              QR. Hàng đã được cộng thẳng vào bảng Tồn Kho và Sơ đồ sức chứa.
             </p>
           </div>
-        ) : (
-          <div className="flex-1 flex flex-col">
-            <div className="p-3 mb-4 bg-teal-50 text-teal-800 border border-teal-200 rounded-lg flex items-center gap-2 text-sm font-medium">
-              <CheckCircle size={16} className="text-[#1D9E75]" /> Đã tạo 15
-              thùng vào Khu A - Dãy 1 - Kệ 2
-            </div>
-            <div className="grid grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-1 max-h-[400px]">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="border border-gray-200 p-3 rounded-lg flex gap-3 items-center bg-gray-50"
-                >
-                  <div
-                    className="w-12 h-12 bg-gray-800 rounded-sm opacity-80"
-                    style={{
-                      backgroundImage:
-                        "repeating-linear-gradient(45deg, transparent, transparent 2px, #fff 2px, #fff 4px)",
-                    }}
-                  ></div>
-                  <div>
-                    <p className="text-xs font-bold font-mono">QR-00{42 + i}</p>
-                    <p className="text-[10px] text-[#888780] mt-1">
-                      HSD: 25/04/26
-                    </p>
-                  </div>
-                </div>
+        </div>
+      )}
+
+      {status === "error" && (
+        <div className="mb-6 p-4 bg-[#E24B4A]/10 border border-[#E24B4A]/20 rounded-lg flex items-start gap-3 text-[#E24B4A]">
+          <AlertTriangle className="mt-0.5 shrink-0" size={20} />
+          <div>
+            <h3 className="font-bold">Thất bại!</h3>
+            <p className="text-sm mt-1">{message}</p>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Khối 1: Thông tin sản phẩm */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-[#2C2C2A] flex items-center gap-1.5">
+              <Package size={16} /> Nhà cung cấp
+            </label>
+            <select
+              name="ma_ncc"
+              value={formData.ma_ncc}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:border-[#1D9E75] bg-gray-50 text-sm"
+            >
+              <option value="">-- Chọn Nhà cung cấp --</option>
+              {formOptions?.ncc?.map((n: any) => (
+                <option key={n.id} value={n.id}>
+                  {n.name}
+                </option>
               ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-[#2C2C2A] flex items-center gap-1.5">
+              <Package size={16} /> Sản phẩm
+            </label>
+            <select
+              name="ma_bien_the"
+              value={formData.ma_bien_the}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:border-[#1D9E75] bg-gray-50 text-sm"
+            >
+              <option value="">-- Chọn Sản phẩm --</option>
+              {formOptions?.sp?.map((s: any) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-[#2C2C2A]">
+              Số lượng (Thùng/Kiện)
+            </label>
+            <input
+              type="number"
+              min="1"
+              name="so_luong_thung"
+              value={formData.so_luong_thung}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:border-[#1D9E75] bg-gray-50 text-sm"
+              placeholder="VD: 50"
+            />
+          </div>
+        </div>
+
+        {/* Khối 2: Ngày tháng */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-[#2C2C2A] flex items-center gap-1.5">
+              <Calendar size={16} /> Ngày thu hoạch
+            </label>
+            <input
+              type="date"
+              name="ngay_thu_hoach"
+              value={formData.ngay_thu_hoach}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:border-[#1D9E75] bg-gray-50 text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-[#2C2C2A] flex items-center gap-1.5">
+              <Calendar size={16} /> Ngày nhập kho
+            </label>
+            <input
+              type="date"
+              name="ngay_nhap_kho"
+              value={formData.ngay_nhap_kho}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:border-[#1D9E75] bg-gray-50 text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-[#2C2C2A] flex items-center gap-1.5">
+              <Calendar size={16} /> Hạn sử dụng
+            </label>
+            <input
+              type="date"
+              name="han_su_dung"
+              value={formData.han_su_dung}
+              onChange={handleInputChange}
+              required
+              className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:border-[#1D9E75] bg-gray-50 text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Khối 3: Vị trí lưu kho dự kiến */}
+        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+          <h3 className="text-sm font-bold text-[#2C2C2A] flex items-center gap-2 mb-4">
+            <MapPin size={16} className="text-[#378ADD]" /> Vị trí cất trữ dự
+            kiến
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                Khu vực
+              </label>
+              <input
+                type="text"
+                name="khu"
+                value={formData.vi_tri.khu}
+                onChange={handleInputChange}
+                placeholder="Khu A"
+                className="w-full p-2 border border-gray-200 rounded outline-none focus:border-[#1D9E75] text-sm"
+              />
             </div>
-            <div className="mt-auto pt-4 flex gap-2">
-              <button className="flex-1 flex justify-center items-center gap-2 bg-[#2C2C2A] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-black">
-                <Printer size={16} /> In tất cả (15)
-              </button>
-              <button className="px-4 py-2.5 border border-gray-200 text-[#2C2C2A] rounded-lg hover:bg-gray-50">
-                <Download size={16} />
-              </button>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                Dãy
+              </label>
+              <input
+                type="text"
+                name="day"
+                value={formData.vi_tri.day}
+                onChange={handleInputChange}
+                placeholder="D1"
+                className="w-full p-2 border border-gray-200 rounded outline-none focus:border-[#1D9E75] text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                Kệ
+              </label>
+              <input
+                type="text"
+                name="ke"
+                value={formData.vi_tri.ke}
+                onChange={handleInputChange}
+                placeholder="K2"
+                className="w-full p-2 border border-gray-200 rounded outline-none focus:border-[#1D9E75] text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                Tầng
+              </label>
+              <input
+                type="text"
+                name="tang"
+                value={formData.vi_tri.tang}
+                onChange={handleInputChange}
+                placeholder="T1"
+                className="w-full p-2 border border-gray-200 rounded outline-none focus:border-[#1D9E75] text-sm"
+              />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+
+        <div className="flex justify-end pt-4">
+          <button
+            type="submit"
+            disabled={status === "loading"}
+            className="bg-[#1D9E75] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#15805e] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {status === "loading" ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>{" "}
+                Đang xử lý...
+              </>
+            ) : (
+              "Tạo Phiếu Nhập Kho"
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

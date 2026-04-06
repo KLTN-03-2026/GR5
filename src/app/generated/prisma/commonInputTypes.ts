@@ -320,6 +320,23 @@ export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
   _max?: Prisma.NestedJsonNullableFilter<$PrismaModel>
 }
 
+export type EnumTrangThaiPhieuNhapNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.TrangThaiPhieuNhap | Prisma.EnumTrangThaiPhieuNhapFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TrangThaiPhieuNhap[] | null
+  notIn?: $Enums.TrangThaiPhieuNhap[] | null
+  not?: Prisma.NestedEnumTrangThaiPhieuNhapNullableFilter<$PrismaModel> | $Enums.TrangThaiPhieuNhap | null
+}
+
+export type EnumTrangThaiPhieuNhapNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TrangThaiPhieuNhap | Prisma.EnumTrangThaiPhieuNhapFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TrangThaiPhieuNhap[] | null
+  notIn?: $Enums.TrangThaiPhieuNhap[] | null
+  not?: Prisma.NestedEnumTrangThaiPhieuNhapNullableWithAggregatesFilter<$PrismaModel> | $Enums.TrangThaiPhieuNhap | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTrangThaiPhieuNhapNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTrangThaiPhieuNhapNullableFilter<$PrismaModel>
+}
+
 export type NestedIntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[]
@@ -614,6 +631,23 @@ export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
   gt?: runtime.InputJsonValue
   gte?: runtime.InputJsonValue
   not?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel> | Prisma.JsonNullValueFilter
+}
+
+export type NestedEnumTrangThaiPhieuNhapNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.TrangThaiPhieuNhap | Prisma.EnumTrangThaiPhieuNhapFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TrangThaiPhieuNhap[] | null
+  notIn?: $Enums.TrangThaiPhieuNhap[] | null
+  not?: Prisma.NestedEnumTrangThaiPhieuNhapNullableFilter<$PrismaModel> | $Enums.TrangThaiPhieuNhap | null
+}
+
+export type NestedEnumTrangThaiPhieuNhapNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TrangThaiPhieuNhap | Prisma.EnumTrangThaiPhieuNhapFieldRefInput<$PrismaModel> | null
+  in?: $Enums.TrangThaiPhieuNhap[] | null
+  notIn?: $Enums.TrangThaiPhieuNhap[] | null
+  not?: Prisma.NestedEnumTrangThaiPhieuNhapNullableWithAggregatesFilter<$PrismaModel> | $Enums.TrangThaiPhieuNhap | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTrangThaiPhieuNhapNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTrangThaiPhieuNhapNullableFilter<$PrismaModel>
 }
 
 

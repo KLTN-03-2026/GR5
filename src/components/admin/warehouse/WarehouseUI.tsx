@@ -48,29 +48,54 @@ export function StatCard({
   );
 }
 
-export function FormInput({ label, type, options, defaultValue }: any) {
+export function FormInput({
+  label,
+  type,
+  options,
+  defaultValue,
+  name,
+  error,
+}: any) {
   return (
     <div>
       <label className="block text-[13px] font-medium text-[#888780] mb-1.5">
         {label}
       </label>
       {type === "select" ? (
-        <select className="w-full border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-[#1D9E75] text-[#2C2C2A]">
-          {options.map((opt: string) => (
-            <option key={opt}>{opt}</option>
-          ))}
+        <select
+          name={name}
+          defaultValue={defaultValue}
+          className={`w-full border rounded-lg p-2.5 text-sm outline-none text-[#2C2C2A] ${error ? "border-[#E24B4A] focus:border-[#E24B4A]" : "border-gray-200 focus:border-[#1D9E75]"}`}
+        >
+          <option value="">-- Chọn --</option>
+          {options?.map((opt: any, index: number) => {
+            // Logic "bảo kê": Nếu là object thì lấy id/name, nếu là string thì lấy thẳng string
+            const isObject = typeof opt === "object";
+            const val = isObject ? opt.id : opt;
+            const text = isObject ? opt.name : opt;
+
+            // Dùng val hoặc index làm key đảm bảo 100% không bao giờ bị trùng hay undefined
+            return (
+              <option key={val || `opt-${index}`} value={val}>
+                {text}
+              </option>
+            );
+          })}
         </select>
       ) : (
         <input
           type={type}
+          name={name}
           defaultValue={defaultValue}
-          className="w-full border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-[#1D9E75] text-[#2C2C2A]"
+          className={`w-full border rounded-lg p-2.5 text-sm outline-none text-[#2C2C2A] ${error ? "border-[#E24B4A] focus:border-[#E24B4A]" : "border-gray-200 focus:border-[#1D9E75]"}`}
         />
+      )}
+      {error && (
+        <p className="text-[#E24B4A] text-[11px] mt-1.5 font-medium">{error}</p>
       )}
     </div>
   );
 }
-
 export function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { color: string; label: string }> = {
     normal: {

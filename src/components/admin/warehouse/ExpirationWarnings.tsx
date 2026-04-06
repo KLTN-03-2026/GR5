@@ -68,9 +68,11 @@ export default function ExpirationWarnings({ warningsData }: any) {
                   </span>
                 ) : (
                   <span
-                    className={`px-2.5 py-1 text-[11px] font-bold rounded shadow-sm ${getBadgeStyle(w.loai_canh_bao)}`}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded shadow-sm ${getBadgeStyle(w.muc_do || w.loai_canh_bao)}`}
                   >
-                    {getLevelLabel(w.loai_canh_bao).toUpperCase()}
+                    {String(
+                      getLevelLabel(w.muc_do || w.loai_canh_bao) || "KHÔNG RÕ",
+                    ).toUpperCase()}
                   </span>
                 )}
               </td>

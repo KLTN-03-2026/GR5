@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import "./globals.css"; // DÒNG NÀY LÀ MẠNG SỐNG CỦA TAILWIND
+// Dùng @/app/ để tự động trỏ từ thư mục gốc, không bao giờ lỗi đường dẫn
+import "@/app/globals.css";
+import { CartProvider } from "@/lib/CartContext";
 
 export const metadata: Metadata = {
   title: "NôngSản Dashboard",
@@ -13,7 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body>
+        <CartProvider>{children}</CartProvider>
+      </body>
     </html>
   );
 }
