@@ -131,7 +131,7 @@ export default function ProductManagementPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Quản lý kho hàng</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Quản lý sản phẩm</h2>
           <p className="text-gray-500 text-sm mt-1">Thêm, sửa, xóa và kiểm soát tồn kho nông sản.</p>
         </div>
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
