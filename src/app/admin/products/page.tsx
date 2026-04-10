@@ -3,7 +3,17 @@
 import React, { useState } from 'react';
 import { Search, Bell, Plus, Edit2, Trash2, X, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Product } from '@/types'; 
+
+// --- ĐỊNH NGHĨA KIỂU DỮ LIỆU (Giúp sửa triệt để lỗi ts(2305)) ---
+interface Product {
+  id: string;
+  name: string;
+  farm: string;
+  quantity: string;
+  unitPrice: number;
+  totalPrice: number;
+  image: string;
+}
 
 // --- DỮ LIỆU MẪU ---
 const INITIAL_PRODUCTS: Product[] = [
@@ -32,7 +42,7 @@ export default function ProductManagementPage() {
   
   // --- STATE MODAL FORM (DÙNG CHUNG CHO CẢ THÊM VÀ SỬA) ---
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null); // Nếu có ID là đang Sửa, nếu null là đang Thêm mới
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   // --- STATE DỮ LIỆU FORM ---
   const [name, setName] = useState('');
@@ -48,13 +58,11 @@ export default function ProductManagementPage() {
   // LOGIC SỬA (EDIT)
   // ==========================================
   const handleEditClick = (product: Product) => {
-    // 1. Điền sẵn thông tin cũ vào form
     setName(product.name);
     setFarm(product.farm);
     setQuantity(product.quantity);
     setUnitPrice(product.unitPrice.toString());
     
-    // 2. Ghi nhớ ID đang sửa và mở Form
     setEditingId(product.id);
     setIsFormModalOpen(true);
   };
@@ -70,7 +78,6 @@ export default function ProductManagementPage() {
     const calculatedTotal = Number(unitPrice) * parsedQuantity;
 
     if (editingId) {
-      // ĐANG Ở CHẾ ĐỘ SỬA: Cập nhật lại mảng
       setProducts(prev => prev.map(p => p.id === editingId ? {
         ...p,
         name,
@@ -80,7 +87,6 @@ export default function ProductManagementPage() {
         totalPrice: calculatedTotal
       } : p));
     } else {
-      // ĐANG Ở CHẾ ĐỘ THÊM MỚI
       const id = Math.random().toString(36).substring(2, 9);
       const newProduct: Product = {
         id,
@@ -94,7 +100,6 @@ export default function ProductManagementPage() {
       setProducts(prev => [newProduct, ...prev]);
     }
 
-    // Reset Form và đóng Modal
     closeFormModal();
   };
 
@@ -109,7 +114,7 @@ export default function ProductManagementPage() {
   // ==========================================
   const handleDeleteClick = (id: string) => {
     setProductToDelete(id);
-    setIsDeleteModalOpen(true); // Hiện bảng xác nhận xóa
+    setIsDeleteModalOpen(true);
   };
 
   const confirmDelete = () => {

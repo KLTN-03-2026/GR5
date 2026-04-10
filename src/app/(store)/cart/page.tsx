@@ -384,7 +384,7 @@ export default function CartPage() {
               </div>
 
               <Link
-                href="/checkout"
+                href="/payment"
                 className="w-full bg-[#065F46] text-white py-4 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-2 hover:bg-emerald-800 transition-all shadow-md active:scale-95"
               >
                 Tiến hành thanh toán <ChevronRight className="w-5 h-5" />

@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-
 // Mock Data
 const CATEGORIES = [
   {
@@ -30,8 +29,7 @@ const CATEGORIES = [
     id: "gao-ngu-coc",
     name: "Gạo & Ngũ cốc",
     description: "Hạt ngọc trời ban",
-    image:
-      "https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&q=80&w=400",
+    image: "https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&q=80&w=400",
   },
   {
     id: "thuy-hai-san",
@@ -86,21 +84,12 @@ export default function HomePage() {
     <main className="grow pt-24">
       {/* Hero Section */}
       <section className="px-6 mb-16">
-<<<<<<< HEAD
-        <div className="max-w-7xl mx-auto relative h-150 rounded-[2.5rem] overflow-hidden group">
-         <img 
-  src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=100&w=1600&auto=format&fit=crop"
-  alt="Hero" 
-  className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-/>
-=======
         <div className="max-w-7xl mx-auto relative h-[600px] rounded-[2.5rem] overflow-hidden group">
           <img
             src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=100&w=1600&auto=format&fit=crop"
             alt="Hero"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
           />
->>>>>>> bbf13b23c67c23b12ecbcdb72ec4e83741181833
           <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/40 to-transparent" />
 
           <div className="relative h-full flex flex-col justify-center px-12 md:px-24 max-w-3xl">
@@ -157,13 +146,8 @@ export default function HomePage() {
           </h2>
           <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full" />
         </div>
-<<<<<<< HEAD
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16" >
-=======
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
->>>>>>> bbf13b23c67c23b12ecbcdb72ec4e83741181833
           {CATEGORIES.map((cat) => (
             <a
               key={cat.id}
@@ -194,14 +178,14 @@ export default function HomePage() {
       <section className="py-16 px-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-12 gap-6">
           {/* Large Card */}
-          <div className="col-span-12 lg:col-span-8 bg-emerald-50/50 rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col justify-between min-h-125 border border-emerald-100">
+          <div className="col-span-12 lg:col-span-8 bg-emerald-50/50 rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col justify-between min-h-[500px] border border-emerald-100">
             <div className="absolute top-0 right-0 w-1/2 h-full">
               <img
                 src="https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=800"
                 alt="Organic"
                 className="w-full h-full object-cover opacity-90"
               />
-              <div className="absolute inset-0 " />
+              <div className="absolute inset-0 bg-gradient-to-l from-transparent to-emerald-50/90" />
             </div>
             <div className="relative z-10 max-w-xs">
               <p className="text-emerald-600 font-bold tracking-widest text-xs uppercase mb-4">
@@ -317,11 +301,6 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {PRODUCTS.map((product) => (
-<<<<<<< HEAD
-            <motion.div key={product.id} whileHover={{ y: -8 }} className="bg-white p-4 rounded-3xl group hover:shadow-2xl hover:shadow-emerald-900/5 transition-all duration-300 border border-gray-100">
-              <div className="relative aspect-square rounded-2xl overflow-hidden mb-4 bg-gray-50">
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-=======
             <motion.div
               key={product.id}
               whileHover={{ y: -8 }}
@@ -333,7 +312,6 @@ export default function HomePage() {
                   alt={product.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
->>>>>>> bbf13b23c67c23b12ecbcdb72ec4e83741181833
                 {product.tag && (
                   <div className="absolute top-4 left-4 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">
                     {product.tag}

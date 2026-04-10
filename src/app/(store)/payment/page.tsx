@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+// 1. IMPORT HOOK GIỎ HÀNG THẬT
+import { useCart } from "@/lib/CartContext";
 
 export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('cod');
@@ -14,31 +16,24 @@ export default function CheckoutPage() {
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Dữ liệu giỏ hàng giả lập
-  const cartItems = [
-    { 
-      name: "Cải Kale Thủy Canh", 
-      weight: "500g", 
-      qty: 2, 
-      price: 45000, 
-      img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=400&auto=format&fit=crop" 
-    },
-    { 
-      name: "Xoài Cát Chu Loại 1", 
-      weight: "1kg", 
-      qty: 1, 
-      price: 65000, 
-      img: "https://images.unsplash.com/photo-1553279768-865429fa0078?q=80&w=400&auto=format&fit=crop" 
-    }
-  ];
+  // 2. KÉO DỮ LIỆU THẬT TỪ CONTEXT
+  const { cart } = useCart();
 
-  const subTotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const shippingFee = 15000;
+  // 3. TÍNH TOÁN LẠI DỰA TRÊN DỮ LIỆU THẬT
+  const subTotal = cart.reduce((acc, item) => acc + item.gia_ban * item.so_luong, 0);
+  
+  // Đồng bộ logic vận chuyển với trang Cart (Freeship > 500k)
+  const shippingFee = subTotal >= 500000 ? 0 : 30000; 
   const total = subTotal + shippingFee;
 
-const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async () => {
     try {
       setIsSubmitting(true);
+
+      // Nếu giỏ hàng trống thì chặn luôn không cho đặt
+      if (cart.length === 0) {
+        throw new Error("Giỏ hàng của bạn đang trống!");
+      }
 
       // --- BƯỚC 1: TẠO ĐƠN HÀNG ---
       const createOrderRes = await fetch('/api/store/orders', {
@@ -50,7 +45,7 @@ const handlePlaceOrder = async () => {
           phuong_thuc_thanh_toan: paymentMethod,
           ghi_chu: note,
           tong_tien: total,
-          items: cartItems
+          items: cart // Truyền trực tiếp mảng giỏ hàng thật lên API
         })
       });
 
@@ -60,13 +55,9 @@ const handlePlaceOrder = async () => {
       const orderId = orderData.orderId;
 
       // --- BƯỚC 2: PHÂN LUỒNG ---
-
       if (paymentMethod === 'cod') {
-        // Nếu là COD: Chuyển thẳng tới trang check kèm theo orderId để hiển thị
         window.location.href = `/payment/check?orderId=${orderId}`;
-        
       } else {
-        // Nếu là Online (VNPay/MoMo): Gọi API lấy link thanh toán
         const paymentRes = await fetch('/api/store/payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -75,9 +66,6 @@ const handlePlaceOrder = async () => {
 
         const paymentData = await paymentRes.json();
         if (paymentData.success && paymentData.paymentUrl) {
-          // Đẩy sang trang VNPay/MoMo
-          // Lưu ý: Sau khi khách trả tiền, VNPay sẽ tự động nhảy về trang /payment/check
-          // (Dựa vào returnUrl bạn cấu hình ở Backend dưới đây)
           window.location.href = paymentData.paymentUrl;
         } else {
           throw new Error(paymentData.message);
@@ -92,14 +80,11 @@ const handlePlaceOrder = async () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAF7]">
-      {/* Ghi chú: pt-32 để tránh bị Header (fixed) che mất nội dung. 
-        Bạn có thể điều chỉnh lại pt- cho phù hợp với chiều cao Header của bạn.
-      */}
-      <main className="pt-32 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
+      <main className="pt-16 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
         
         {/* Tiêu đề & Điều hướng nhanh */}
         <div className="mb-8">
-            <Link href="/cart" className="flex items-center gap-2 text-gray-400 hover:text-[#007832] font-bold transition-all mb-4">
+            <Link href="/cart" className="flex items-center gap-2 text-gray-400 hover:text-[#007832] font-bold transition-all mb-4 w-fit">
                 <ChevronLeft size={20} /> Quay lại giỏ hàng
             </Link>
             <h1 className="text-4xl font-black text-gray-950 tracking-tight">Thanh toán</h1>
@@ -111,7 +96,7 @@ const handlePlaceOrder = async () => {
           <div className="lg:col-span-8 space-y-8">
             
             {/* 1. Địa chỉ giao hàng */}
-            <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-emerald-50">
+            <section className="bg-white p-8 rounded-4xl shadow-sm border border-emerald-50">
               <div className="flex items-center space-x-3 mb-8">
                 <div className="p-2 bg-emerald-50 rounded-lg text-[#007832]">
                     <MapPin className="w-6 h-6" />
@@ -248,62 +233,52 @@ const handlePlaceOrder = async () => {
             <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-emerald-900/5 border border-emerald-50 sticky top-28">
               <h2 className="text-2xl font-black text-gray-950 mb-8 tracking-tight">Chi tiết đơn hàng</h2>
               
-              <div className="space-y-6 mb-10">
-                {cartItems.map((item, idx) => (
-                  <div key={idx} className="flex space-x-4 group">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 shadow-sm">
-                        <img 
-                          src={item.img} 
-                          className="w-full h-full object-cover transition-transform group-hover:scale-110" 
-                          alt={item.name} 
-                          referrerPolicy="no-referrer"
-                        />
+              <div className="space-y-6 mb-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                {/* 4. RENDER DỮ LIỆU THẬT Ở ĐÂY */}
+                {cart.length === 0 ? (
+                    <p className="text-center text-gray-500 text-sm font-medium py-4">Giỏ hàng trống</p>
+                ) : (
+                    cart.map((item, idx) => (
+                    <div key={idx} className="flex space-x-4 group">
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 shadow-sm">
+                            <img 
+                            src={item.anh_chinh} 
+                            className="w-full h-full object-cover transition-transform group-hover:scale-110" 
+                            alt={item.ten_san_pham} 
+                            referrerPolicy="no-referrer"
+                            />
+                        </div>
+                        <div className="flex-grow">
+                        <p className="text-sm font-black text-gray-900 leading-tight line-clamp-1">{item.ten_san_pham}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1 line-clamp-1">{item.phan_loai}</p>
+                        <div className="flex justify-between items-end mt-1">
+                            <span className="text-xs font-bold text-gray-400">SL: {item.so_luong}</span>
+                            <span className="font-black text-[#007832]">{(item.gia_ban * item.so_luong).toLocaleString('vi-VN')}đ</span>
+                        </div>
+                        </div>
                     </div>
-                    <div className="flex-grow">
-                      <p className="text-sm font-black text-gray-900 leading-tight">{item.name}</p>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">{item.weight}</p>
-                      <div className="flex justify-between items-end mt-1">
-                        <span className="text-xs font-bold text-gray-400">Số lượng: {item.qty}</span>
-{/* Sửa dòng này */}
-<span className="font-black text-[#007832]">{(item.price * item.qty).toLocaleString('vi-VN')}đ</span>                      </div>
-                    </div>
-                  </div>
-                ))}
+                    ))
+                )}
               </div>
 
+              {/* 5. TỔNG KẾT (ĐÃ DỌN DẸP CODE BỊ ĐÚP) */}
               <div className="space-y-4 pt-8 border-t border-gray-100">
-  <div className="flex justify-between text-gray-400 text-sm font-bold">
-    <span>Tiền hàng tạm tính</span>
-    <span className="text-gray-900">{subTotal.toLocaleString('vi-VN')}đ</span>
-  </div>
-  <div className="flex justify-between text-gray-400 text-sm font-bold">
-    <span>Phí vận chuyển</span>
-    <span className="text-gray-900">{shippingFee.toLocaleString('vi-VN')}đ</span>
-  </div>
-  
-  <div className="flex justify-between items-center pt-6 mt-4 border-t border-emerald-50">
-    <span className="text-lg font-black text-gray-950">TỔNG CỘNG</span>
-    <span className="text-3xl font-black text-[#007832] tracking-tighter">
-      {total.toLocaleString('vi-VN')}đ
-    </span>
-  </div>
-                </div>
-               <div className="space-y-4 pt-8 border-t border-gray-100">
                 <div className="flex justify-between text-gray-400 text-sm font-bold">
                   <span>Tiền hàng tạm tính</span>
-                  {/* THÊM 'vi-VN' VÀO ĐÂY */}
                   <span className="text-gray-900">{subTotal.toLocaleString('vi-VN')}đ</span>
                 </div>
                 <div className="flex justify-between text-gray-400 text-sm font-bold">
                   <span>Phí vận chuyển</span>
-                  {/* THÊM 'vi-VN' VÀO ĐÂY */}
-                  <span className="text-gray-900">{shippingFee.toLocaleString('vi-VN')}đ</span>
+                  {shippingFee === 0 ? (
+                      <span className="text-emerald-600 italic">Miễn phí</span>
+                  ) : (
+                      <span className="text-gray-900">{shippingFee.toLocaleString('vi-VN')}đ</span>
+                  )}
                 </div>
                 
                 <div className="flex justify-between items-center pt-6 mt-4 border-t border-emerald-50">
                   <span className="text-lg font-black text-gray-950">TỔNG CỘNG</span>
                   <span className="text-3xl font-black text-[#007832] tracking-tighter">
-                    {/* THÊM 'vi-VN' VÀO ĐÂY NỮA LÀ XONG */}
                     {total.toLocaleString('vi-VN')}đ
                   </span>
                 </div>
@@ -311,11 +286,11 @@ const handlePlaceOrder = async () => {
 
               <motion.button 
                 onClick={handlePlaceOrder}
-                disabled={isSubmitting}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                disabled={isSubmitting || cart.length === 0}
+                whileHover={{ scale: cart.length > 0 ? 1.02 : 1 }}
+                whileTap={{ scale: cart.length > 0 ? 0.98 : 1 }}
                 className={`w-full mt-10 py-5 rounded-[1.5rem] font-black text-white shadow-xl flex items-center justify-center space-x-3 transition-all ${
-                    isSubmitting 
+                    isSubmitting || cart.length === 0
                     ? 'bg-gray-300 cursor-not-allowed' 
                     : 'bg-[#007832] hover:bg-[#006028] shadow-emerald-900/20'
                 }`}

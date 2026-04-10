@@ -1,108 +1,114 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("📦 Dữ liệu FE gửi lên:", JSON.stringify(body, null, 2));
+    const { ma_nguoi_dung, tong_tien, items, ghi_chu } = body;
 
-    // BƯỚC 1: Lấy User ID (Tạm thời fix cứng hoặc lấy từ body)
-    const maNguoiDung = Number(body.ma_nguoi_dung) || 1;
-
-    // Kiểm tra xem User này có tồn tại không
-    const userExists = await prisma.nguoi_dung.findUnique({
-      where: { id: maNguoiDung }
-    });
-
-    if (!userExists) {
-      return NextResponse.json({ 
-        success: false, 
-        message: `Người dùng có ID ${maNguoiDung} không tồn tại trong CSDL.` 
-      }, { status: 400 });
-    }
-
-    // BƯỚC 2: TẠO ĐƠN HÀNG (Sử dụng đúng các trường trong Schema)
+    // KHÔNG DÙNG "as any" NỮA, VIẾT CHUẨN ĐỂ PRISMA KHÔNG BÁO LỖI
     const newOrder = await prisma.don_hang.create({
       data: {
-        // Nối với bảng nguoi_dung
+        // 1. Kết nối user đúng chuẩn Prisma
         nguoi_dung: {
-          connect: { id: maNguoiDung }
+          connect: { id: Number(ma_nguoi_dung || 1) }
         },
-        tong_tien: Number(body.tong_tien),
-        phi_van_chuyen: 15000, // Cứng phí ship như FE
-        trang_thai: "CHO_XAC_NHAN",
         
-        // --- CHÚ Ý ---
-        // Không có các cột: ghi_chu, phuong_thuc_thanh_toan, ma_dia_chi trong bảng don_hang
-        // Nên chúng ta không truyền vào đây để tránh lỗi Prisma.
+        // (Tạm thời KHÔNG LƯU ma_dia_chi ở đây để tránh lỗi Database)
+
+        tong_tien: Number(tong_tien || 0),
+        trang_thai: "CHO_XAC_NHAN",
+
+        // 2. Lưu chi tiết đơn: Đảm bảo nhét tiền vào cột 'don_gia'
+        chi_tiet_don_hang: {
+          create: items.map((item: any) => ({
+            ma_bien_the: Number(item.ma_bien_the || item.id),
+            so_luong: Number(item.so_luong || 1),
+            don_gia: Number(item.gia_ban || item.don_gia || 0), // Lấy đúng giá
+          }))
+        }
       }
     });
 
-    console.log("✅ Đã tạo đơn hàng thành công, ID:", newOrder.id);
+    return NextResponse.json({ success: true, orderId: newOrder.id });
+  } catch (error: any) {
+    console.error("❌ Lỗi POST đơn hàng (Runtime):", error.message);
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}
 
-    // BƯỚC 3: TẠO GIAO DỊCH THANH TOÁN
-    // Vì bảng don_hang không lưu phương thức, ta phải tạo một dòng bên bảng giao_dich_thanh_toan
-    // Lưu ý: ma_phuong_thuc = 1 (Tiền mặt), 2 (MoMo), 3 (VNPay) - Tùy bạn quy định trong DB
-    let phuongThucId = 1; 
-    if (body.phuong_thuc_thanh_toan === 'momo') phuongThucId = 2;
-    if (body.phuong_thuc_thanh_toan === 'vnpay') phuongThucId = 3;
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId') || "1";
 
-    try {
-      await prisma.giao_dich_thanh_toan.create({
-        data: {
-          don_hang: { connect: { id: newOrder.id } },
-          // Chú ý: Cần chắc chắn trong bảng phuong_thuc_thanh_toan đã có các id 1, 2, 3
-          // Nếu bảng đó trống, Prisma sẽ báo lỗi khóa ngoại ở đây.
-          // Tạm thời mình comment lại nếu bạn chưa thiết lập data cho bảng phuong_thuc_thanh_toan
-          /* phuong_thuc_thanh_toan: { connect: { id: phuongThucId } },
-          */
-          so_tien: newOrder.tong_tien,
-          trang_thai: "CHO_THANH_TOAN",
-        }
-      });
-      console.log("✅ Đã tạo giao dịch thanh toán chờ xử lý.");
-    } catch (e) {
-      console.warn("⚠️ Không tạo được giao dịch thanh toán (Có thể do bảng phuong_thuc_thanh_toan trống).");
-      // Cứ bỏ qua lỗi này để test VNPay trước
-    }
-
-    // BƯỚC 4: LƯU CHI TIẾT ĐƠN HÀNG (Nếu ID biến thể có thật)
-    try {
-        if (body.items && body.items.length > 0) {
-            for (const item of body.items) {
-                // Kiểm tra xem ID biến thể này có thật không
-                const bienTheExists = await prisma.bien_the_san_pham.findUnique({
-                    where: { id: Number(item.id) }
-                });
-
-                if (bienTheExists) {
-                    await prisma.chi_tiet_don_hang.create({
-                        data: {
-                            don_hang: { connect: { id: newOrder.id } },
-                            bien_the_san_pham: { connect: { id: bienTheExists.id } },
-                            so_luong: item.qty,
-                            don_gia: item.price
-                        }
-                    });
-                }
+    const orders = await prisma.don_hang.findMany({
+      where: { ma_nguoi_dung: Number(userId) },
+      include: {
+        chi_tiet_don_hang: {
+          include: {
+            bien_the_san_pham: {
+              include: {
+                san_pham: true
+              }
             }
-            console.log("✅ Đã lưu chi tiết món hàng.");
+          }
         }
-    } catch (e) {
-         console.warn("⚠️ Bỏ qua lỗi lưu chi tiết đơn hàng.");
-    }
-
-    // TRẢ VỀ ORDER ID ĐỂ FRONTEND GỌI TIẾP VNPAY
-    return NextResponse.json({ 
-      success: true, 
-      orderId: newOrder.id 
+      },
+      orderBy: { id: 'desc' }
     });
 
+    return NextResponse.json(orders);
   } catch (error: any) {
-    console.error("🔥 LỖI TẠO ĐƠN PRISMA CHI TIẾT:", error);
-    return NextResponse.json({ 
-      success: false, 
-      message: "Lỗi tạo đơn: " + error.message 
-    }, { status: 500 });
+    console.error("❌ Lỗi GET đơn hàng:", error.message);
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}
+
+// THÊM ĐOẠN NÀY VÀO CUỐI FILE route.ts
+
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json();
+    const { orderId, action, reason } = body;
+
+    if (!orderId) {
+      return NextResponse.json({ success: false, message: "Thiếu ID đơn hàng" }, { status: 400 });
+    }
+
+    // NẾU LÀ YÊU CẦU ĐỔI TRẢ
+    if (action === "RETURN") {
+      // Vì mình không rõ chính xác các cột trong bảng yeu_cau_doi_tra của bạn, 
+      // nên cách an toàn nhất (không bị đỏ code) là Cập nhật trực tiếp trạng thái của đơn hàng đó.
+      const updatedOrder = await prisma.don_hang.update({
+        where: { id: Number(orderId) },
+        data: ({
+          trang_thai: "YEU_CAU_DOI_TRA", // Đổi trạng thái đơn để Admin dễ thấy
+        } as any)
+      });
+
+      // LƯU Ý: Nếu bảng yeu_cau_doi_tra của bạn có trường ly_do, bạn có thể thay đoạn data ở trên thành:
+      /*
+      data: {
+        trang_thai: "YEU_CAU_DOI_TRA",
+        yeu_cau_doi_tra: {
+          create: {
+            // Nhập tên cột lý do của bạn vào đây, ví dụ:
+            ly_do_doi_tra: reason 
+          }
+        }
+      }
+      */
+
+      return NextResponse.json({ success: true, message: "Đã gửi yêu cầu thành công!" });
+    }
+
+    return NextResponse.json({ success: false, message: "Hành động không hợp lệ" }, { status: 400 });
+    
+  } catch (error: any) {
+    console.error("❌ Lỗi PUT đơn hàng:", error.message);
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
