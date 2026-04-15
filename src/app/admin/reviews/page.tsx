@@ -68,7 +68,8 @@ export default function ReviewsManagementPage() {
 
   // Hàm Toggle Ẩn/Hiện
   const toggleVisibility = async (id: number, currentStatus: string) => {
-    const newStatus = currentStatus === "DA_AN" ? "HIEN_THI" : "DA_AN";
+    // ĐÃ FIX: Đổi "HIEN_THI" thành "DA_DUYET"
+    const newStatus = currentStatus === "DA_AN" ? "DA_DUYET" : "DA_AN";
     try {
       const res = await fetch(`/api/admin/reviews/${id}`, {
         method: "PUT",
@@ -77,11 +78,11 @@ export default function ReviewsManagementPage() {
       });
       if (res.ok) {
         toast.success(
-          newStatus === "HIEN_THI"
+          newStatus === "DA_DUYET"
             ? "Đã duyệt hiển thị!"
             : "Đã ẩn đánh giá này!",
         );
-        fetchReviews(); // Load lại data
+        fetchReviews();
       } else {
         toast.error("Lỗi cập nhật!");
       }

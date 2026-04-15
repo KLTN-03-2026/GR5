@@ -257,6 +257,90 @@ async function main() {
     ]
   });
 
+  // ==========================================
+  // 6. TẠO DATA MODULE NHÂN SỰ (HR) ĐỂ TEST
+  // ==========================================
+  console.log('⏳ Đang tạo dữ liệu Nhân sự (Nhân viên, Ca làm, Chấm công)...');
+
+  // Xóa data cũ (nếu chạy seed nhiều lần để tránh lỗi trùng lặp)
+  await prisma.lich_su_cham_cong.deleteMany();
+  await prisma.lich_phan_cong_ca.deleteMany();
+  await prisma.ca_lam_viec.deleteMany();
+  await prisma.ho_so_nguoi_dung.deleteMany({ where: { cccd: { in: ['001099111111', '001099222222', '001099333333'] } } });
+  await prisma.nguoi_dung.deleteMany({ where: { email: { in: ['nva@nongsan.vn', 'ttb@nongsan.vn', 'lvc@nongsan.vn'] } } });
+
+  // A. TẠO 3 CA LÀM VIỆC CHUẨN (Dùng mốc 1970 theo chuẩn db.Time)
+  const caSang = await prisma.ca_lam_viec.create({
+    data: { ten_ca: 'Ca Sáng', gio_bat_dau: new Date('1970-01-01T06:00:00.000Z'), gio_ket_thuc: new Date('1970-01-01T14:00:00.000Z') }
+  });
+  const caChieu = await prisma.ca_lam_viec.create({
+    data: { ten_ca: 'Ca Chiều', gio_bat_dau: new Date('1970-01-01T14:00:00.000Z'), gio_ket_thuc: new Date('1970-01-01T22:00:00.000Z') }
+  });
+  const caToi = await prisma.ca_lam_viec.create({
+    data: { ten_ca: 'Ca Tối (Đêm)', gio_bat_dau: new Date('1970-01-01T22:00:00.000Z'), gio_ket_thuc: new Date('1970-01-02T06:00:00.000Z') }
+  });
+
+  // B. TẠO 3 NHÂN VIÊN MẪU
+  const nv1 = await prisma.nguoi_dung.create({ data: { email: 'nva@nongsan.vn', mat_khau: '123456', trang_thai: 1 } });
+  await prisma.ho_so_nguoi_dung.create({
+    data: { ma_nguoi_dung: nv1.id, ho_ten: 'Nguyễn Văn A', so_dien_thoai: '0901111111', cccd: '001099111111', chuc_vu: 'Nhân viên kho', bo_phan: 'Kho Tổng', luong_theo_gio: 25000, ngay_vao_lam: new Date('2025-01-01') }
+  });
+
+  const nv2 = await prisma.nguoi_dung.create({ data: { email: 'ttb@nongsan.vn', mat_khau: '123456', trang_thai: 1 } });
+  await prisma.ho_so_nguoi_dung.create({
+    data: { ma_nguoi_dung: nv2.id, ho_ten: 'Trần Thị B', so_dien_thoai: '0902222222', cccd: '001099222222', chuc_vu: 'Kiểm kê', bo_phan: 'Kho Tổng', luong_theo_gio: 27000, ngay_vao_lam: new Date('2025-06-15') }
+  });
+
+  const nv3 = await prisma.nguoi_dung.create({ data: { email: 'lvc@nongsan.vn', mat_khau: '123456', trang_thai: 1 } });
+  await prisma.ho_so_nguoi_dung.create({
+    data: { ma_nguoi_dung: nv3.id, ho_ten: 'Lê Văn C', so_dien_thoai: '0903333333', cccd: '001099333333', chuc_vu: 'Thủ kho', bo_phan: 'Quản lý', luong_theo_gio: 35000, ngay_vao_lam: new Date('2024-02-10') }
+  });
+
+  // C. PHÂN CA CHO "HÔM NAY" & "NGÀY MAI"
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const startOfTomorrow = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+
+  // NV1: Làm sáng hôm nay và mai
+  await prisma.lich_phan_cong_ca.createMany({
+    data: [
+      { ma_nguoi_dung: nv1.id, ma_ca_lam: caSang.id, ngay_lam_viec: startOfToday },
+      { ma_nguoi_dung: nv1.id, ma_ca_lam: caSang.id, ngay_lam_viec: startOfTomorrow },
+    ]
+  });
+
+  // NV2: Làm chiều hôm nay
+  await prisma.lich_phan_cong_ca.create({
+    data: { ma_nguoi_dung: nv2.id, ma_ca_lam: caChieu.id, ngay_lam_viec: startOfToday }
+  });
+
+  // NV3: Làm tối hôm nay
+  await prisma.lich_phan_cong_ca.create({
+    data: { ma_nguoi_dung: nv3.id, ma_ca_lam: caToi.id, ngay_lam_viec: startOfToday }
+  });
+
+  // D. TẠO DỮ LIỆU CHẤM CÔNG (Giả lập thực tế)
+  // NV1: Đi làm đúng giờ (Chấm vào lúc 05:55 sáng) - Chưa chấm ra
+  const gioVaoNV1 = new Date(today);
+  gioVaoNV1.setHours(5, 55, 0, 0);
+  await prisma.lich_su_cham_cong.create({
+    data: { ma_nguoi_dung: nv1.id, ma_ca_lam: caSang.id, gio_vao: gioVaoNV1, trang_thai: 'DUNG_GIO', so_phut_tre: 0 }
+  });
+
+  // NV2: Đi làm TRỄ (Ca chiều 14h, nhưng 14h30 mới chấm) - Đã về
+  const gioVaoNV2 = new Date(today);
+  gioVaoNV2.setHours(14, 30, 0, 0);
+  const gioRaNV2 = new Date(today);
+  gioRaNV2.setHours(22, 5, 0, 0);
+  await prisma.lich_su_cham_cong.create({
+    data: { ma_nguoi_dung: nv2.id, ma_ca_lam: caChieu.id, gio_vao: gioVaoNV2, gio_ra: gioRaNV2, trang_thai: 'TRE', so_phut_tre: 30 }
+  });
+
+  // NV3: Ca tối - Chưa chấm (Màn hình sẽ hiển thị "Chưa vào ca" hoặc "Vắng" tùy giờ hiện tại)
+
   console.log('✅ Seed dữ liệu Kho thành công! Mọi thứ đã sẵn sàng!');
 }
 
@@ -268,3 +352,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

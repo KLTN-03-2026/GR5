@@ -30,12 +30,14 @@ export type Lich_su_cham_congAvgAggregateOutputType = {
   id: number | null
   ma_nguoi_dung: number | null
   ma_ca_lam: number | null
+  so_phut_tre: number | null
 }
 
 export type Lich_su_cham_congSumAggregateOutputType = {
   id: number | null
   ma_nguoi_dung: number | null
   ma_ca_lam: number | null
+  so_phut_tre: number | null
 }
 
 export type Lich_su_cham_congMinAggregateOutputType = {
@@ -45,6 +47,8 @@ export type Lich_su_cham_congMinAggregateOutputType = {
   gio_vao: Date | null
   gio_ra: Date | null
   phuong_thuc_xac_thuc: string | null
+  trang_thai: string | null
+  so_phut_tre: number | null
 }
 
 export type Lich_su_cham_congMaxAggregateOutputType = {
@@ -54,6 +58,8 @@ export type Lich_su_cham_congMaxAggregateOutputType = {
   gio_vao: Date | null
   gio_ra: Date | null
   phuong_thuc_xac_thuc: string | null
+  trang_thai: string | null
+  so_phut_tre: number | null
 }
 
 export type Lich_su_cham_congCountAggregateOutputType = {
@@ -63,6 +69,8 @@ export type Lich_su_cham_congCountAggregateOutputType = {
   gio_vao: number
   gio_ra: number
   phuong_thuc_xac_thuc: number
+  trang_thai: number
+  so_phut_tre: number
   _all: number
 }
 
@@ -71,12 +79,14 @@ export type Lich_su_cham_congAvgAggregateInputType = {
   id?: true
   ma_nguoi_dung?: true
   ma_ca_lam?: true
+  so_phut_tre?: true
 }
 
 export type Lich_su_cham_congSumAggregateInputType = {
   id?: true
   ma_nguoi_dung?: true
   ma_ca_lam?: true
+  so_phut_tre?: true
 }
 
 export type Lich_su_cham_congMinAggregateInputType = {
@@ -86,6 +96,8 @@ export type Lich_su_cham_congMinAggregateInputType = {
   gio_vao?: true
   gio_ra?: true
   phuong_thuc_xac_thuc?: true
+  trang_thai?: true
+  so_phut_tre?: true
 }
 
 export type Lich_su_cham_congMaxAggregateInputType = {
@@ -95,6 +107,8 @@ export type Lich_su_cham_congMaxAggregateInputType = {
   gio_vao?: true
   gio_ra?: true
   phuong_thuc_xac_thuc?: true
+  trang_thai?: true
+  so_phut_tre?: true
 }
 
 export type Lich_su_cham_congCountAggregateInputType = {
@@ -104,6 +118,8 @@ export type Lich_su_cham_congCountAggregateInputType = {
   gio_vao?: true
   gio_ra?: true
   phuong_thuc_xac_thuc?: true
+  trang_thai?: true
+  so_phut_tre?: true
   _all?: true
 }
 
@@ -200,6 +216,8 @@ export type Lich_su_cham_congGroupByOutputType = {
   gio_vao: Date | null
   gio_ra: Date | null
   phuong_thuc_xac_thuc: string | null
+  trang_thai: string | null
+  so_phut_tre: number | null
   _count: Lich_su_cham_congCountAggregateOutputType | null
   _avg: Lich_su_cham_congAvgAggregateOutputType | null
   _sum: Lich_su_cham_congSumAggregateOutputType | null
@@ -232,6 +250,8 @@ export type lich_su_cham_congWhereInput = {
   gio_vao?: Prisma.DateTimeNullableFilter<"lich_su_cham_cong"> | Date | string | null
   gio_ra?: Prisma.DateTimeNullableFilter<"lich_su_cham_cong"> | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.StringNullableFilter<"lich_su_cham_cong"> | string | null
+  trang_thai?: Prisma.StringNullableFilter<"lich_su_cham_cong"> | string | null
+  so_phut_tre?: Prisma.IntNullableFilter<"lich_su_cham_cong"> | number | null
   nguoi_dung?: Prisma.XOR<Prisma.Nguoi_dungNullableScalarRelationFilter, Prisma.nguoi_dungWhereInput> | null
   ca_lam_viec?: Prisma.XOR<Prisma.Ca_lam_viecNullableScalarRelationFilter, Prisma.ca_lam_viecWhereInput> | null
 }
@@ -243,6 +263,8 @@ export type lich_su_cham_congOrderByWithRelationInput = {
   gio_vao?: Prisma.SortOrderInput | Prisma.SortOrder
   gio_ra?: Prisma.SortOrderInput | Prisma.SortOrder
   phuong_thuc_xac_thuc?: Prisma.SortOrderInput | Prisma.SortOrder
+  trang_thai?: Prisma.SortOrderInput | Prisma.SortOrder
+  so_phut_tre?: Prisma.SortOrderInput | Prisma.SortOrder
   nguoi_dung?: Prisma.nguoi_dungOrderByWithRelationInput
   ca_lam_viec?: Prisma.ca_lam_viecOrderByWithRelationInput
   _relevance?: Prisma.lich_su_cham_congOrderByRelevanceInput
@@ -258,6 +280,8 @@ export type lich_su_cham_congWhereUniqueInput = Prisma.AtLeast<{
   gio_vao?: Prisma.DateTimeNullableFilter<"lich_su_cham_cong"> | Date | string | null
   gio_ra?: Prisma.DateTimeNullableFilter<"lich_su_cham_cong"> | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.StringNullableFilter<"lich_su_cham_cong"> | string | null
+  trang_thai?: Prisma.StringNullableFilter<"lich_su_cham_cong"> | string | null
+  so_phut_tre?: Prisma.IntNullableFilter<"lich_su_cham_cong"> | number | null
   nguoi_dung?: Prisma.XOR<Prisma.Nguoi_dungNullableScalarRelationFilter, Prisma.nguoi_dungWhereInput> | null
   ca_lam_viec?: Prisma.XOR<Prisma.Ca_lam_viecNullableScalarRelationFilter, Prisma.ca_lam_viecWhereInput> | null
 }, "id">
@@ -269,6 +293,8 @@ export type lich_su_cham_congOrderByWithAggregationInput = {
   gio_vao?: Prisma.SortOrderInput | Prisma.SortOrder
   gio_ra?: Prisma.SortOrderInput | Prisma.SortOrder
   phuong_thuc_xac_thuc?: Prisma.SortOrderInput | Prisma.SortOrder
+  trang_thai?: Prisma.SortOrderInput | Prisma.SortOrder
+  so_phut_tre?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.lich_su_cham_congCountOrderByAggregateInput
   _avg?: Prisma.lich_su_cham_congAvgOrderByAggregateInput
   _max?: Prisma.lich_su_cham_congMaxOrderByAggregateInput
@@ -286,12 +312,16 @@ export type lich_su_cham_congScalarWhereWithAggregatesInput = {
   gio_vao?: Prisma.DateTimeNullableWithAggregatesFilter<"lich_su_cham_cong"> | Date | string | null
   gio_ra?: Prisma.DateTimeNullableWithAggregatesFilter<"lich_su_cham_cong"> | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.StringNullableWithAggregatesFilter<"lich_su_cham_cong"> | string | null
+  trang_thai?: Prisma.StringNullableWithAggregatesFilter<"lich_su_cham_cong"> | string | null
+  so_phut_tre?: Prisma.IntNullableWithAggregatesFilter<"lich_su_cham_cong"> | number | null
 }
 
 export type lich_su_cham_congCreateInput = {
   gio_vao?: Date | string | null
   gio_ra?: Date | string | null
   phuong_thuc_xac_thuc?: string | null
+  trang_thai?: string | null
+  so_phut_tre?: number | null
   nguoi_dung?: Prisma.nguoi_dungCreateNestedOneWithoutLich_su_cham_congInput
   ca_lam_viec?: Prisma.ca_lam_viecCreateNestedOneWithoutLich_su_cham_congInput
 }
@@ -303,12 +333,16 @@ export type lich_su_cham_congUncheckedCreateInput = {
   gio_vao?: Date | string | null
   gio_ra?: Date | string | null
   phuong_thuc_xac_thuc?: string | null
+  trang_thai?: string | null
+  so_phut_tre?: number | null
 }
 
 export type lich_su_cham_congUpdateInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   nguoi_dung?: Prisma.nguoi_dungUpdateOneWithoutLich_su_cham_congNestedInput
   ca_lam_viec?: Prisma.ca_lam_viecUpdateOneWithoutLich_su_cham_congNestedInput
 }
@@ -320,6 +354,8 @@ export type lich_su_cham_congUncheckedUpdateInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type lich_su_cham_congCreateManyInput = {
@@ -329,12 +365,16 @@ export type lich_su_cham_congCreateManyInput = {
   gio_vao?: Date | string | null
   gio_ra?: Date | string | null
   phuong_thuc_xac_thuc?: string | null
+  trang_thai?: string | null
+  so_phut_tre?: number | null
 }
 
 export type lich_su_cham_congUpdateManyMutationInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type lich_su_cham_congUncheckedUpdateManyInput = {
@@ -344,6 +384,8 @@ export type lich_su_cham_congUncheckedUpdateManyInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type Lich_su_cham_congListRelationFilter = {
@@ -369,12 +411,15 @@ export type lich_su_cham_congCountOrderByAggregateInput = {
   gio_vao?: Prisma.SortOrder
   gio_ra?: Prisma.SortOrder
   phuong_thuc_xac_thuc?: Prisma.SortOrder
+  trang_thai?: Prisma.SortOrder
+  so_phut_tre?: Prisma.SortOrder
 }
 
 export type lich_su_cham_congAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   ma_nguoi_dung?: Prisma.SortOrder
   ma_ca_lam?: Prisma.SortOrder
+  so_phut_tre?: Prisma.SortOrder
 }
 
 export type lich_su_cham_congMaxOrderByAggregateInput = {
@@ -384,6 +429,8 @@ export type lich_su_cham_congMaxOrderByAggregateInput = {
   gio_vao?: Prisma.SortOrder
   gio_ra?: Prisma.SortOrder
   phuong_thuc_xac_thuc?: Prisma.SortOrder
+  trang_thai?: Prisma.SortOrder
+  so_phut_tre?: Prisma.SortOrder
 }
 
 export type lich_su_cham_congMinOrderByAggregateInput = {
@@ -393,12 +440,15 @@ export type lich_su_cham_congMinOrderByAggregateInput = {
   gio_vao?: Prisma.SortOrder
   gio_ra?: Prisma.SortOrder
   phuong_thuc_xac_thuc?: Prisma.SortOrder
+  trang_thai?: Prisma.SortOrder
+  so_phut_tre?: Prisma.SortOrder
 }
 
 export type lich_su_cham_congSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   ma_nguoi_dung?: Prisma.SortOrder
   ma_ca_lam?: Prisma.SortOrder
+  so_phut_tre?: Prisma.SortOrder
 }
 
 export type lich_su_cham_congCreateNestedManyWithoutCa_lam_viecInput = {
@@ -489,6 +539,8 @@ export type lich_su_cham_congCreateWithoutCa_lam_viecInput = {
   gio_vao?: Date | string | null
   gio_ra?: Date | string | null
   phuong_thuc_xac_thuc?: string | null
+  trang_thai?: string | null
+  so_phut_tre?: number | null
   nguoi_dung?: Prisma.nguoi_dungCreateNestedOneWithoutLich_su_cham_congInput
 }
 
@@ -498,6 +550,8 @@ export type lich_su_cham_congUncheckedCreateWithoutCa_lam_viecInput = {
   gio_vao?: Date | string | null
   gio_ra?: Date | string | null
   phuong_thuc_xac_thuc?: string | null
+  trang_thai?: string | null
+  so_phut_tre?: number | null
 }
 
 export type lich_su_cham_congCreateOrConnectWithoutCa_lam_viecInput = {
@@ -536,12 +590,16 @@ export type lich_su_cham_congScalarWhereInput = {
   gio_vao?: Prisma.DateTimeNullableFilter<"lich_su_cham_cong"> | Date | string | null
   gio_ra?: Prisma.DateTimeNullableFilter<"lich_su_cham_cong"> | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.StringNullableFilter<"lich_su_cham_cong"> | string | null
+  trang_thai?: Prisma.StringNullableFilter<"lich_su_cham_cong"> | string | null
+  so_phut_tre?: Prisma.IntNullableFilter<"lich_su_cham_cong"> | number | null
 }
 
 export type lich_su_cham_congCreateWithoutNguoi_dungInput = {
   gio_vao?: Date | string | null
   gio_ra?: Date | string | null
   phuong_thuc_xac_thuc?: string | null
+  trang_thai?: string | null
+  so_phut_tre?: number | null
   ca_lam_viec?: Prisma.ca_lam_viecCreateNestedOneWithoutLich_su_cham_congInput
 }
 
@@ -551,6 +609,8 @@ export type lich_su_cham_congUncheckedCreateWithoutNguoi_dungInput = {
   gio_vao?: Date | string | null
   gio_ra?: Date | string | null
   phuong_thuc_xac_thuc?: string | null
+  trang_thai?: string | null
+  so_phut_tre?: number | null
 }
 
 export type lich_su_cham_congCreateOrConnectWithoutNguoi_dungInput = {
@@ -585,12 +645,16 @@ export type lich_su_cham_congCreateManyCa_lam_viecInput = {
   gio_vao?: Date | string | null
   gio_ra?: Date | string | null
   phuong_thuc_xac_thuc?: string | null
+  trang_thai?: string | null
+  so_phut_tre?: number | null
 }
 
 export type lich_su_cham_congUpdateWithoutCa_lam_viecInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   nguoi_dung?: Prisma.nguoi_dungUpdateOneWithoutLich_su_cham_congNestedInput
 }
 
@@ -600,6 +664,8 @@ export type lich_su_cham_congUncheckedUpdateWithoutCa_lam_viecInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type lich_su_cham_congUncheckedUpdateManyWithoutCa_lam_viecInput = {
@@ -608,6 +674,8 @@ export type lich_su_cham_congUncheckedUpdateManyWithoutCa_lam_viecInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type lich_su_cham_congCreateManyNguoi_dungInput = {
@@ -616,12 +684,16 @@ export type lich_su_cham_congCreateManyNguoi_dungInput = {
   gio_vao?: Date | string | null
   gio_ra?: Date | string | null
   phuong_thuc_xac_thuc?: string | null
+  trang_thai?: string | null
+  so_phut_tre?: number | null
 }
 
 export type lich_su_cham_congUpdateWithoutNguoi_dungInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ca_lam_viec?: Prisma.ca_lam_viecUpdateOneWithoutLich_su_cham_congNestedInput
 }
 
@@ -631,6 +703,8 @@ export type lich_su_cham_congUncheckedUpdateWithoutNguoi_dungInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type lich_su_cham_congUncheckedUpdateManyWithoutNguoi_dungInput = {
@@ -639,6 +713,8 @@ export type lich_su_cham_congUncheckedUpdateManyWithoutNguoi_dungInput = {
   gio_vao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gio_ra?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   phuong_thuc_xac_thuc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trang_thai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  so_phut_tre?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -650,6 +726,8 @@ export type lich_su_cham_congSelect<ExtArgs extends runtime.Types.Extensions.Int
   gio_vao?: boolean
   gio_ra?: boolean
   phuong_thuc_xac_thuc?: boolean
+  trang_thai?: boolean
+  so_phut_tre?: boolean
   nguoi_dung?: boolean | Prisma.lich_su_cham_cong$nguoi_dungArgs<ExtArgs>
   ca_lam_viec?: boolean | Prisma.lich_su_cham_cong$ca_lam_viecArgs<ExtArgs>
 }, ExtArgs["result"]["lich_su_cham_cong"]>
@@ -663,9 +741,11 @@ export type lich_su_cham_congSelectScalar = {
   gio_vao?: boolean
   gio_ra?: boolean
   phuong_thuc_xac_thuc?: boolean
+  trang_thai?: boolean
+  so_phut_tre?: boolean
 }
 
-export type lich_su_cham_congOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_nguoi_dung" | "ma_ca_lam" | "gio_vao" | "gio_ra" | "phuong_thuc_xac_thuc", ExtArgs["result"]["lich_su_cham_cong"]>
+export type lich_su_cham_congOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_nguoi_dung" | "ma_ca_lam" | "gio_vao" | "gio_ra" | "phuong_thuc_xac_thuc" | "trang_thai" | "so_phut_tre", ExtArgs["result"]["lich_su_cham_cong"]>
 export type lich_su_cham_congInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   nguoi_dung?: boolean | Prisma.lich_su_cham_cong$nguoi_dungArgs<ExtArgs>
   ca_lam_viec?: boolean | Prisma.lich_su_cham_cong$ca_lam_viecArgs<ExtArgs>
@@ -684,6 +764,8 @@ export type $lich_su_cham_congPayload<ExtArgs extends runtime.Types.Extensions.I
     gio_vao: Date | null
     gio_ra: Date | null
     phuong_thuc_xac_thuc: string | null
+    trang_thai: string | null
+    so_phut_tre: number | null
   }, ExtArgs["result"]["lich_su_cham_cong"]>
   composites: {}
 }
@@ -1061,6 +1143,8 @@ export interface lich_su_cham_congFieldRefs {
   readonly gio_vao: Prisma.FieldRef<"lich_su_cham_cong", 'DateTime'>
   readonly gio_ra: Prisma.FieldRef<"lich_su_cham_cong", 'DateTime'>
   readonly phuong_thuc_xac_thuc: Prisma.FieldRef<"lich_su_cham_cong", 'String'>
+  readonly trang_thai: Prisma.FieldRef<"lich_su_cham_cong", 'String'>
+  readonly so_phut_tre: Prisma.FieldRef<"lich_su_cham_cong", 'Int'>
 }
     
 

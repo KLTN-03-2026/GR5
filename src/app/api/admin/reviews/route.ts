@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'; // Tắt cache vĩnh viễn
+
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
@@ -10,10 +12,14 @@ export async function GET() {
           select: { ten_san_pham: true, anh_san_pham: { take: 1 } }
         },
         nguoi_dung: {
-          select: { ho_ten: true, email: true }
+          // ĐÃ XÓA ho_ten. CHỈ LẤY EMAIL VÀ HO_SO_NGUOI_DUNG
+          select: { 
+            email: true,
+            ho_so_nguoi_dung: true 
+          }
         }
       },
-      orderBy: { id: 'desc' } // Sắp xếp mới nhất lên đầu
+      orderBy: { id: 'desc' }
     });
     return NextResponse.json(reviews);
   } catch (error) {

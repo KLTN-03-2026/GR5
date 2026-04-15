@@ -11,6 +11,7 @@
 
 export const TrangThaiPhieuNhap = {
   CHO_DUYET: 'CHO_DUYET',
+  CHO_KIEM_TRA: 'CHO_KIEM_TRA',
   DA_DUYET: 'DA_DUYET',
   DA_HUY: 'DA_HUY',
   HOAN_THANH: 'HOAN_THANH'

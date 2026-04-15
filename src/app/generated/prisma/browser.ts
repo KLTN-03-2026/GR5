@@ -143,6 +143,16 @@ export type gio_hang = Prisma.gio_hangModel
  */
 export type ho_so_nguoi_dung = Prisma.ho_so_nguoi_dungModel
 /**
+ * Model don_xin_nghi
+ * 
+ */
+export type don_xin_nghi = Prisma.don_xin_nghiModel
+/**
+ * Model bang_luong_thang
+ * 
+ */
+export type bang_luong_thang = Prisma.bang_luong_thangModel
+/**
  * Model kho_hang
  * 
  */

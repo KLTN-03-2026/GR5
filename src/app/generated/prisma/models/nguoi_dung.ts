@@ -238,6 +238,10 @@ export type nguoi_dungWhereInput = {
   thong_bao?: Prisma.Thong_baoListRelationFilter
   vai_tro_nguoi_dung?: Prisma.Vai_tro_nguoi_dungListRelationFilter
   yeu_cau_doi_tra?: Prisma.Yeu_cau_doi_traListRelationFilter
+  don_xin_nghi_tao?: Prisma.Don_xin_nghiListRelationFilter
+  don_xin_nghi_duyet?: Prisma.Don_xin_nghiListRelationFilter
+  bang_luong_thang?: Prisma.Bang_luong_thangListRelationFilter
+  donXinNghis?: Prisma.Don_xin_nghiListRelationFilter
 }
 
 export type nguoi_dungOrderByWithRelationInput = {
@@ -264,6 +268,10 @@ export type nguoi_dungOrderByWithRelationInput = {
   thong_bao?: Prisma.thong_baoOrderByRelationAggregateInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungOrderByRelationAggregateInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traOrderByRelationAggregateInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiOrderByRelationAggregateInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiOrderByRelationAggregateInput
+  bang_luong_thang?: Prisma.bang_luong_thangOrderByRelationAggregateInput
+  donXinNghis?: Prisma.don_xin_nghiOrderByRelationAggregateInput
   _relevance?: Prisma.nguoi_dungOrderByRelevanceInput
 }
 
@@ -294,6 +302,10 @@ export type nguoi_dungWhereUniqueInput = Prisma.AtLeast<{
   thong_bao?: Prisma.Thong_baoListRelationFilter
   vai_tro_nguoi_dung?: Prisma.Vai_tro_nguoi_dungListRelationFilter
   yeu_cau_doi_tra?: Prisma.Yeu_cau_doi_traListRelationFilter
+  don_xin_nghi_tao?: Prisma.Don_xin_nghiListRelationFilter
+  don_xin_nghi_duyet?: Prisma.Don_xin_nghiListRelationFilter
+  bang_luong_thang?: Prisma.Bang_luong_thangListRelationFilter
+  donXinNghis?: Prisma.Don_xin_nghiListRelationFilter
 }, "id" | "email">
 
 export type nguoi_dungOrderByWithAggregationInput = {
@@ -343,6 +355,10 @@ export type nguoi_dungCreateInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateInput = {
@@ -369,6 +385,10 @@ export type nguoi_dungUncheckedCreateInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUpdateInput = {
@@ -394,6 +414,10 @@ export type nguoi_dungUpdateInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateInput = {
@@ -420,6 +444,10 @@ export type nguoi_dungUncheckedUpdateInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateManyInput = {
@@ -587,6 +615,66 @@ export type nguoi_dungUpdateOneRequiredWithoutHo_so_nguoi_dungNestedInput = {
   upsert?: Prisma.nguoi_dungUpsertWithoutHo_so_nguoi_dungInput
   connect?: Prisma.nguoi_dungWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.nguoi_dungUpdateToOneWithWhereWithoutHo_so_nguoi_dungInput, Prisma.nguoi_dungUpdateWithoutHo_so_nguoi_dungInput>, Prisma.nguoi_dungUncheckedUpdateWithoutHo_so_nguoi_dungInput>
+}
+
+export type nguoi_dungCreateNestedOneWithoutDon_xin_nghi_taoInput = {
+  create?: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDon_xin_nghi_taoInput, Prisma.nguoi_dungUncheckedCreateWithoutDon_xin_nghi_taoInput>
+  connectOrCreate?: Prisma.nguoi_dungCreateOrConnectWithoutDon_xin_nghi_taoInput
+  connect?: Prisma.nguoi_dungWhereUniqueInput
+}
+
+export type nguoi_dungCreateNestedOneWithoutDon_xin_nghi_duyetInput = {
+  create?: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDon_xin_nghi_duyetInput, Prisma.nguoi_dungUncheckedCreateWithoutDon_xin_nghi_duyetInput>
+  connectOrCreate?: Prisma.nguoi_dungCreateOrConnectWithoutDon_xin_nghi_duyetInput
+  connect?: Prisma.nguoi_dungWhereUniqueInput
+}
+
+export type nguoi_dungCreateNestedOneWithoutDonXinNghisInput = {
+  create?: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDonXinNghisInput, Prisma.nguoi_dungUncheckedCreateWithoutDonXinNghisInput>
+  connectOrCreate?: Prisma.nguoi_dungCreateOrConnectWithoutDonXinNghisInput
+  connect?: Prisma.nguoi_dungWhereUniqueInput
+}
+
+export type nguoi_dungUpdateOneRequiredWithoutDon_xin_nghi_taoNestedInput = {
+  create?: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDon_xin_nghi_taoInput, Prisma.nguoi_dungUncheckedCreateWithoutDon_xin_nghi_taoInput>
+  connectOrCreate?: Prisma.nguoi_dungCreateOrConnectWithoutDon_xin_nghi_taoInput
+  upsert?: Prisma.nguoi_dungUpsertWithoutDon_xin_nghi_taoInput
+  connect?: Prisma.nguoi_dungWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.nguoi_dungUpdateToOneWithWhereWithoutDon_xin_nghi_taoInput, Prisma.nguoi_dungUpdateWithoutDon_xin_nghi_taoInput>, Prisma.nguoi_dungUncheckedUpdateWithoutDon_xin_nghi_taoInput>
+}
+
+export type nguoi_dungUpdateOneWithoutDon_xin_nghi_duyetNestedInput = {
+  create?: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDon_xin_nghi_duyetInput, Prisma.nguoi_dungUncheckedCreateWithoutDon_xin_nghi_duyetInput>
+  connectOrCreate?: Prisma.nguoi_dungCreateOrConnectWithoutDon_xin_nghi_duyetInput
+  upsert?: Prisma.nguoi_dungUpsertWithoutDon_xin_nghi_duyetInput
+  disconnect?: Prisma.nguoi_dungWhereInput | boolean
+  delete?: Prisma.nguoi_dungWhereInput | boolean
+  connect?: Prisma.nguoi_dungWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.nguoi_dungUpdateToOneWithWhereWithoutDon_xin_nghi_duyetInput, Prisma.nguoi_dungUpdateWithoutDon_xin_nghi_duyetInput>, Prisma.nguoi_dungUncheckedUpdateWithoutDon_xin_nghi_duyetInput>
+}
+
+export type nguoi_dungUpdateOneWithoutDonXinNghisNestedInput = {
+  create?: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDonXinNghisInput, Prisma.nguoi_dungUncheckedCreateWithoutDonXinNghisInput>
+  connectOrCreate?: Prisma.nguoi_dungCreateOrConnectWithoutDonXinNghisInput
+  upsert?: Prisma.nguoi_dungUpsertWithoutDonXinNghisInput
+  disconnect?: Prisma.nguoi_dungWhereInput | boolean
+  delete?: Prisma.nguoi_dungWhereInput | boolean
+  connect?: Prisma.nguoi_dungWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.nguoi_dungUpdateToOneWithWhereWithoutDonXinNghisInput, Prisma.nguoi_dungUpdateWithoutDonXinNghisInput>, Prisma.nguoi_dungUncheckedUpdateWithoutDonXinNghisInput>
+}
+
+export type nguoi_dungCreateNestedOneWithoutBang_luong_thangInput = {
+  create?: Prisma.XOR<Prisma.nguoi_dungCreateWithoutBang_luong_thangInput, Prisma.nguoi_dungUncheckedCreateWithoutBang_luong_thangInput>
+  connectOrCreate?: Prisma.nguoi_dungCreateOrConnectWithoutBang_luong_thangInput
+  connect?: Prisma.nguoi_dungWhereUniqueInput
+}
+
+export type nguoi_dungUpdateOneRequiredWithoutBang_luong_thangNestedInput = {
+  create?: Prisma.XOR<Prisma.nguoi_dungCreateWithoutBang_luong_thangInput, Prisma.nguoi_dungUncheckedCreateWithoutBang_luong_thangInput>
+  connectOrCreate?: Prisma.nguoi_dungCreateOrConnectWithoutBang_luong_thangInput
+  upsert?: Prisma.nguoi_dungUpsertWithoutBang_luong_thangInput
+  connect?: Prisma.nguoi_dungWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.nguoi_dungUpdateToOneWithWhereWithoutBang_luong_thangInput, Prisma.nguoi_dungUpdateWithoutBang_luong_thangInput>, Prisma.nguoi_dungUncheckedUpdateWithoutBang_luong_thangInput>
 }
 
 export type nguoi_dungCreateNestedOneWithoutLich_phan_cong_caInput = {
@@ -801,6 +889,10 @@ export type nguoi_dungCreateWithoutDanh_gia_san_phamInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutDanh_gia_san_phamInput = {
@@ -826,6 +918,10 @@ export type nguoi_dungUncheckedCreateWithoutDanh_gia_san_phamInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutDanh_gia_san_phamInput = {
@@ -866,6 +962,10 @@ export type nguoi_dungUpdateWithoutDanh_gia_san_phamInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutDanh_gia_san_phamInput = {
@@ -891,6 +991,10 @@ export type nguoi_dungUncheckedUpdateWithoutDanh_gia_san_phamInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutDia_chi_nguoi_dungInput = {
@@ -915,6 +1019,10 @@ export type nguoi_dungCreateWithoutDia_chi_nguoi_dungInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutDia_chi_nguoi_dungInput = {
@@ -940,6 +1048,10 @@ export type nguoi_dungUncheckedCreateWithoutDia_chi_nguoi_dungInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutDia_chi_nguoi_dungInput = {
@@ -980,6 +1092,10 @@ export type nguoi_dungUpdateWithoutDia_chi_nguoi_dungInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutDia_chi_nguoi_dungInput = {
@@ -1005,6 +1121,10 @@ export type nguoi_dungUncheckedUpdateWithoutDia_chi_nguoi_dungInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutDon_hangInput = {
@@ -1029,6 +1149,10 @@ export type nguoi_dungCreateWithoutDon_hangInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutDon_hangInput = {
@@ -1054,6 +1178,10 @@ export type nguoi_dungUncheckedCreateWithoutDon_hangInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutDon_hangInput = {
@@ -1094,6 +1222,10 @@ export type nguoi_dungUpdateWithoutDon_hangInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutDon_hangInput = {
@@ -1119,6 +1251,10 @@ export type nguoi_dungUncheckedUpdateWithoutDon_hangInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutDu_lieu_khuon_matInput = {
@@ -1143,6 +1279,10 @@ export type nguoi_dungCreateWithoutDu_lieu_khuon_matInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutDu_lieu_khuon_matInput = {
@@ -1168,6 +1308,10 @@ export type nguoi_dungUncheckedCreateWithoutDu_lieu_khuon_matInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutDu_lieu_khuon_matInput = {
@@ -1208,6 +1352,10 @@ export type nguoi_dungUpdateWithoutDu_lieu_khuon_matInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutDu_lieu_khuon_matInput = {
@@ -1233,6 +1381,10 @@ export type nguoi_dungUncheckedUpdateWithoutDu_lieu_khuon_matInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutGio_hangInput = {
@@ -1257,6 +1409,10 @@ export type nguoi_dungCreateWithoutGio_hangInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutGio_hangInput = {
@@ -1282,6 +1438,10 @@ export type nguoi_dungUncheckedCreateWithoutGio_hangInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutGio_hangInput = {
@@ -1322,6 +1482,10 @@ export type nguoi_dungUpdateWithoutGio_hangInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutGio_hangInput = {
@@ -1347,6 +1511,10 @@ export type nguoi_dungUncheckedUpdateWithoutGio_hangInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutHo_so_nguoi_dungInput = {
@@ -1371,6 +1539,10 @@ export type nguoi_dungCreateWithoutHo_so_nguoi_dungInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutHo_so_nguoi_dungInput = {
@@ -1396,6 +1568,10 @@ export type nguoi_dungUncheckedCreateWithoutHo_so_nguoi_dungInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutHo_so_nguoi_dungInput = {
@@ -1436,6 +1612,10 @@ export type nguoi_dungUpdateWithoutHo_so_nguoi_dungInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutHo_so_nguoi_dungInput = {
@@ -1461,6 +1641,530 @@ export type nguoi_dungUncheckedUpdateWithoutHo_so_nguoi_dungInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
+}
+
+export type nguoi_dungCreateWithoutDon_xin_nghi_taoInput = {
+  email: string
+  mat_khau: string
+  trang_thai?: number | null
+  ngay_tao?: Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamCreateNestedManyWithoutNguoi_dungInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
+  don_hang?: Prisma.don_hangCreateNestedManyWithoutNguoi_dungInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matCreateNestedOneWithoutNguoi_dungInput
+  gio_hang?: Prisma.gio_hangCreateNestedOneWithoutNguoi_dungInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungCreateNestedOneWithoutNguoi_dungInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caCreateNestedManyWithoutNguoi_dungInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congCreateNestedManyWithoutNguoi_dungInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapCreateNestedManyWithoutNguoi_dungInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecCreateNestedManyWithoutNguoi_dungInput
+  phien_chat_ai?: Prisma.phien_chat_aiCreateNestedManyWithoutNguoi_dungInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoCreateNestedManyWithoutNguoi_dungInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedManyWithoutNguoi_dungInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capCreateNestedManyWithoutNguoi_dungInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoCreateNestedManyWithoutNguoi_dungInput
+  thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
+}
+
+export type nguoi_dungUncheckedCreateWithoutDon_xin_nghi_taoInput = {
+  id?: number
+  email: string
+  mat_khau: string
+  trang_thai?: number | null
+  ngay_tao?: Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUncheckedCreateNestedManyWithoutNguoi_dungInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_hang?: Prisma.don_hangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUncheckedCreateNestedOneWithoutNguoi_dungInput
+  gio_hang?: Prisma.gio_hangUncheckedCreateNestedOneWithoutNguoi_dungInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUncheckedCreateNestedOneWithoutNguoi_dungInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUncheckedCreateNestedManyWithoutNguoi_dungInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUncheckedCreateNestedManyWithoutNguoi_dungInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUncheckedCreateNestedManyWithoutNguoi_dungInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phien_chat_ai?: Prisma.phien_chat_aiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
+}
+
+export type nguoi_dungCreateOrConnectWithoutDon_xin_nghi_taoInput = {
+  where: Prisma.nguoi_dungWhereUniqueInput
+  create: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDon_xin_nghi_taoInput, Prisma.nguoi_dungUncheckedCreateWithoutDon_xin_nghi_taoInput>
+}
+
+export type nguoi_dungCreateWithoutDon_xin_nghi_duyetInput = {
+  email: string
+  mat_khau: string
+  trang_thai?: number | null
+  ngay_tao?: Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamCreateNestedManyWithoutNguoi_dungInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
+  don_hang?: Prisma.don_hangCreateNestedManyWithoutNguoi_dungInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matCreateNestedOneWithoutNguoi_dungInput
+  gio_hang?: Prisma.gio_hangCreateNestedOneWithoutNguoi_dungInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungCreateNestedOneWithoutNguoi_dungInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caCreateNestedManyWithoutNguoi_dungInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congCreateNestedManyWithoutNguoi_dungInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapCreateNestedManyWithoutNguoi_dungInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecCreateNestedManyWithoutNguoi_dungInput
+  phien_chat_ai?: Prisma.phien_chat_aiCreateNestedManyWithoutNguoi_dungInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoCreateNestedManyWithoutNguoi_dungInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedManyWithoutNguoi_dungInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capCreateNestedManyWithoutNguoi_dungInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoCreateNestedManyWithoutNguoi_dungInput
+  thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
+}
+
+export type nguoi_dungUncheckedCreateWithoutDon_xin_nghi_duyetInput = {
+  id?: number
+  email: string
+  mat_khau: string
+  trang_thai?: number | null
+  ngay_tao?: Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUncheckedCreateNestedManyWithoutNguoi_dungInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_hang?: Prisma.don_hangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUncheckedCreateNestedOneWithoutNguoi_dungInput
+  gio_hang?: Prisma.gio_hangUncheckedCreateNestedOneWithoutNguoi_dungInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUncheckedCreateNestedOneWithoutNguoi_dungInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUncheckedCreateNestedManyWithoutNguoi_dungInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUncheckedCreateNestedManyWithoutNguoi_dungInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUncheckedCreateNestedManyWithoutNguoi_dungInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phien_chat_ai?: Prisma.phien_chat_aiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
+}
+
+export type nguoi_dungCreateOrConnectWithoutDon_xin_nghi_duyetInput = {
+  where: Prisma.nguoi_dungWhereUniqueInput
+  create: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDon_xin_nghi_duyetInput, Prisma.nguoi_dungUncheckedCreateWithoutDon_xin_nghi_duyetInput>
+}
+
+export type nguoi_dungCreateWithoutDonXinNghisInput = {
+  email: string
+  mat_khau: string
+  trang_thai?: number | null
+  ngay_tao?: Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamCreateNestedManyWithoutNguoi_dungInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
+  don_hang?: Prisma.don_hangCreateNestedManyWithoutNguoi_dungInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matCreateNestedOneWithoutNguoi_dungInput
+  gio_hang?: Prisma.gio_hangCreateNestedOneWithoutNguoi_dungInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungCreateNestedOneWithoutNguoi_dungInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caCreateNestedManyWithoutNguoi_dungInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congCreateNestedManyWithoutNguoi_dungInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapCreateNestedManyWithoutNguoi_dungInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecCreateNestedManyWithoutNguoi_dungInput
+  phien_chat_ai?: Prisma.phien_chat_aiCreateNestedManyWithoutNguoi_dungInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoCreateNestedManyWithoutNguoi_dungInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedManyWithoutNguoi_dungInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capCreateNestedManyWithoutNguoi_dungInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoCreateNestedManyWithoutNguoi_dungInput
+  thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+}
+
+export type nguoi_dungUncheckedCreateWithoutDonXinNghisInput = {
+  id?: number
+  email: string
+  mat_khau: string
+  trang_thai?: number | null
+  ngay_tao?: Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUncheckedCreateNestedManyWithoutNguoi_dungInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_hang?: Prisma.don_hangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUncheckedCreateNestedOneWithoutNguoi_dungInput
+  gio_hang?: Prisma.gio_hangUncheckedCreateNestedOneWithoutNguoi_dungInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUncheckedCreateNestedOneWithoutNguoi_dungInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUncheckedCreateNestedManyWithoutNguoi_dungInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUncheckedCreateNestedManyWithoutNguoi_dungInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUncheckedCreateNestedManyWithoutNguoi_dungInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phien_chat_ai?: Prisma.phien_chat_aiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+}
+
+export type nguoi_dungCreateOrConnectWithoutDonXinNghisInput = {
+  where: Prisma.nguoi_dungWhereUniqueInput
+  create: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDonXinNghisInput, Prisma.nguoi_dungUncheckedCreateWithoutDonXinNghisInput>
+}
+
+export type nguoi_dungUpsertWithoutDon_xin_nghi_taoInput = {
+  update: Prisma.XOR<Prisma.nguoi_dungUpdateWithoutDon_xin_nghi_taoInput, Prisma.nguoi_dungUncheckedUpdateWithoutDon_xin_nghi_taoInput>
+  create: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDon_xin_nghi_taoInput, Prisma.nguoi_dungUncheckedCreateWithoutDon_xin_nghi_taoInput>
+  where?: Prisma.nguoi_dungWhereInput
+}
+
+export type nguoi_dungUpdateToOneWithWhereWithoutDon_xin_nghi_taoInput = {
+  where?: Prisma.nguoi_dungWhereInput
+  data: Prisma.XOR<Prisma.nguoi_dungUpdateWithoutDon_xin_nghi_taoInput, Prisma.nguoi_dungUncheckedUpdateWithoutDon_xin_nghi_taoInput>
+}
+
+export type nguoi_dungUpdateWithoutDon_xin_nghi_taoInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  mat_khau?: Prisma.StringFieldUpdateOperationsInput | string
+  trang_thai?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUpdateManyWithoutNguoi_dungNestedInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
+  don_hang?: Prisma.don_hangUpdateManyWithoutNguoi_dungNestedInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUpdateOneWithoutNguoi_dungNestedInput
+  gio_hang?: Prisma.gio_hangUpdateOneWithoutNguoi_dungNestedInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUpdateOneWithoutNguoi_dungNestedInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUpdateManyWithoutNguoi_dungNestedInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUpdateManyWithoutNguoi_dungNestedInput
+  phien_chat_ai?: Prisma.phien_chat_aiUpdateManyWithoutNguoi_dungNestedInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUpdateManyWithoutNguoi_dungNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateManyWithoutNguoi_dungNestedInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUpdateManyWithoutNguoi_dungNestedInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateManyWithoutNguoi_dungNestedInput
+  thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
+}
+
+export type nguoi_dungUncheckedUpdateWithoutDon_xin_nghi_taoInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  mat_khau?: Prisma.StringFieldUpdateOperationsInput | string
+  trang_thai?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_hang?: Prisma.don_hangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  gio_hang?: Prisma.gio_hangUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phien_chat_ai?: Prisma.phien_chat_aiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
+}
+
+export type nguoi_dungUpsertWithoutDon_xin_nghi_duyetInput = {
+  update: Prisma.XOR<Prisma.nguoi_dungUpdateWithoutDon_xin_nghi_duyetInput, Prisma.nguoi_dungUncheckedUpdateWithoutDon_xin_nghi_duyetInput>
+  create: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDon_xin_nghi_duyetInput, Prisma.nguoi_dungUncheckedCreateWithoutDon_xin_nghi_duyetInput>
+  where?: Prisma.nguoi_dungWhereInput
+}
+
+export type nguoi_dungUpdateToOneWithWhereWithoutDon_xin_nghi_duyetInput = {
+  where?: Prisma.nguoi_dungWhereInput
+  data: Prisma.XOR<Prisma.nguoi_dungUpdateWithoutDon_xin_nghi_duyetInput, Prisma.nguoi_dungUncheckedUpdateWithoutDon_xin_nghi_duyetInput>
+}
+
+export type nguoi_dungUpdateWithoutDon_xin_nghi_duyetInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  mat_khau?: Prisma.StringFieldUpdateOperationsInput | string
+  trang_thai?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUpdateManyWithoutNguoi_dungNestedInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
+  don_hang?: Prisma.don_hangUpdateManyWithoutNguoi_dungNestedInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUpdateOneWithoutNguoi_dungNestedInput
+  gio_hang?: Prisma.gio_hangUpdateOneWithoutNguoi_dungNestedInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUpdateOneWithoutNguoi_dungNestedInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUpdateManyWithoutNguoi_dungNestedInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUpdateManyWithoutNguoi_dungNestedInput
+  phien_chat_ai?: Prisma.phien_chat_aiUpdateManyWithoutNguoi_dungNestedInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUpdateManyWithoutNguoi_dungNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateManyWithoutNguoi_dungNestedInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUpdateManyWithoutNguoi_dungNestedInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateManyWithoutNguoi_dungNestedInput
+  thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
+}
+
+export type nguoi_dungUncheckedUpdateWithoutDon_xin_nghi_duyetInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  mat_khau?: Prisma.StringFieldUpdateOperationsInput | string
+  trang_thai?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_hang?: Prisma.don_hangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  gio_hang?: Prisma.gio_hangUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phien_chat_ai?: Prisma.phien_chat_aiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
+}
+
+export type nguoi_dungUpsertWithoutDonXinNghisInput = {
+  update: Prisma.XOR<Prisma.nguoi_dungUpdateWithoutDonXinNghisInput, Prisma.nguoi_dungUncheckedUpdateWithoutDonXinNghisInput>
+  create: Prisma.XOR<Prisma.nguoi_dungCreateWithoutDonXinNghisInput, Prisma.nguoi_dungUncheckedCreateWithoutDonXinNghisInput>
+  where?: Prisma.nguoi_dungWhereInput
+}
+
+export type nguoi_dungUpdateToOneWithWhereWithoutDonXinNghisInput = {
+  where?: Prisma.nguoi_dungWhereInput
+  data: Prisma.XOR<Prisma.nguoi_dungUpdateWithoutDonXinNghisInput, Prisma.nguoi_dungUncheckedUpdateWithoutDonXinNghisInput>
+}
+
+export type nguoi_dungUpdateWithoutDonXinNghisInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  mat_khau?: Prisma.StringFieldUpdateOperationsInput | string
+  trang_thai?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUpdateManyWithoutNguoi_dungNestedInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
+  don_hang?: Prisma.don_hangUpdateManyWithoutNguoi_dungNestedInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUpdateOneWithoutNguoi_dungNestedInput
+  gio_hang?: Prisma.gio_hangUpdateOneWithoutNguoi_dungNestedInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUpdateOneWithoutNguoi_dungNestedInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUpdateManyWithoutNguoi_dungNestedInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUpdateManyWithoutNguoi_dungNestedInput
+  phien_chat_ai?: Prisma.phien_chat_aiUpdateManyWithoutNguoi_dungNestedInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUpdateManyWithoutNguoi_dungNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateManyWithoutNguoi_dungNestedInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUpdateManyWithoutNguoi_dungNestedInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateManyWithoutNguoi_dungNestedInput
+  thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+}
+
+export type nguoi_dungUncheckedUpdateWithoutDonXinNghisInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  mat_khau?: Prisma.StringFieldUpdateOperationsInput | string
+  trang_thai?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_hang?: Prisma.don_hangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  gio_hang?: Prisma.gio_hangUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phien_chat_ai?: Prisma.phien_chat_aiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+}
+
+export type nguoi_dungCreateWithoutBang_luong_thangInput = {
+  email: string
+  mat_khau: string
+  trang_thai?: number | null
+  ngay_tao?: Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamCreateNestedManyWithoutNguoi_dungInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
+  don_hang?: Prisma.don_hangCreateNestedManyWithoutNguoi_dungInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matCreateNestedOneWithoutNguoi_dungInput
+  gio_hang?: Prisma.gio_hangCreateNestedOneWithoutNguoi_dungInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungCreateNestedOneWithoutNguoi_dungInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caCreateNestedManyWithoutNguoi_dungInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congCreateNestedManyWithoutNguoi_dungInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapCreateNestedManyWithoutNguoi_dungInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecCreateNestedManyWithoutNguoi_dungInput
+  phien_chat_ai?: Prisma.phien_chat_aiCreateNestedManyWithoutNguoi_dungInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoCreateNestedManyWithoutNguoi_dungInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoCreateNestedManyWithoutNguoi_dungInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capCreateNestedManyWithoutNguoi_dungInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoCreateNestedManyWithoutNguoi_dungInput
+  thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
+}
+
+export type nguoi_dungUncheckedCreateWithoutBang_luong_thangInput = {
+  id?: number
+  email: string
+  mat_khau: string
+  trang_thai?: number | null
+  ngay_tao?: Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUncheckedCreateNestedManyWithoutNguoi_dungInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_hang?: Prisma.don_hangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUncheckedCreateNestedOneWithoutNguoi_dungInput
+  gio_hang?: Prisma.gio_hangUncheckedCreateNestedOneWithoutNguoi_dungInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUncheckedCreateNestedOneWithoutNguoi_dungInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUncheckedCreateNestedManyWithoutNguoi_dungInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUncheckedCreateNestedManyWithoutNguoi_dungInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUncheckedCreateNestedManyWithoutNguoi_dungInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phien_chat_ai?: Prisma.phien_chat_aiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUncheckedCreateNestedManyWithoutNguoi_dungInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
+}
+
+export type nguoi_dungCreateOrConnectWithoutBang_luong_thangInput = {
+  where: Prisma.nguoi_dungWhereUniqueInput
+  create: Prisma.XOR<Prisma.nguoi_dungCreateWithoutBang_luong_thangInput, Prisma.nguoi_dungUncheckedCreateWithoutBang_luong_thangInput>
+}
+
+export type nguoi_dungUpsertWithoutBang_luong_thangInput = {
+  update: Prisma.XOR<Prisma.nguoi_dungUpdateWithoutBang_luong_thangInput, Prisma.nguoi_dungUncheckedUpdateWithoutBang_luong_thangInput>
+  create: Prisma.XOR<Prisma.nguoi_dungCreateWithoutBang_luong_thangInput, Prisma.nguoi_dungUncheckedCreateWithoutBang_luong_thangInput>
+  where?: Prisma.nguoi_dungWhereInput
+}
+
+export type nguoi_dungUpdateToOneWithWhereWithoutBang_luong_thangInput = {
+  where?: Prisma.nguoi_dungWhereInput
+  data: Prisma.XOR<Prisma.nguoi_dungUpdateWithoutBang_luong_thangInput, Prisma.nguoi_dungUncheckedUpdateWithoutBang_luong_thangInput>
+}
+
+export type nguoi_dungUpdateWithoutBang_luong_thangInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  mat_khau?: Prisma.StringFieldUpdateOperationsInput | string
+  trang_thai?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUpdateManyWithoutNguoi_dungNestedInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
+  don_hang?: Prisma.don_hangUpdateManyWithoutNguoi_dungNestedInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUpdateOneWithoutNguoi_dungNestedInput
+  gio_hang?: Prisma.gio_hangUpdateOneWithoutNguoi_dungNestedInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUpdateOneWithoutNguoi_dungNestedInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUpdateManyWithoutNguoi_dungNestedInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUpdateManyWithoutNguoi_dungNestedInput
+  phien_chat_ai?: Prisma.phien_chat_aiUpdateManyWithoutNguoi_dungNestedInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUpdateManyWithoutNguoi_dungNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUpdateManyWithoutNguoi_dungNestedInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUpdateManyWithoutNguoi_dungNestedInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateManyWithoutNguoi_dungNestedInput
+  thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
+}
+
+export type nguoi_dungUncheckedUpdateWithoutBang_luong_thangInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  mat_khau?: Prisma.StringFieldUpdateOperationsInput | string
+  trang_thai?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ngay_tao?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  danh_gia_san_pham?: Prisma.danh_gia_san_phamUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  dia_chi_nguoi_dung?: Prisma.dia_chi_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_hang?: Prisma.don_hangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  du_lieu_khuon_mat?: Prisma.du_lieu_khuon_matUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  gio_hang?: Prisma.gio_hangUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  ho_so_nguoi_dung?: Prisma.ho_so_nguoi_dungUncheckedUpdateOneWithoutNguoi_dungNestedInput
+  lich_phan_cong_ca?: Prisma.lich_phan_cong_caUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_cham_cong?: Prisma.lich_su_cham_congUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  lich_su_dang_nhap?: Prisma.lich_su_dang_nhapUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  nhiem_vu_cong_viec?: Prisma.nhiem_vu_cong_viecUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phien_chat_ai?: Prisma.phien_chat_aiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_kiem_ke_kho?: Prisma.phieu_kiem_ke_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_nhap_kho?: Prisma.phieu_nhap_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_tra_nha_cung_cap?: Prisma.phieu_tra_nha_cung_capUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutLich_phan_cong_caInput = {
@@ -1485,6 +2189,10 @@ export type nguoi_dungCreateWithoutLich_phan_cong_caInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutLich_phan_cong_caInput = {
@@ -1510,6 +2218,10 @@ export type nguoi_dungUncheckedCreateWithoutLich_phan_cong_caInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutLich_phan_cong_caInput = {
@@ -1550,6 +2262,10 @@ export type nguoi_dungUpdateWithoutLich_phan_cong_caInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutLich_phan_cong_caInput = {
@@ -1575,6 +2291,10 @@ export type nguoi_dungUncheckedUpdateWithoutLich_phan_cong_caInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutLich_su_cham_congInput = {
@@ -1599,6 +2319,10 @@ export type nguoi_dungCreateWithoutLich_su_cham_congInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutLich_su_cham_congInput = {
@@ -1624,6 +2348,10 @@ export type nguoi_dungUncheckedCreateWithoutLich_su_cham_congInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutLich_su_cham_congInput = {
@@ -1664,6 +2392,10 @@ export type nguoi_dungUpdateWithoutLich_su_cham_congInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutLich_su_cham_congInput = {
@@ -1689,6 +2421,10 @@ export type nguoi_dungUncheckedUpdateWithoutLich_su_cham_congInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutLich_su_dang_nhapInput = {
@@ -1713,6 +2449,10 @@ export type nguoi_dungCreateWithoutLich_su_dang_nhapInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutLich_su_dang_nhapInput = {
@@ -1738,6 +2478,10 @@ export type nguoi_dungUncheckedCreateWithoutLich_su_dang_nhapInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutLich_su_dang_nhapInput = {
@@ -1778,6 +2522,10 @@ export type nguoi_dungUpdateWithoutLich_su_dang_nhapInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutLich_su_dang_nhapInput = {
@@ -1803,6 +2551,10 @@ export type nguoi_dungUncheckedUpdateWithoutLich_su_dang_nhapInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutNhiem_vu_cong_viecInput = {
@@ -1827,6 +2579,10 @@ export type nguoi_dungCreateWithoutNhiem_vu_cong_viecInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutNhiem_vu_cong_viecInput = {
@@ -1852,6 +2608,10 @@ export type nguoi_dungUncheckedCreateWithoutNhiem_vu_cong_viecInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutNhiem_vu_cong_viecInput = {
@@ -1892,6 +2652,10 @@ export type nguoi_dungUpdateWithoutNhiem_vu_cong_viecInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutNhiem_vu_cong_viecInput = {
@@ -1917,6 +2681,10 @@ export type nguoi_dungUncheckedUpdateWithoutNhiem_vu_cong_viecInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutPhien_chat_aiInput = {
@@ -1941,6 +2709,10 @@ export type nguoi_dungCreateWithoutPhien_chat_aiInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutPhien_chat_aiInput = {
@@ -1966,6 +2738,10 @@ export type nguoi_dungUncheckedCreateWithoutPhien_chat_aiInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutPhien_chat_aiInput = {
@@ -2006,6 +2782,10 @@ export type nguoi_dungUpdateWithoutPhien_chat_aiInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutPhien_chat_aiInput = {
@@ -2031,6 +2811,10 @@ export type nguoi_dungUncheckedUpdateWithoutPhien_chat_aiInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutPhieu_kiem_ke_khoInput = {
@@ -2055,6 +2839,10 @@ export type nguoi_dungCreateWithoutPhieu_kiem_ke_khoInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutPhieu_kiem_ke_khoInput = {
@@ -2080,6 +2868,10 @@ export type nguoi_dungUncheckedCreateWithoutPhieu_kiem_ke_khoInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutPhieu_kiem_ke_khoInput = {
@@ -2120,6 +2912,10 @@ export type nguoi_dungUpdateWithoutPhieu_kiem_ke_khoInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutPhieu_kiem_ke_khoInput = {
@@ -2145,6 +2941,10 @@ export type nguoi_dungUncheckedUpdateWithoutPhieu_kiem_ke_khoInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutPhieu_nhap_khoInput = {
@@ -2169,6 +2969,10 @@ export type nguoi_dungCreateWithoutPhieu_nhap_khoInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutPhieu_nhap_khoInput = {
@@ -2194,6 +2998,10 @@ export type nguoi_dungUncheckedCreateWithoutPhieu_nhap_khoInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutPhieu_nhap_khoInput = {
@@ -2234,6 +3042,10 @@ export type nguoi_dungUpdateWithoutPhieu_nhap_khoInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutPhieu_nhap_khoInput = {
@@ -2259,6 +3071,10 @@ export type nguoi_dungUncheckedUpdateWithoutPhieu_nhap_khoInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutPhieu_tra_nha_cung_capInput = {
@@ -2283,6 +3099,10 @@ export type nguoi_dungCreateWithoutPhieu_tra_nha_cung_capInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutPhieu_tra_nha_cung_capInput = {
@@ -2308,6 +3128,10 @@ export type nguoi_dungUncheckedCreateWithoutPhieu_tra_nha_cung_capInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutPhieu_tra_nha_cung_capInput = {
@@ -2348,6 +3172,10 @@ export type nguoi_dungUpdateWithoutPhieu_tra_nha_cung_capInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutPhieu_tra_nha_cung_capInput = {
@@ -2373,6 +3201,10 @@ export type nguoi_dungUncheckedUpdateWithoutPhieu_tra_nha_cung_capInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutPhieu_xuat_khoInput = {
@@ -2397,6 +3229,10 @@ export type nguoi_dungCreateWithoutPhieu_xuat_khoInput = {
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutPhieu_xuat_khoInput = {
@@ -2422,6 +3258,10 @@ export type nguoi_dungUncheckedCreateWithoutPhieu_xuat_khoInput = {
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutPhieu_xuat_khoInput = {
@@ -2462,6 +3302,10 @@ export type nguoi_dungUpdateWithoutPhieu_xuat_khoInput = {
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutPhieu_xuat_khoInput = {
@@ -2487,6 +3331,10 @@ export type nguoi_dungUncheckedUpdateWithoutPhieu_xuat_khoInput = {
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutThong_baoInput = {
@@ -2511,6 +3359,10 @@ export type nguoi_dungCreateWithoutThong_baoInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutThong_baoInput = {
@@ -2536,6 +3388,10 @@ export type nguoi_dungUncheckedCreateWithoutThong_baoInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutThong_baoInput = {
@@ -2576,6 +3432,10 @@ export type nguoi_dungUpdateWithoutThong_baoInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutThong_baoInput = {
@@ -2601,6 +3461,10 @@ export type nguoi_dungUncheckedUpdateWithoutThong_baoInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutVai_tro_nguoi_dungInput = {
@@ -2625,6 +3489,10 @@ export type nguoi_dungCreateWithoutVai_tro_nguoi_dungInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoCreateNestedManyWithoutNguoi_dungInput
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutVai_tro_nguoi_dungInput = {
@@ -2650,6 +3518,10 @@ export type nguoi_dungUncheckedCreateWithoutVai_tro_nguoi_dungInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutVai_tro_nguoi_dungInput = {
@@ -2690,6 +3562,10 @@ export type nguoi_dungUpdateWithoutVai_tro_nguoi_dungInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateManyWithoutNguoi_dungNestedInput
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutVai_tro_nguoi_dungInput = {
@@ -2715,6 +3591,10 @@ export type nguoi_dungUncheckedUpdateWithoutVai_tro_nguoi_dungInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   yeu_cau_doi_tra?: Prisma.yeu_cau_doi_traUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungCreateWithoutYeu_cau_doi_traInput = {
@@ -2739,6 +3619,10 @@ export type nguoi_dungCreateWithoutYeu_cau_doi_traInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoCreateNestedManyWithoutNguoi_dungInput
   thong_bao?: Prisma.thong_baoCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungUncheckedCreateWithoutYeu_cau_doi_traInput = {
@@ -2764,6 +3648,10 @@ export type nguoi_dungUncheckedCreateWithoutYeu_cau_doi_traInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedCreateNestedManyWithoutNguoi_dungInput
   thong_bao?: Prisma.thong_baoUncheckedCreateNestedManyWithoutNguoi_dungInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_dungInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoi_duyetInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedCreateNestedManyWithoutNguoi_dungInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedCreateNestedManyWithoutNguoiDungInput
 }
 
 export type nguoi_dungCreateOrConnectWithoutYeu_cau_doi_traInput = {
@@ -2804,6 +3692,10 @@ export type nguoi_dungUpdateWithoutYeu_cau_doi_traInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUpdateManyWithoutNguoi_dungNestedInput
   thong_bao?: Prisma.thong_baoUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUpdateManyWithoutNguoiDungNestedInput
 }
 
 export type nguoi_dungUncheckedUpdateWithoutYeu_cau_doi_traInput = {
@@ -2829,6 +3721,10 @@ export type nguoi_dungUncheckedUpdateWithoutYeu_cau_doi_traInput = {
   phieu_xuat_kho?: Prisma.phieu_xuat_khoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   thong_bao?: Prisma.thong_baoUncheckedUpdateManyWithoutNguoi_dungNestedInput
   vai_tro_nguoi_dung?: Prisma.vai_tro_nguoi_dungUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_tao?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  don_xin_nghi_duyet?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoi_duyetNestedInput
+  bang_luong_thang?: Prisma.bang_luong_thangUncheckedUpdateManyWithoutNguoi_dungNestedInput
+  donXinNghis?: Prisma.don_xin_nghiUncheckedUpdateManyWithoutNguoiDungNestedInput
 }
 
 
@@ -2852,6 +3748,10 @@ export type Nguoi_dungCountOutputType = {
   thong_bao: number
   vai_tro_nguoi_dung: number
   yeu_cau_doi_tra: number
+  don_xin_nghi_tao: number
+  don_xin_nghi_duyet: number
+  bang_luong_thang: number
+  donXinNghis: number
 }
 
 export type Nguoi_dungCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2870,6 +3770,10 @@ export type Nguoi_dungCountOutputTypeSelect<ExtArgs extends runtime.Types.Extens
   thong_bao?: boolean | Nguoi_dungCountOutputTypeCountThong_baoArgs
   vai_tro_nguoi_dung?: boolean | Nguoi_dungCountOutputTypeCountVai_tro_nguoi_dungArgs
   yeu_cau_doi_tra?: boolean | Nguoi_dungCountOutputTypeCountYeu_cau_doi_traArgs
+  don_xin_nghi_tao?: boolean | Nguoi_dungCountOutputTypeCountDon_xin_nghi_taoArgs
+  don_xin_nghi_duyet?: boolean | Nguoi_dungCountOutputTypeCountDon_xin_nghi_duyetArgs
+  bang_luong_thang?: boolean | Nguoi_dungCountOutputTypeCountBang_luong_thangArgs
+  donXinNghis?: boolean | Nguoi_dungCountOutputTypeCountDonXinNghisArgs
 }
 
 /**
@@ -2987,6 +3891,34 @@ export type Nguoi_dungCountOutputTypeCountYeu_cau_doi_traArgs<ExtArgs extends ru
   where?: Prisma.yeu_cau_doi_traWhereInput
 }
 
+/**
+ * Nguoi_dungCountOutputType without action
+ */
+export type Nguoi_dungCountOutputTypeCountDon_xin_nghi_taoArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.don_xin_nghiWhereInput
+}
+
+/**
+ * Nguoi_dungCountOutputType without action
+ */
+export type Nguoi_dungCountOutputTypeCountDon_xin_nghi_duyetArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.don_xin_nghiWhereInput
+}
+
+/**
+ * Nguoi_dungCountOutputType without action
+ */
+export type Nguoi_dungCountOutputTypeCountBang_luong_thangArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.bang_luong_thangWhereInput
+}
+
+/**
+ * Nguoi_dungCountOutputType without action
+ */
+export type Nguoi_dungCountOutputTypeCountDonXinNghisArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.don_xin_nghiWhereInput
+}
+
 
 export type nguoi_dungSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -3012,6 +3944,10 @@ export type nguoi_dungSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   thong_bao?: boolean | Prisma.nguoi_dung$thong_baoArgs<ExtArgs>
   vai_tro_nguoi_dung?: boolean | Prisma.nguoi_dung$vai_tro_nguoi_dungArgs<ExtArgs>
   yeu_cau_doi_tra?: boolean | Prisma.nguoi_dung$yeu_cau_doi_traArgs<ExtArgs>
+  don_xin_nghi_tao?: boolean | Prisma.nguoi_dung$don_xin_nghi_taoArgs<ExtArgs>
+  don_xin_nghi_duyet?: boolean | Prisma.nguoi_dung$don_xin_nghi_duyetArgs<ExtArgs>
+  bang_luong_thang?: boolean | Prisma.nguoi_dung$bang_luong_thangArgs<ExtArgs>
+  donXinNghis?: boolean | Prisma.nguoi_dung$donXinNghisArgs<ExtArgs>
   _count?: boolean | Prisma.Nguoi_dungCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["nguoi_dung"]>
 
@@ -3045,6 +3981,10 @@ export type nguoi_dungInclude<ExtArgs extends runtime.Types.Extensions.InternalA
   thong_bao?: boolean | Prisma.nguoi_dung$thong_baoArgs<ExtArgs>
   vai_tro_nguoi_dung?: boolean | Prisma.nguoi_dung$vai_tro_nguoi_dungArgs<ExtArgs>
   yeu_cau_doi_tra?: boolean | Prisma.nguoi_dung$yeu_cau_doi_traArgs<ExtArgs>
+  don_xin_nghi_tao?: boolean | Prisma.nguoi_dung$don_xin_nghi_taoArgs<ExtArgs>
+  don_xin_nghi_duyet?: boolean | Prisma.nguoi_dung$don_xin_nghi_duyetArgs<ExtArgs>
+  bang_luong_thang?: boolean | Prisma.nguoi_dung$bang_luong_thangArgs<ExtArgs>
+  donXinNghis?: boolean | Prisma.nguoi_dung$donXinNghisArgs<ExtArgs>
   _count?: boolean | Prisma.Nguoi_dungCountOutputTypeDefaultArgs<ExtArgs>
 }
 
@@ -3069,6 +4009,10 @@ export type $nguoi_dungPayload<ExtArgs extends runtime.Types.Extensions.Internal
     thong_bao: Prisma.$thong_baoPayload<ExtArgs>[]
     vai_tro_nguoi_dung: Prisma.$vai_tro_nguoi_dungPayload<ExtArgs>[]
     yeu_cau_doi_tra: Prisma.$yeu_cau_doi_traPayload<ExtArgs>[]
+    don_xin_nghi_tao: Prisma.$don_xin_nghiPayload<ExtArgs>[]
+    don_xin_nghi_duyet: Prisma.$don_xin_nghiPayload<ExtArgs>[]
+    bang_luong_thang: Prisma.$bang_luong_thangPayload<ExtArgs>[]
+    donXinNghis: Prisma.$don_xin_nghiPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -3434,6 +4378,10 @@ export interface Prisma__nguoi_dungClient<T, Null = never, ExtArgs extends runti
   thong_bao<T extends Prisma.nguoi_dung$thong_baoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.nguoi_dung$thong_baoArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$thong_baoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   vai_tro_nguoi_dung<T extends Prisma.nguoi_dung$vai_tro_nguoi_dungArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.nguoi_dung$vai_tro_nguoi_dungArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$vai_tro_nguoi_dungPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   yeu_cau_doi_tra<T extends Prisma.nguoi_dung$yeu_cau_doi_traArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.nguoi_dung$yeu_cau_doi_traArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$yeu_cau_doi_traPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  don_xin_nghi_tao<T extends Prisma.nguoi_dung$don_xin_nghi_taoArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.nguoi_dung$don_xin_nghi_taoArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$don_xin_nghiPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  don_xin_nghi_duyet<T extends Prisma.nguoi_dung$don_xin_nghi_duyetArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.nguoi_dung$don_xin_nghi_duyetArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$don_xin_nghiPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  bang_luong_thang<T extends Prisma.nguoi_dung$bang_luong_thangArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.nguoi_dung$bang_luong_thangArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$bang_luong_thangPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  donXinNghis<T extends Prisma.nguoi_dung$donXinNghisArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.nguoi_dung$donXinNghisArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$don_xin_nghiPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4230,6 +5178,102 @@ export type nguoi_dung$yeu_cau_doi_traArgs<ExtArgs extends runtime.Types.Extensi
   take?: number
   skip?: number
   distinct?: Prisma.Yeu_cau_doi_traScalarFieldEnum | Prisma.Yeu_cau_doi_traScalarFieldEnum[]
+}
+
+/**
+ * nguoi_dung.don_xin_nghi_tao
+ */
+export type nguoi_dung$don_xin_nghi_taoArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the don_xin_nghi
+   */
+  select?: Prisma.don_xin_nghiSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the don_xin_nghi
+   */
+  omit?: Prisma.don_xin_nghiOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.don_xin_nghiInclude<ExtArgs> | null
+  where?: Prisma.don_xin_nghiWhereInput
+  orderBy?: Prisma.don_xin_nghiOrderByWithRelationInput | Prisma.don_xin_nghiOrderByWithRelationInput[]
+  cursor?: Prisma.don_xin_nghiWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Don_xin_nghiScalarFieldEnum | Prisma.Don_xin_nghiScalarFieldEnum[]
+}
+
+/**
+ * nguoi_dung.don_xin_nghi_duyet
+ */
+export type nguoi_dung$don_xin_nghi_duyetArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the don_xin_nghi
+   */
+  select?: Prisma.don_xin_nghiSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the don_xin_nghi
+   */
+  omit?: Prisma.don_xin_nghiOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.don_xin_nghiInclude<ExtArgs> | null
+  where?: Prisma.don_xin_nghiWhereInput
+  orderBy?: Prisma.don_xin_nghiOrderByWithRelationInput | Prisma.don_xin_nghiOrderByWithRelationInput[]
+  cursor?: Prisma.don_xin_nghiWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Don_xin_nghiScalarFieldEnum | Prisma.Don_xin_nghiScalarFieldEnum[]
+}
+
+/**
+ * nguoi_dung.bang_luong_thang
+ */
+export type nguoi_dung$bang_luong_thangArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the bang_luong_thang
+   */
+  select?: Prisma.bang_luong_thangSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the bang_luong_thang
+   */
+  omit?: Prisma.bang_luong_thangOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.bang_luong_thangInclude<ExtArgs> | null
+  where?: Prisma.bang_luong_thangWhereInput
+  orderBy?: Prisma.bang_luong_thangOrderByWithRelationInput | Prisma.bang_luong_thangOrderByWithRelationInput[]
+  cursor?: Prisma.bang_luong_thangWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Bang_luong_thangScalarFieldEnum | Prisma.Bang_luong_thangScalarFieldEnum[]
+}
+
+/**
+ * nguoi_dung.donXinNghis
+ */
+export type nguoi_dung$donXinNghisArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the don_xin_nghi
+   */
+  select?: Prisma.don_xin_nghiSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the don_xin_nghi
+   */
+  omit?: Prisma.don_xin_nghiOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.don_xin_nghiInclude<ExtArgs> | null
+  where?: Prisma.don_xin_nghiWhereInput
+  orderBy?: Prisma.don_xin_nghiOrderByWithRelationInput | Prisma.don_xin_nghiOrderByWithRelationInput[]
+  cursor?: Prisma.don_xin_nghiWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Don_xin_nghiScalarFieldEnum | Prisma.Don_xin_nghiScalarFieldEnum[]
 }
 
 /**

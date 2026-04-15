@@ -28,10 +28,12 @@ export type AggregateHo_so_nguoi_dung = {
 
 export type Ho_so_nguoi_dungAvgAggregateOutputType = {
   ma_nguoi_dung: number | null
+  luong_theo_gio: runtime.Decimal | null
 }
 
 export type Ho_so_nguoi_dungSumAggregateOutputType = {
   ma_nguoi_dung: number | null
+  luong_theo_gio: runtime.Decimal | null
 }
 
 export type Ho_so_nguoi_dungMinAggregateOutputType = {
@@ -39,6 +41,13 @@ export type Ho_so_nguoi_dungMinAggregateOutputType = {
   ho_ten: string | null
   so_dien_thoai: string | null
   anh_dai_dien: string | null
+  luong_theo_gio: runtime.Decimal | null
+  cccd: string | null
+  ngay_vao_lam: Date | null
+  chuc_vu: string | null
+  bo_phan: string | null
+  loai_hop_dong: string | null
+  hop_dong_het_han: Date | null
 }
 
 export type Ho_so_nguoi_dungMaxAggregateOutputType = {
@@ -46,6 +55,13 @@ export type Ho_so_nguoi_dungMaxAggregateOutputType = {
   ho_ten: string | null
   so_dien_thoai: string | null
   anh_dai_dien: string | null
+  luong_theo_gio: runtime.Decimal | null
+  cccd: string | null
+  ngay_vao_lam: Date | null
+  chuc_vu: string | null
+  bo_phan: string | null
+  loai_hop_dong: string | null
+  hop_dong_het_han: Date | null
 }
 
 export type Ho_so_nguoi_dungCountAggregateOutputType = {
@@ -53,16 +69,25 @@ export type Ho_so_nguoi_dungCountAggregateOutputType = {
   ho_ten: number
   so_dien_thoai: number
   anh_dai_dien: number
+  luong_theo_gio: number
+  cccd: number
+  ngay_vao_lam: number
+  chuc_vu: number
+  bo_phan: number
+  loai_hop_dong: number
+  hop_dong_het_han: number
   _all: number
 }
 
 
 export type Ho_so_nguoi_dungAvgAggregateInputType = {
   ma_nguoi_dung?: true
+  luong_theo_gio?: true
 }
 
 export type Ho_so_nguoi_dungSumAggregateInputType = {
   ma_nguoi_dung?: true
+  luong_theo_gio?: true
 }
 
 export type Ho_so_nguoi_dungMinAggregateInputType = {
@@ -70,6 +95,13 @@ export type Ho_so_nguoi_dungMinAggregateInputType = {
   ho_ten?: true
   so_dien_thoai?: true
   anh_dai_dien?: true
+  luong_theo_gio?: true
+  cccd?: true
+  ngay_vao_lam?: true
+  chuc_vu?: true
+  bo_phan?: true
+  loai_hop_dong?: true
+  hop_dong_het_han?: true
 }
 
 export type Ho_so_nguoi_dungMaxAggregateInputType = {
@@ -77,6 +109,13 @@ export type Ho_so_nguoi_dungMaxAggregateInputType = {
   ho_ten?: true
   so_dien_thoai?: true
   anh_dai_dien?: true
+  luong_theo_gio?: true
+  cccd?: true
+  ngay_vao_lam?: true
+  chuc_vu?: true
+  bo_phan?: true
+  loai_hop_dong?: true
+  hop_dong_het_han?: true
 }
 
 export type Ho_so_nguoi_dungCountAggregateInputType = {
@@ -84,6 +123,13 @@ export type Ho_so_nguoi_dungCountAggregateInputType = {
   ho_ten?: true
   so_dien_thoai?: true
   anh_dai_dien?: true
+  luong_theo_gio?: true
+  cccd?: true
+  ngay_vao_lam?: true
+  chuc_vu?: true
+  bo_phan?: true
+  loai_hop_dong?: true
+  hop_dong_het_han?: true
   _all?: true
 }
 
@@ -178,6 +224,13 @@ export type Ho_so_nguoi_dungGroupByOutputType = {
   ho_ten: string | null
   so_dien_thoai: string | null
   anh_dai_dien: string | null
+  luong_theo_gio: runtime.Decimal | null
+  cccd: string | null
+  ngay_vao_lam: Date | null
+  chuc_vu: string | null
+  bo_phan: string | null
+  loai_hop_dong: string | null
+  hop_dong_het_han: Date | null
   _count: Ho_so_nguoi_dungCountAggregateOutputType | null
   _avg: Ho_so_nguoi_dungAvgAggregateOutputType | null
   _sum: Ho_so_nguoi_dungSumAggregateOutputType | null
@@ -208,6 +261,13 @@ export type ho_so_nguoi_dungWhereInput = {
   ho_ten?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
   so_dien_thoai?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
   anh_dai_dien?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
+  luong_theo_gio?: Prisma.DecimalNullableFilter<"ho_so_nguoi_dung"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
+  ngay_vao_lam?: Prisma.DateTimeNullableFilter<"ho_so_nguoi_dung"> | Date | string | null
+  chuc_vu?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
+  bo_phan?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
+  loai_hop_dong?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
+  hop_dong_het_han?: Prisma.DateTimeNullableFilter<"ho_so_nguoi_dung"> | Date | string | null
   nguoi_dung?: Prisma.XOR<Prisma.Nguoi_dungScalarRelationFilter, Prisma.nguoi_dungWhereInput>
 }
 
@@ -216,26 +276,47 @@ export type ho_so_nguoi_dungOrderByWithRelationInput = {
   ho_ten?: Prisma.SortOrderInput | Prisma.SortOrder
   so_dien_thoai?: Prisma.SortOrderInput | Prisma.SortOrder
   anh_dai_dien?: Prisma.SortOrderInput | Prisma.SortOrder
+  luong_theo_gio?: Prisma.SortOrderInput | Prisma.SortOrder
+  cccd?: Prisma.SortOrderInput | Prisma.SortOrder
+  ngay_vao_lam?: Prisma.SortOrderInput | Prisma.SortOrder
+  chuc_vu?: Prisma.SortOrderInput | Prisma.SortOrder
+  bo_phan?: Prisma.SortOrderInput | Prisma.SortOrder
+  loai_hop_dong?: Prisma.SortOrderInput | Prisma.SortOrder
+  hop_dong_het_han?: Prisma.SortOrderInput | Prisma.SortOrder
   nguoi_dung?: Prisma.nguoi_dungOrderByWithRelationInput
   _relevance?: Prisma.ho_so_nguoi_dungOrderByRelevanceInput
 }
 
 export type ho_so_nguoi_dungWhereUniqueInput = Prisma.AtLeast<{
   ma_nguoi_dung?: number
+  cccd?: string
   AND?: Prisma.ho_so_nguoi_dungWhereInput | Prisma.ho_so_nguoi_dungWhereInput[]
   OR?: Prisma.ho_so_nguoi_dungWhereInput[]
   NOT?: Prisma.ho_so_nguoi_dungWhereInput | Prisma.ho_so_nguoi_dungWhereInput[]
   ho_ten?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
   so_dien_thoai?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
   anh_dai_dien?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
+  luong_theo_gio?: Prisma.DecimalNullableFilter<"ho_so_nguoi_dung"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  ngay_vao_lam?: Prisma.DateTimeNullableFilter<"ho_so_nguoi_dung"> | Date | string | null
+  chuc_vu?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
+  bo_phan?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
+  loai_hop_dong?: Prisma.StringNullableFilter<"ho_so_nguoi_dung"> | string | null
+  hop_dong_het_han?: Prisma.DateTimeNullableFilter<"ho_so_nguoi_dung"> | Date | string | null
   nguoi_dung?: Prisma.XOR<Prisma.Nguoi_dungScalarRelationFilter, Prisma.nguoi_dungWhereInput>
-}, "ma_nguoi_dung">
+}, "ma_nguoi_dung" | "cccd">
 
 export type ho_so_nguoi_dungOrderByWithAggregationInput = {
   ma_nguoi_dung?: Prisma.SortOrder
   ho_ten?: Prisma.SortOrderInput | Prisma.SortOrder
   so_dien_thoai?: Prisma.SortOrderInput | Prisma.SortOrder
   anh_dai_dien?: Prisma.SortOrderInput | Prisma.SortOrder
+  luong_theo_gio?: Prisma.SortOrderInput | Prisma.SortOrder
+  cccd?: Prisma.SortOrderInput | Prisma.SortOrder
+  ngay_vao_lam?: Prisma.SortOrderInput | Prisma.SortOrder
+  chuc_vu?: Prisma.SortOrderInput | Prisma.SortOrder
+  bo_phan?: Prisma.SortOrderInput | Prisma.SortOrder
+  loai_hop_dong?: Prisma.SortOrderInput | Prisma.SortOrder
+  hop_dong_het_han?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.ho_so_nguoi_dungCountOrderByAggregateInput
   _avg?: Prisma.ho_so_nguoi_dungAvgOrderByAggregateInput
   _max?: Prisma.ho_so_nguoi_dungMaxOrderByAggregateInput
@@ -251,12 +332,26 @@ export type ho_so_nguoi_dungScalarWhereWithAggregatesInput = {
   ho_ten?: Prisma.StringNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | string | null
   so_dien_thoai?: Prisma.StringNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | string | null
   anh_dai_dien?: Prisma.StringNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | string | null
+  luong_theo_gio?: Prisma.DecimalNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: Prisma.StringNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | string | null
+  ngay_vao_lam?: Prisma.DateTimeNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | Date | string | null
+  chuc_vu?: Prisma.StringNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | string | null
+  bo_phan?: Prisma.StringNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | string | null
+  loai_hop_dong?: Prisma.StringNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | string | null
+  hop_dong_het_han?: Prisma.DateTimeNullableWithAggregatesFilter<"ho_so_nguoi_dung"> | Date | string | null
 }
 
 export type ho_so_nguoi_dungCreateInput = {
   ho_ten?: string | null
   so_dien_thoai?: string | null
   anh_dai_dien?: string | null
+  luong_theo_gio?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: string | null
+  ngay_vao_lam?: Date | string | null
+  chuc_vu?: string | null
+  bo_phan?: string | null
+  loai_hop_dong?: string | null
+  hop_dong_het_han?: Date | string | null
   nguoi_dung: Prisma.nguoi_dungCreateNestedOneWithoutHo_so_nguoi_dungInput
 }
 
@@ -265,12 +360,26 @@ export type ho_so_nguoi_dungUncheckedCreateInput = {
   ho_ten?: string | null
   so_dien_thoai?: string | null
   anh_dai_dien?: string | null
+  luong_theo_gio?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: string | null
+  ngay_vao_lam?: Date | string | null
+  chuc_vu?: string | null
+  bo_phan?: string | null
+  loai_hop_dong?: string | null
+  hop_dong_het_han?: Date | string | null
 }
 
 export type ho_so_nguoi_dungUpdateInput = {
   ho_ten?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   so_dien_thoai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anh_dai_dien?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  luong_theo_gio?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ngay_vao_lam?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  chuc_vu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bo_phan?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  loai_hop_dong?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hop_dong_het_han?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   nguoi_dung?: Prisma.nguoi_dungUpdateOneRequiredWithoutHo_so_nguoi_dungNestedInput
 }
 
@@ -279,6 +388,13 @@ export type ho_so_nguoi_dungUncheckedUpdateInput = {
   ho_ten?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   so_dien_thoai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anh_dai_dien?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  luong_theo_gio?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ngay_vao_lam?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  chuc_vu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bo_phan?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  loai_hop_dong?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hop_dong_het_han?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type ho_so_nguoi_dungCreateManyInput = {
@@ -286,12 +402,26 @@ export type ho_so_nguoi_dungCreateManyInput = {
   ho_ten?: string | null
   so_dien_thoai?: string | null
   anh_dai_dien?: string | null
+  luong_theo_gio?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: string | null
+  ngay_vao_lam?: Date | string | null
+  chuc_vu?: string | null
+  bo_phan?: string | null
+  loai_hop_dong?: string | null
+  hop_dong_het_han?: Date | string | null
 }
 
 export type ho_so_nguoi_dungUpdateManyMutationInput = {
   ho_ten?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   so_dien_thoai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anh_dai_dien?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  luong_theo_gio?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ngay_vao_lam?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  chuc_vu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bo_phan?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  loai_hop_dong?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hop_dong_het_han?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type ho_so_nguoi_dungUncheckedUpdateManyInput = {
@@ -299,6 +429,13 @@ export type ho_so_nguoi_dungUncheckedUpdateManyInput = {
   ho_ten?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   so_dien_thoai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anh_dai_dien?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  luong_theo_gio?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ngay_vao_lam?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  chuc_vu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bo_phan?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  loai_hop_dong?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hop_dong_het_han?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type ho_so_nguoi_dungOrderByRelevanceInput = {
@@ -312,10 +449,18 @@ export type ho_so_nguoi_dungCountOrderByAggregateInput = {
   ho_ten?: Prisma.SortOrder
   so_dien_thoai?: Prisma.SortOrder
   anh_dai_dien?: Prisma.SortOrder
+  luong_theo_gio?: Prisma.SortOrder
+  cccd?: Prisma.SortOrder
+  ngay_vao_lam?: Prisma.SortOrder
+  chuc_vu?: Prisma.SortOrder
+  bo_phan?: Prisma.SortOrder
+  loai_hop_dong?: Prisma.SortOrder
+  hop_dong_het_han?: Prisma.SortOrder
 }
 
 export type ho_so_nguoi_dungAvgOrderByAggregateInput = {
   ma_nguoi_dung?: Prisma.SortOrder
+  luong_theo_gio?: Prisma.SortOrder
 }
 
 export type ho_so_nguoi_dungMaxOrderByAggregateInput = {
@@ -323,6 +468,13 @@ export type ho_so_nguoi_dungMaxOrderByAggregateInput = {
   ho_ten?: Prisma.SortOrder
   so_dien_thoai?: Prisma.SortOrder
   anh_dai_dien?: Prisma.SortOrder
+  luong_theo_gio?: Prisma.SortOrder
+  cccd?: Prisma.SortOrder
+  ngay_vao_lam?: Prisma.SortOrder
+  chuc_vu?: Prisma.SortOrder
+  bo_phan?: Prisma.SortOrder
+  loai_hop_dong?: Prisma.SortOrder
+  hop_dong_het_han?: Prisma.SortOrder
 }
 
 export type ho_so_nguoi_dungMinOrderByAggregateInput = {
@@ -330,10 +482,18 @@ export type ho_so_nguoi_dungMinOrderByAggregateInput = {
   ho_ten?: Prisma.SortOrder
   so_dien_thoai?: Prisma.SortOrder
   anh_dai_dien?: Prisma.SortOrder
+  luong_theo_gio?: Prisma.SortOrder
+  cccd?: Prisma.SortOrder
+  ngay_vao_lam?: Prisma.SortOrder
+  chuc_vu?: Prisma.SortOrder
+  bo_phan?: Prisma.SortOrder
+  loai_hop_dong?: Prisma.SortOrder
+  hop_dong_het_han?: Prisma.SortOrder
 }
 
 export type ho_so_nguoi_dungSumOrderByAggregateInput = {
   ma_nguoi_dung?: Prisma.SortOrder
+  luong_theo_gio?: Prisma.SortOrder
 }
 
 export type Ho_so_nguoi_dungNullableScalarRelationFilter = {
@@ -377,12 +537,26 @@ export type ho_so_nguoi_dungCreateWithoutNguoi_dungInput = {
   ho_ten?: string | null
   so_dien_thoai?: string | null
   anh_dai_dien?: string | null
+  luong_theo_gio?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: string | null
+  ngay_vao_lam?: Date | string | null
+  chuc_vu?: string | null
+  bo_phan?: string | null
+  loai_hop_dong?: string | null
+  hop_dong_het_han?: Date | string | null
 }
 
 export type ho_so_nguoi_dungUncheckedCreateWithoutNguoi_dungInput = {
   ho_ten?: string | null
   so_dien_thoai?: string | null
   anh_dai_dien?: string | null
+  luong_theo_gio?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: string | null
+  ngay_vao_lam?: Date | string | null
+  chuc_vu?: string | null
+  bo_phan?: string | null
+  loai_hop_dong?: string | null
+  hop_dong_het_han?: Date | string | null
 }
 
 export type ho_so_nguoi_dungCreateOrConnectWithoutNguoi_dungInput = {
@@ -405,12 +579,26 @@ export type ho_so_nguoi_dungUpdateWithoutNguoi_dungInput = {
   ho_ten?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   so_dien_thoai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anh_dai_dien?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  luong_theo_gio?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ngay_vao_lam?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  chuc_vu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bo_phan?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  loai_hop_dong?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hop_dong_het_han?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type ho_so_nguoi_dungUncheckedUpdateWithoutNguoi_dungInput = {
   ho_ten?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   so_dien_thoai?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anh_dai_dien?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  luong_theo_gio?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  cccd?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ngay_vao_lam?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  chuc_vu?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bo_phan?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  loai_hop_dong?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hop_dong_het_han?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -420,6 +608,13 @@ export type ho_so_nguoi_dungSelect<ExtArgs extends runtime.Types.Extensions.Inte
   ho_ten?: boolean
   so_dien_thoai?: boolean
   anh_dai_dien?: boolean
+  luong_theo_gio?: boolean
+  cccd?: boolean
+  ngay_vao_lam?: boolean
+  chuc_vu?: boolean
+  bo_phan?: boolean
+  loai_hop_dong?: boolean
+  hop_dong_het_han?: boolean
   nguoi_dung?: boolean | Prisma.nguoi_dungDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["ho_so_nguoi_dung"]>
 
@@ -430,9 +625,16 @@ export type ho_so_nguoi_dungSelectScalar = {
   ho_ten?: boolean
   so_dien_thoai?: boolean
   anh_dai_dien?: boolean
+  luong_theo_gio?: boolean
+  cccd?: boolean
+  ngay_vao_lam?: boolean
+  chuc_vu?: boolean
+  bo_phan?: boolean
+  loai_hop_dong?: boolean
+  hop_dong_het_han?: boolean
 }
 
-export type ho_so_nguoi_dungOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"ma_nguoi_dung" | "ho_ten" | "so_dien_thoai" | "anh_dai_dien", ExtArgs["result"]["ho_so_nguoi_dung"]>
+export type ho_so_nguoi_dungOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"ma_nguoi_dung" | "ho_ten" | "so_dien_thoai" | "anh_dai_dien" | "luong_theo_gio" | "cccd" | "ngay_vao_lam" | "chuc_vu" | "bo_phan" | "loai_hop_dong" | "hop_dong_het_han", ExtArgs["result"]["ho_so_nguoi_dung"]>
 export type ho_so_nguoi_dungInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   nguoi_dung?: boolean | Prisma.nguoi_dungDefaultArgs<ExtArgs>
 }
@@ -447,6 +649,13 @@ export type $ho_so_nguoi_dungPayload<ExtArgs extends runtime.Types.Extensions.In
     ho_ten: string | null
     so_dien_thoai: string | null
     anh_dai_dien: string | null
+    luong_theo_gio: runtime.Decimal | null
+    cccd: string | null
+    ngay_vao_lam: Date | null
+    chuc_vu: string | null
+    bo_phan: string | null
+    loai_hop_dong: string | null
+    hop_dong_het_han: Date | null
   }, ExtArgs["result"]["ho_so_nguoi_dung"]>
   composites: {}
 }
@@ -821,6 +1030,13 @@ export interface ho_so_nguoi_dungFieldRefs {
   readonly ho_ten: Prisma.FieldRef<"ho_so_nguoi_dung", 'String'>
   readonly so_dien_thoai: Prisma.FieldRef<"ho_so_nguoi_dung", 'String'>
   readonly anh_dai_dien: Prisma.FieldRef<"ho_so_nguoi_dung", 'String'>
+  readonly luong_theo_gio: Prisma.FieldRef<"ho_so_nguoi_dung", 'Decimal'>
+  readonly cccd: Prisma.FieldRef<"ho_so_nguoi_dung", 'String'>
+  readonly ngay_vao_lam: Prisma.FieldRef<"ho_so_nguoi_dung", 'DateTime'>
+  readonly chuc_vu: Prisma.FieldRef<"ho_so_nguoi_dung", 'String'>
+  readonly bo_phan: Prisma.FieldRef<"ho_so_nguoi_dung", 'String'>
+  readonly loai_hop_dong: Prisma.FieldRef<"ho_so_nguoi_dung", 'String'>
+  readonly hop_dong_het_han: Prisma.FieldRef<"ho_so_nguoi_dung", 'DateTime'>
 }
     
 

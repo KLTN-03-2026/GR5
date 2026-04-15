@@ -30,12 +30,16 @@ export type Canh_bao_lo_hangAvgAggregateOutputType = {
   id: number | null
   ma_lo_hang: number | null
   so_ngay_con: number | null
+  nguoi_xu_ly_id: number | null
+  ma_phieu_xu_ly: number | null
 }
 
 export type Canh_bao_lo_hangSumAggregateOutputType = {
   id: number | null
   ma_lo_hang: number | null
   so_ngay_con: number | null
+  nguoi_xu_ly_id: number | null
+  ma_phieu_xu_ly: number | null
 }
 
 export type Canh_bao_lo_hangMinAggregateOutputType = {
@@ -46,6 +50,10 @@ export type Canh_bao_lo_hangMinAggregateOutputType = {
   da_xu_ly: boolean | null
   ngay_tao: Date | null
   ngay_xu_ly: Date | null
+  phuong_thuc_xu_ly: string | null
+  nguoi_xu_ly_id: number | null
+  ghi_chu_xu_ly: string | null
+  ma_phieu_xu_ly: number | null
 }
 
 export type Canh_bao_lo_hangMaxAggregateOutputType = {
@@ -56,6 +64,10 @@ export type Canh_bao_lo_hangMaxAggregateOutputType = {
   da_xu_ly: boolean | null
   ngay_tao: Date | null
   ngay_xu_ly: Date | null
+  phuong_thuc_xu_ly: string | null
+  nguoi_xu_ly_id: number | null
+  ghi_chu_xu_ly: string | null
+  ma_phieu_xu_ly: number | null
 }
 
 export type Canh_bao_lo_hangCountAggregateOutputType = {
@@ -66,6 +78,10 @@ export type Canh_bao_lo_hangCountAggregateOutputType = {
   da_xu_ly: number
   ngay_tao: number
   ngay_xu_ly: number
+  phuong_thuc_xu_ly: number
+  nguoi_xu_ly_id: number
+  ghi_chu_xu_ly: number
+  ma_phieu_xu_ly: number
   _all: number
 }
 
@@ -74,12 +90,16 @@ export type Canh_bao_lo_hangAvgAggregateInputType = {
   id?: true
   ma_lo_hang?: true
   so_ngay_con?: true
+  nguoi_xu_ly_id?: true
+  ma_phieu_xu_ly?: true
 }
 
 export type Canh_bao_lo_hangSumAggregateInputType = {
   id?: true
   ma_lo_hang?: true
   so_ngay_con?: true
+  nguoi_xu_ly_id?: true
+  ma_phieu_xu_ly?: true
 }
 
 export type Canh_bao_lo_hangMinAggregateInputType = {
@@ -90,6 +110,10 @@ export type Canh_bao_lo_hangMinAggregateInputType = {
   da_xu_ly?: true
   ngay_tao?: true
   ngay_xu_ly?: true
+  phuong_thuc_xu_ly?: true
+  nguoi_xu_ly_id?: true
+  ghi_chu_xu_ly?: true
+  ma_phieu_xu_ly?: true
 }
 
 export type Canh_bao_lo_hangMaxAggregateInputType = {
@@ -100,6 +124,10 @@ export type Canh_bao_lo_hangMaxAggregateInputType = {
   da_xu_ly?: true
   ngay_tao?: true
   ngay_xu_ly?: true
+  phuong_thuc_xu_ly?: true
+  nguoi_xu_ly_id?: true
+  ghi_chu_xu_ly?: true
+  ma_phieu_xu_ly?: true
 }
 
 export type Canh_bao_lo_hangCountAggregateInputType = {
@@ -110,6 +138,10 @@ export type Canh_bao_lo_hangCountAggregateInputType = {
   da_xu_ly?: true
   ngay_tao?: true
   ngay_xu_ly?: true
+  phuong_thuc_xu_ly?: true
+  nguoi_xu_ly_id?: true
+  ghi_chu_xu_ly?: true
+  ma_phieu_xu_ly?: true
   _all?: true
 }
 
@@ -207,6 +239,10 @@ export type Canh_bao_lo_hangGroupByOutputType = {
   da_xu_ly: boolean
   ngay_tao: Date
   ngay_xu_ly: Date | null
+  phuong_thuc_xu_ly: string | null
+  nguoi_xu_ly_id: number | null
+  ghi_chu_xu_ly: string | null
+  ma_phieu_xu_ly: number | null
   _count: Canh_bao_lo_hangCountAggregateOutputType | null
   _avg: Canh_bao_lo_hangAvgAggregateOutputType | null
   _sum: Canh_bao_lo_hangSumAggregateOutputType | null
@@ -240,6 +276,10 @@ export type canh_bao_lo_hangWhereInput = {
   da_xu_ly?: Prisma.BoolFilter<"canh_bao_lo_hang"> | boolean
   ngay_tao?: Prisma.DateTimeFilter<"canh_bao_lo_hang"> | Date | string
   ngay_xu_ly?: Prisma.DateTimeNullableFilter<"canh_bao_lo_hang"> | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.StringNullableFilter<"canh_bao_lo_hang"> | string | null
+  nguoi_xu_ly_id?: Prisma.IntNullableFilter<"canh_bao_lo_hang"> | number | null
+  ghi_chu_xu_ly?: Prisma.StringNullableFilter<"canh_bao_lo_hang"> | string | null
+  ma_phieu_xu_ly?: Prisma.IntNullableFilter<"canh_bao_lo_hang"> | number | null
   lo_hang?: Prisma.XOR<Prisma.Lo_hangScalarRelationFilter, Prisma.lo_hangWhereInput>
 }
 
@@ -251,6 +291,10 @@ export type canh_bao_lo_hangOrderByWithRelationInput = {
   da_xu_ly?: Prisma.SortOrder
   ngay_tao?: Prisma.SortOrder
   ngay_xu_ly?: Prisma.SortOrderInput | Prisma.SortOrder
+  phuong_thuc_xu_ly?: Prisma.SortOrderInput | Prisma.SortOrder
+  nguoi_xu_ly_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  ghi_chu_xu_ly?: Prisma.SortOrderInput | Prisma.SortOrder
+  ma_phieu_xu_ly?: Prisma.SortOrderInput | Prisma.SortOrder
   lo_hang?: Prisma.lo_hangOrderByWithRelationInput
   _relevance?: Prisma.canh_bao_lo_hangOrderByRelevanceInput
 }
@@ -266,6 +310,10 @@ export type canh_bao_lo_hangWhereUniqueInput = Prisma.AtLeast<{
   da_xu_ly?: Prisma.BoolFilter<"canh_bao_lo_hang"> | boolean
   ngay_tao?: Prisma.DateTimeFilter<"canh_bao_lo_hang"> | Date | string
   ngay_xu_ly?: Prisma.DateTimeNullableFilter<"canh_bao_lo_hang"> | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.StringNullableFilter<"canh_bao_lo_hang"> | string | null
+  nguoi_xu_ly_id?: Prisma.IntNullableFilter<"canh_bao_lo_hang"> | number | null
+  ghi_chu_xu_ly?: Prisma.StringNullableFilter<"canh_bao_lo_hang"> | string | null
+  ma_phieu_xu_ly?: Prisma.IntNullableFilter<"canh_bao_lo_hang"> | number | null
   lo_hang?: Prisma.XOR<Prisma.Lo_hangScalarRelationFilter, Prisma.lo_hangWhereInput>
 }, "id">
 
@@ -277,6 +325,10 @@ export type canh_bao_lo_hangOrderByWithAggregationInput = {
   da_xu_ly?: Prisma.SortOrder
   ngay_tao?: Prisma.SortOrder
   ngay_xu_ly?: Prisma.SortOrderInput | Prisma.SortOrder
+  phuong_thuc_xu_ly?: Prisma.SortOrderInput | Prisma.SortOrder
+  nguoi_xu_ly_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  ghi_chu_xu_ly?: Prisma.SortOrderInput | Prisma.SortOrder
+  ma_phieu_xu_ly?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.canh_bao_lo_hangCountOrderByAggregateInput
   _avg?: Prisma.canh_bao_lo_hangAvgOrderByAggregateInput
   _max?: Prisma.canh_bao_lo_hangMaxOrderByAggregateInput
@@ -295,6 +347,10 @@ export type canh_bao_lo_hangScalarWhereWithAggregatesInput = {
   da_xu_ly?: Prisma.BoolWithAggregatesFilter<"canh_bao_lo_hang"> | boolean
   ngay_tao?: Prisma.DateTimeWithAggregatesFilter<"canh_bao_lo_hang"> | Date | string
   ngay_xu_ly?: Prisma.DateTimeNullableWithAggregatesFilter<"canh_bao_lo_hang"> | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.StringNullableWithAggregatesFilter<"canh_bao_lo_hang"> | string | null
+  nguoi_xu_ly_id?: Prisma.IntNullableWithAggregatesFilter<"canh_bao_lo_hang"> | number | null
+  ghi_chu_xu_ly?: Prisma.StringNullableWithAggregatesFilter<"canh_bao_lo_hang"> | string | null
+  ma_phieu_xu_ly?: Prisma.IntNullableWithAggregatesFilter<"canh_bao_lo_hang"> | number | null
 }
 
 export type canh_bao_lo_hangCreateInput = {
@@ -303,6 +359,10 @@ export type canh_bao_lo_hangCreateInput = {
   da_xu_ly?: boolean
   ngay_tao?: Date | string
   ngay_xu_ly?: Date | string | null
+  phuong_thuc_xu_ly?: string | null
+  nguoi_xu_ly_id?: number | null
+  ghi_chu_xu_ly?: string | null
+  ma_phieu_xu_ly?: number | null
   lo_hang: Prisma.lo_hangCreateNestedOneWithoutCanh_bao_lo_hangInput
 }
 
@@ -314,6 +374,10 @@ export type canh_bao_lo_hangUncheckedCreateInput = {
   da_xu_ly?: boolean
   ngay_tao?: Date | string
   ngay_xu_ly?: Date | string | null
+  phuong_thuc_xu_ly?: string | null
+  nguoi_xu_ly_id?: number | null
+  ghi_chu_xu_ly?: string | null
+  ma_phieu_xu_ly?: number | null
 }
 
 export type canh_bao_lo_hangUpdateInput = {
@@ -322,6 +386,10 @@ export type canh_bao_lo_hangUpdateInput = {
   da_xu_ly?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ngay_tao?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ngay_xu_ly?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nguoi_xu_ly_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ghi_chu_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ma_phieu_xu_ly?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lo_hang?: Prisma.lo_hangUpdateOneRequiredWithoutCanh_bao_lo_hangNestedInput
 }
 
@@ -333,6 +401,10 @@ export type canh_bao_lo_hangUncheckedUpdateInput = {
   da_xu_ly?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ngay_tao?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ngay_xu_ly?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nguoi_xu_ly_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ghi_chu_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ma_phieu_xu_ly?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type canh_bao_lo_hangCreateManyInput = {
@@ -343,6 +415,10 @@ export type canh_bao_lo_hangCreateManyInput = {
   da_xu_ly?: boolean
   ngay_tao?: Date | string
   ngay_xu_ly?: Date | string | null
+  phuong_thuc_xu_ly?: string | null
+  nguoi_xu_ly_id?: number | null
+  ghi_chu_xu_ly?: string | null
+  ma_phieu_xu_ly?: number | null
 }
 
 export type canh_bao_lo_hangUpdateManyMutationInput = {
@@ -351,6 +427,10 @@ export type canh_bao_lo_hangUpdateManyMutationInput = {
   da_xu_ly?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ngay_tao?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ngay_xu_ly?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nguoi_xu_ly_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ghi_chu_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ma_phieu_xu_ly?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type canh_bao_lo_hangUncheckedUpdateManyInput = {
@@ -361,6 +441,10 @@ export type canh_bao_lo_hangUncheckedUpdateManyInput = {
   da_xu_ly?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ngay_tao?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ngay_xu_ly?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nguoi_xu_ly_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ghi_chu_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ma_phieu_xu_ly?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type canh_bao_lo_hangOrderByRelevanceInput = {
@@ -377,12 +461,18 @@ export type canh_bao_lo_hangCountOrderByAggregateInput = {
   da_xu_ly?: Prisma.SortOrder
   ngay_tao?: Prisma.SortOrder
   ngay_xu_ly?: Prisma.SortOrder
+  phuong_thuc_xu_ly?: Prisma.SortOrder
+  nguoi_xu_ly_id?: Prisma.SortOrder
+  ghi_chu_xu_ly?: Prisma.SortOrder
+  ma_phieu_xu_ly?: Prisma.SortOrder
 }
 
 export type canh_bao_lo_hangAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   ma_lo_hang?: Prisma.SortOrder
   so_ngay_con?: Prisma.SortOrder
+  nguoi_xu_ly_id?: Prisma.SortOrder
+  ma_phieu_xu_ly?: Prisma.SortOrder
 }
 
 export type canh_bao_lo_hangMaxOrderByAggregateInput = {
@@ -393,6 +483,10 @@ export type canh_bao_lo_hangMaxOrderByAggregateInput = {
   da_xu_ly?: Prisma.SortOrder
   ngay_tao?: Prisma.SortOrder
   ngay_xu_ly?: Prisma.SortOrder
+  phuong_thuc_xu_ly?: Prisma.SortOrder
+  nguoi_xu_ly_id?: Prisma.SortOrder
+  ghi_chu_xu_ly?: Prisma.SortOrder
+  ma_phieu_xu_ly?: Prisma.SortOrder
 }
 
 export type canh_bao_lo_hangMinOrderByAggregateInput = {
@@ -403,12 +497,18 @@ export type canh_bao_lo_hangMinOrderByAggregateInput = {
   da_xu_ly?: Prisma.SortOrder
   ngay_tao?: Prisma.SortOrder
   ngay_xu_ly?: Prisma.SortOrder
+  phuong_thuc_xu_ly?: Prisma.SortOrder
+  nguoi_xu_ly_id?: Prisma.SortOrder
+  ghi_chu_xu_ly?: Prisma.SortOrder
+  ma_phieu_xu_ly?: Prisma.SortOrder
 }
 
 export type canh_bao_lo_hangSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   ma_lo_hang?: Prisma.SortOrder
   so_ngay_con?: Prisma.SortOrder
+  nguoi_xu_ly_id?: Prisma.SortOrder
+  ma_phieu_xu_ly?: Prisma.SortOrder
 }
 
 export type Canh_bao_lo_hangListRelationFilter = {
@@ -477,6 +577,10 @@ export type canh_bao_lo_hangCreateWithoutLo_hangInput = {
   da_xu_ly?: boolean
   ngay_tao?: Date | string
   ngay_xu_ly?: Date | string | null
+  phuong_thuc_xu_ly?: string | null
+  nguoi_xu_ly_id?: number | null
+  ghi_chu_xu_ly?: string | null
+  ma_phieu_xu_ly?: number | null
 }
 
 export type canh_bao_lo_hangUncheckedCreateWithoutLo_hangInput = {
@@ -486,6 +590,10 @@ export type canh_bao_lo_hangUncheckedCreateWithoutLo_hangInput = {
   da_xu_ly?: boolean
   ngay_tao?: Date | string
   ngay_xu_ly?: Date | string | null
+  phuong_thuc_xu_ly?: string | null
+  nguoi_xu_ly_id?: number | null
+  ghi_chu_xu_ly?: string | null
+  ma_phieu_xu_ly?: number | null
 }
 
 export type canh_bao_lo_hangCreateOrConnectWithoutLo_hangInput = {
@@ -525,6 +633,10 @@ export type canh_bao_lo_hangScalarWhereInput = {
   da_xu_ly?: Prisma.BoolFilter<"canh_bao_lo_hang"> | boolean
   ngay_tao?: Prisma.DateTimeFilter<"canh_bao_lo_hang"> | Date | string
   ngay_xu_ly?: Prisma.DateTimeNullableFilter<"canh_bao_lo_hang"> | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.StringNullableFilter<"canh_bao_lo_hang"> | string | null
+  nguoi_xu_ly_id?: Prisma.IntNullableFilter<"canh_bao_lo_hang"> | number | null
+  ghi_chu_xu_ly?: Prisma.StringNullableFilter<"canh_bao_lo_hang"> | string | null
+  ma_phieu_xu_ly?: Prisma.IntNullableFilter<"canh_bao_lo_hang"> | number | null
 }
 
 export type canh_bao_lo_hangCreateManyLo_hangInput = {
@@ -534,6 +646,10 @@ export type canh_bao_lo_hangCreateManyLo_hangInput = {
   da_xu_ly?: boolean
   ngay_tao?: Date | string
   ngay_xu_ly?: Date | string | null
+  phuong_thuc_xu_ly?: string | null
+  nguoi_xu_ly_id?: number | null
+  ghi_chu_xu_ly?: string | null
+  ma_phieu_xu_ly?: number | null
 }
 
 export type canh_bao_lo_hangUpdateWithoutLo_hangInput = {
@@ -542,6 +658,10 @@ export type canh_bao_lo_hangUpdateWithoutLo_hangInput = {
   da_xu_ly?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ngay_tao?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ngay_xu_ly?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nguoi_xu_ly_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ghi_chu_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ma_phieu_xu_ly?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type canh_bao_lo_hangUncheckedUpdateWithoutLo_hangInput = {
@@ -551,6 +671,10 @@ export type canh_bao_lo_hangUncheckedUpdateWithoutLo_hangInput = {
   da_xu_ly?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ngay_tao?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ngay_xu_ly?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nguoi_xu_ly_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ghi_chu_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ma_phieu_xu_ly?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type canh_bao_lo_hangUncheckedUpdateManyWithoutLo_hangInput = {
@@ -560,6 +684,10 @@ export type canh_bao_lo_hangUncheckedUpdateManyWithoutLo_hangInput = {
   da_xu_ly?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ngay_tao?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ngay_xu_ly?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  phuong_thuc_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nguoi_xu_ly_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ghi_chu_xu_ly?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ma_phieu_xu_ly?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -572,6 +700,10 @@ export type canh_bao_lo_hangSelect<ExtArgs extends runtime.Types.Extensions.Inte
   da_xu_ly?: boolean
   ngay_tao?: boolean
   ngay_xu_ly?: boolean
+  phuong_thuc_xu_ly?: boolean
+  nguoi_xu_ly_id?: boolean
+  ghi_chu_xu_ly?: boolean
+  ma_phieu_xu_ly?: boolean
   lo_hang?: boolean | Prisma.lo_hangDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["canh_bao_lo_hang"]>
 
@@ -585,9 +717,13 @@ export type canh_bao_lo_hangSelectScalar = {
   da_xu_ly?: boolean
   ngay_tao?: boolean
   ngay_xu_ly?: boolean
+  phuong_thuc_xu_ly?: boolean
+  nguoi_xu_ly_id?: boolean
+  ghi_chu_xu_ly?: boolean
+  ma_phieu_xu_ly?: boolean
 }
 
-export type canh_bao_lo_hangOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_lo_hang" | "loai_canh_bao" | "so_ngay_con" | "da_xu_ly" | "ngay_tao" | "ngay_xu_ly", ExtArgs["result"]["canh_bao_lo_hang"]>
+export type canh_bao_lo_hangOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ma_lo_hang" | "loai_canh_bao" | "so_ngay_con" | "da_xu_ly" | "ngay_tao" | "ngay_xu_ly" | "phuong_thuc_xu_ly" | "nguoi_xu_ly_id" | "ghi_chu_xu_ly" | "ma_phieu_xu_ly", ExtArgs["result"]["canh_bao_lo_hang"]>
 export type canh_bao_lo_hangInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   lo_hang?: boolean | Prisma.lo_hangDefaultArgs<ExtArgs>
 }
@@ -605,6 +741,10 @@ export type $canh_bao_lo_hangPayload<ExtArgs extends runtime.Types.Extensions.In
     da_xu_ly: boolean
     ngay_tao: Date
     ngay_xu_ly: Date | null
+    phuong_thuc_xu_ly: string | null
+    nguoi_xu_ly_id: number | null
+    ghi_chu_xu_ly: string | null
+    ma_phieu_xu_ly: number | null
   }, ExtArgs["result"]["canh_bao_lo_hang"]>
   composites: {}
 }
@@ -982,6 +1122,10 @@ export interface canh_bao_lo_hangFieldRefs {
   readonly da_xu_ly: Prisma.FieldRef<"canh_bao_lo_hang", 'Boolean'>
   readonly ngay_tao: Prisma.FieldRef<"canh_bao_lo_hang", 'DateTime'>
   readonly ngay_xu_ly: Prisma.FieldRef<"canh_bao_lo_hang", 'DateTime'>
+  readonly phuong_thuc_xu_ly: Prisma.FieldRef<"canh_bao_lo_hang", 'String'>
+  readonly nguoi_xu_ly_id: Prisma.FieldRef<"canh_bao_lo_hang", 'Int'>
+  readonly ghi_chu_xu_ly: Prisma.FieldRef<"canh_bao_lo_hang", 'String'>
+  readonly ma_phieu_xu_ly: Prisma.FieldRef<"canh_bao_lo_hang", 'Int'>
 }
     
 

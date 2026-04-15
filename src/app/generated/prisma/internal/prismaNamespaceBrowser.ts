@@ -76,6 +76,8 @@ export const ModelName = {
   giao_dich_thanh_toan: 'giao_dich_thanh_toan',
   gio_hang: 'gio_hang',
   ho_so_nguoi_dung: 'ho_so_nguoi_dung',
+  don_xin_nghi: 'don_xin_nghi',
+  bang_luong_thang: 'bang_luong_thang',
   kho_hang: 'kho_hang',
   kho_tri_thuc_ai: 'kho_tri_thuc_ai',
   kien_hang_chi_tiet: 'kien_hang_chi_tiet',
@@ -187,7 +189,11 @@ export const Canh_bao_lo_hangScalarFieldEnum = {
   so_ngay_con: 'so_ngay_con',
   da_xu_ly: 'da_xu_ly',
   ngay_tao: 'ngay_tao',
-  ngay_xu_ly: 'ngay_xu_ly'
+  ngay_xu_ly: 'ngay_xu_ly',
+  phuong_thuc_xu_ly: 'phuong_thuc_xu_ly',
+  nguoi_xu_ly_id: 'nguoi_xu_ly_id',
+  ghi_chu_xu_ly: 'ghi_chu_xu_ly',
+  ma_phieu_xu_ly: 'ma_phieu_xu_ly'
 } as const
 
 export type Canh_bao_lo_hangScalarFieldEnum = (typeof Canh_bao_lo_hangScalarFieldEnum)[keyof typeof Canh_bao_lo_hangScalarFieldEnum]
@@ -399,10 +405,51 @@ export const Ho_so_nguoi_dungScalarFieldEnum = {
   ma_nguoi_dung: 'ma_nguoi_dung',
   ho_ten: 'ho_ten',
   so_dien_thoai: 'so_dien_thoai',
-  anh_dai_dien: 'anh_dai_dien'
+  anh_dai_dien: 'anh_dai_dien',
+  luong_theo_gio: 'luong_theo_gio',
+  cccd: 'cccd',
+  ngay_vao_lam: 'ngay_vao_lam',
+  chuc_vu: 'chuc_vu',
+  bo_phan: 'bo_phan',
+  loai_hop_dong: 'loai_hop_dong',
+  hop_dong_het_han: 'hop_dong_het_han'
 } as const
 
 export type Ho_so_nguoi_dungScalarFieldEnum = (typeof Ho_so_nguoi_dungScalarFieldEnum)[keyof typeof Ho_so_nguoi_dungScalarFieldEnum]
+
+
+export const Don_xin_nghiScalarFieldEnum = {
+  id: 'id',
+  ma_nguoi_dung: 'ma_nguoi_dung',
+  loai_nghi: 'loai_nghi',
+  ngay_bat_dau: 'ngay_bat_dau',
+  ngay_ket_thuc: 'ngay_ket_thuc',
+  ly_do: 'ly_do',
+  trang_thai: 'trang_thai',
+  ly_do_tu_choi: 'ly_do_tu_choi',
+  ngay_tao: 'ngay_tao',
+  nguoi_duyet_id: 'nguoi_duyet_id',
+  nguoi_dungId: 'nguoi_dungId'
+} as const
+
+export type Don_xin_nghiScalarFieldEnum = (typeof Don_xin_nghiScalarFieldEnum)[keyof typeof Don_xin_nghiScalarFieldEnum]
+
+
+export const Bang_luong_thangScalarFieldEnum = {
+  id: 'id',
+  ma_nguoi_dung: 'ma_nguoi_dung',
+  thang: 'thang',
+  nam: 'nam',
+  tong_gio_thuc_te: 'tong_gio_thuc_te',
+  luong_co_ban: 'luong_co_ban',
+  phu_cap_ca_toi: 'phu_cap_ca_toi',
+  thuong_chuyen_can: 'thuong_chuyen_can',
+  khau_tru_tre: 'khau_tru_tre',
+  thuc_nhan: 'thuc_nhan',
+  da_chot: 'da_chot'
+} as const
+
+export type Bang_luong_thangScalarFieldEnum = (typeof Bang_luong_thangScalarFieldEnum)[keyof typeof Bang_luong_thangScalarFieldEnum]
 
 
 export const Kho_hangScalarFieldEnum = {
@@ -467,7 +514,9 @@ export const Lich_su_cham_congScalarFieldEnum = {
   ma_ca_lam: 'ma_ca_lam',
   gio_vao: 'gio_vao',
   gio_ra: 'gio_ra',
-  phuong_thuc_xac_thuc: 'phuong_thuc_xac_thuc'
+  phuong_thuc_xac_thuc: 'phuong_thuc_xac_thuc',
+  trang_thai: 'trang_thai',
+  so_phut_tre: 'so_phut_tre'
 } as const
 
 export type Lich_su_cham_congScalarFieldEnum = (typeof Lich_su_cham_congScalarFieldEnum)[keyof typeof Lich_su_cham_congScalarFieldEnum]
@@ -513,7 +562,8 @@ export const Lo_hangScalarFieldEnum = {
   ngay_thu_hoach: 'ngay_thu_hoach',
   ngay_nhap_kho: 'ngay_nhap_kho',
   han_su_dung: 'han_su_dung',
-  ma_phieu_nhap: 'ma_phieu_nhap'
+  ma_phieu_nhap: 'ma_phieu_nhap',
+  trang_thai: 'trang_thai'
 } as const
 
 export type Lo_hangScalarFieldEnum = (typeof Lo_hangScalarFieldEnum)[keyof typeof Lo_hangScalarFieldEnum]
@@ -609,7 +659,11 @@ export const Phieu_nhap_khoScalarFieldEnum = {
   trang_thai: 'trang_thai',
   ngay_tao: 'ngay_tao',
   ngay_duyet: 'ngay_duyet',
-  ghi_chu: 'ghi_chu'
+  ghi_chu: 'ghi_chu',
+  ma_nguoi_kiem_tra: 'ma_nguoi_kiem_tra',
+  ngay_kiem_tra: 'ngay_kiem_tra',
+  ghi_chu_kiem_tra: 'ghi_chu_kiem_tra',
+  ly_do_chenh_lech: 'ly_do_chenh_lech'
 } as const
 
 export type Phieu_nhap_khoScalarFieldEnum = (typeof Phieu_nhap_khoScalarFieldEnum)[keyof typeof Phieu_nhap_khoScalarFieldEnum]
@@ -757,7 +811,9 @@ export const Vi_tri_khoScalarFieldEnum = {
   khu_vuc: 'khu_vuc',
   day: 'day',
   ke: 'ke',
-  tang: 'tang'
+  tang: 'tang',
+  suc_chua_toi_da: 'suc_chua_toi_da',
+  ghi_chu: 'ghi_chu'
 } as const
 
 export type Vi_tri_khoScalarFieldEnum = (typeof Vi_tri_khoScalarFieldEnum)[keyof typeof Vi_tri_khoScalarFieldEnum]
@@ -839,7 +895,9 @@ export type ca_lam_viecOrderByRelevanceFieldEnum = (typeof ca_lam_viecOrderByRel
 
 
 export const canh_bao_lo_hangOrderByRelevanceFieldEnum = {
-  loai_canh_bao: 'loai_canh_bao'
+  loai_canh_bao: 'loai_canh_bao',
+  phuong_thuc_xu_ly: 'phuong_thuc_xu_ly',
+  ghi_chu_xu_ly: 'ghi_chu_xu_ly'
 } as const
 
 export type canh_bao_lo_hangOrderByRelevanceFieldEnum = (typeof canh_bao_lo_hangOrderByRelevanceFieldEnum)[keyof typeof canh_bao_lo_hangOrderByRelevanceFieldEnum]
@@ -948,10 +1006,24 @@ export type giao_dich_thanh_toanOrderByRelevanceFieldEnum = (typeof giao_dich_th
 export const ho_so_nguoi_dungOrderByRelevanceFieldEnum = {
   ho_ten: 'ho_ten',
   so_dien_thoai: 'so_dien_thoai',
-  anh_dai_dien: 'anh_dai_dien'
+  anh_dai_dien: 'anh_dai_dien',
+  cccd: 'cccd',
+  chuc_vu: 'chuc_vu',
+  bo_phan: 'bo_phan',
+  loai_hop_dong: 'loai_hop_dong'
 } as const
 
 export type ho_so_nguoi_dungOrderByRelevanceFieldEnum = (typeof ho_so_nguoi_dungOrderByRelevanceFieldEnum)[keyof typeof ho_so_nguoi_dungOrderByRelevanceFieldEnum]
+
+
+export const don_xin_nghiOrderByRelevanceFieldEnum = {
+  loai_nghi: 'loai_nghi',
+  ly_do: 'ly_do',
+  trang_thai: 'trang_thai',
+  ly_do_tu_choi: 'ly_do_tu_choi'
+} as const
+
+export type don_xin_nghiOrderByRelevanceFieldEnum = (typeof don_xin_nghiOrderByRelevanceFieldEnum)[keyof typeof don_xin_nghiOrderByRelevanceFieldEnum]
 
 
 export const kho_hangOrderByRelevanceFieldEnum = {
@@ -1004,7 +1076,8 @@ export type kien_hang_da_xuatOrderByRelevanceFieldEnum = (typeof kien_hang_da_xu
 
 
 export const lich_su_cham_congOrderByRelevanceFieldEnum = {
-  phuong_thuc_xac_thuc: 'phuong_thuc_xac_thuc'
+  phuong_thuc_xac_thuc: 'phuong_thuc_xac_thuc',
+  trang_thai: 'trang_thai'
 } as const
 
 export type lich_su_cham_congOrderByRelevanceFieldEnum = (typeof lich_su_cham_congOrderByRelevanceFieldEnum)[keyof typeof lich_su_cham_congOrderByRelevanceFieldEnum]
@@ -1032,7 +1105,8 @@ export type lich_su_hoan_tienOrderByRelevanceFieldEnum = (typeof lich_su_hoan_ti
 
 
 export const lo_hangOrderByRelevanceFieldEnum = {
-  ma_lo_hang: 'ma_lo_hang'
+  ma_lo_hang: 'ma_lo_hang',
+  trang_thai: 'trang_thai'
 } as const
 
 export type lo_hangOrderByRelevanceFieldEnum = (typeof lo_hangOrderByRelevanceFieldEnum)[keyof typeof lo_hangOrderByRelevanceFieldEnum]
@@ -1097,7 +1171,9 @@ export type phieu_kiem_ke_khoOrderByRelevanceFieldEnum = (typeof phieu_kiem_ke_k
 
 export const phieu_nhap_khoOrderByRelevanceFieldEnum = {
   ma_phieu: 'ma_phieu',
-  ghi_chu: 'ghi_chu'
+  ghi_chu: 'ghi_chu',
+  ghi_chu_kiem_tra: 'ghi_chu_kiem_tra',
+  ly_do_chenh_lech: 'ly_do_chenh_lech'
 } as const
 
 export type phieu_nhap_khoOrderByRelevanceFieldEnum = (typeof phieu_nhap_khoOrderByRelevanceFieldEnum)[keyof typeof phieu_nhap_khoOrderByRelevanceFieldEnum]
@@ -1189,7 +1265,8 @@ export const vi_tri_khoOrderByRelevanceFieldEnum = {
   khu_vuc: 'khu_vuc',
   day: 'day',
   ke: 'ke',
-  tang: 'tang'
+  tang: 'tang',
+  ghi_chu: 'ghi_chu'
 } as const
 
 export type vi_tri_khoOrderByRelevanceFieldEnum = (typeof vi_tri_khoOrderByRelevanceFieldEnum)[keyof typeof vi_tri_khoOrderByRelevanceFieldEnum]

@@ -16,7 +16,6 @@ import GoodsIssueScan from "@/components/admin/warehouse/GoodsIssueScan";
 import ExpirationWarnings from "@/components/admin/warehouse/ExpirationWarnings";
 import IssueHistory from "@/components/admin/warehouse/IssueHistory";
 
-// Nhận đủ 5 props từ file page.tsx truyền xuống
 export default function WarehouseClient({
   mapData,
   warningsData,
@@ -24,6 +23,8 @@ export default function WarehouseClient({
   formOptions,
   historyData,
   inventoryData,
+  importHistoryData,
+  zonesRaw,
 }: any) {
   const [activeTab, setActiveTab] = useState("map");
 
@@ -37,7 +38,7 @@ export default function WarehouseClient({
         </p>
       </div>
 
-      {/* Navigation Tabs (Thanh Menu) */}
+      {/* Navigation Tabs */}
       <div className="flex bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto custom-scrollbar">
         <button
           onClick={() => setActiveTab("map")}
@@ -68,22 +69,22 @@ export default function WarehouseClient({
             </span>
           )}
         </button>
-        {/* Nút Tab Lịch sử mới thêm */}
         <button
           onClick={() => setActiveTab("history")}
           className={`flex-1 min-w-[150px] py-3 px-4 flex items-center justify-center gap-2 font-medium text-sm transition-colors border-b-2 ${activeTab === "history" ? "border-[#1D9E75] text-[#1D9E75]" : "border-transparent text-[#888780] hover:text-[#2C2C2A] hover:bg-gray-50"}`}
         >
-          <Clock size={18} /> Lịch sử xuất
+          <Clock size={18} /> Lịch sử
         </button>
       </div>
 
-      {/* Tab Content (Khu vực hiển thị) */}
+      {/* Tab Content */}
       <div className="animate-in fade-in duration-300">
         <div className={activeTab === "map" ? "block" : "hidden"}>
           <WarehouseMap
             mapData={mapData}
             statsData={statsData}
             inventoryData={inventoryData}
+            zonesRaw={zonesRaw}
           />
         </div>
         <div className={activeTab === "import" ? "block" : "hidden"}>
@@ -95,9 +96,8 @@ export default function WarehouseClient({
         <div className={activeTab === "warnings" ? "block" : "hidden"}>
           <ExpirationWarnings warningsData={warningsData} />
         </div>
-        {/* Component Lịch sử xuất kho */}
         <div className={activeTab === "history" ? "block" : "hidden"}>
-          <IssueHistory historyData={historyData} />
+          <IssueHistory historyData={historyData} importHistoryData={importHistoryData} />
         </div>
       </div>
     </div>

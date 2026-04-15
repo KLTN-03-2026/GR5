@@ -19,6 +19,7 @@ export default async function ProductDetailPage({
       bien_the_san_pham: { orderBy: { gia_ban: "asc" } },
       danh_muc: true,
       danh_gia_san_pham: {
+        where: { trang_thai: "DA_DUYET" },
         include: { nguoi_dung: true },
         orderBy: { id: "desc" },
       },

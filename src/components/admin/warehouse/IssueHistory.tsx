@@ -1,95 +1,161 @@
 "use client";
 
-import React from "react";
-import { Clock, CheckCircle, Package } from "lucide-react";
+import React, { useState } from "react";
+import { Clock, ArrowDownToLine, ArrowUpFromLine, Package } from "lucide-react";
 
-export default function IssueHistory({ historyData }: { historyData?: any[] }) {
-  // Demo data nếu chưa fetch từ DB
-  const data = historyData || [
-    {
-      id: 1,
-      ngay_xuat: "03/04/2026 14:30",
-      qr: "QR-LO-123-001",
-      san_pham: "Rau muống 1kg",
-      phieu: "PX-WINMART-01",
-      nguoi_xuat: "Hung Le",
-    },
-    {
-      id: 2,
-      ngay_xuat: "03/04/2026 14:31",
-      qr: "QR-LO-123-002",
-      san_pham: "Rau muống 1kg",
-      phieu: "PX-WINMART-01",
-      nguoi_xuat: "Hung Le",
-    },
-    {
-      id: 3,
-      ngay_xuat: "02/04/2026 09:15",
-      qr: "QR-CT-999-004",
-      san_pham: "Cải thảo 2kg",
-      phieu: "PX-BIGH-05",
-      nguoi_xuat: "Admin",
-    },
-  ];
+export default function IssueHistory({
+  historyData,
+  importHistoryData,
+}: {
+  historyData?: any[];
+  importHistoryData?: any[];
+}) {
+  // Tạo state để làm nút gạt chuyển đổi giữa 2 bảng
+  const [subTab, setSubTab] = useState<"import" | "export">("import");
+
+  const exportData = historyData || [];
+  const importData = importHistoryData || [];
 
   return (
     <div className="bg-[#FFFFFF] p-6 rounded-xl shadow-sm border border-gray-100 animate-in fade-in zoom-in duration-300">
-      <div className="flex justify-between items-center mb-6">
+      {/* Header & Nút gạt Toggle */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-gray-100 pb-4 gap-4">
         <div>
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <Clock className="text-[#378ADD]" /> Lịch sử xuất kho
+          <h2 className="text-xl font-bold text-[#2C2C2A] flex items-center gap-2">
+            <Clock className="text-[#1D9E75]" /> Lịch sử Giao dịch
           </h2>
           <p className="text-sm text-[#888780] mt-1">
-            Truy vết chi tiết từng thùng hàng đã rời khỏi kho
+            Lưu vết 50 hoạt động nhập/xuất kho gần nhất.
           </p>
         </div>
-        <div className="flex gap-2">
-          <input
-            type="date"
-            className="border border-gray-200 rounded-lg p-2 text-sm outline-none focus:border-[#1D9E75]"
-          />
-          <button className="px-4 py-2 bg-gray-100 text-[#2C2C2A] rounded-lg font-medium hover:bg-gray-200 text-sm">
-            Xuất Excel
+
+        {/* Cụm nút gạt mượt mà */}
+        <div className="flex bg-gray-100 p-1 rounded-lg">
+          <button
+            onClick={() => setSubTab("import")}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md transition-all ${subTab === "import" ? "bg-white text-[#1D9E75] shadow-sm" : "text-gray-500 hover:text-[#2C2C2A]"}`}
+          >
+            <ArrowDownToLine size={16} /> Nhập Kho
+          </button>
+          <button
+            onClick={() => setSubTab("export")}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md transition-all ${subTab === "export" ? "bg-white text-[#378ADD] shadow-sm" : "text-gray-500 hover:text-[#2C2C2A]"}`}
+          >
+            <ArrowUpFromLine size={16} /> Xuất Kho
           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="bg-gray-50 text-[#888780] font-medium border-b border-gray-200">
-              <th className="p-3 rounded-tl-lg">Thời gian xuất</th>
-              <th className="p-3">Mã phiếu (Đơn hàng)</th>
-              <th className="p-3">Sản phẩm</th>
-              <th className="p-3">Mã QR truy vết</th>
-              <th className="p-3 text-right rounded-tr-lg">Trạng thái</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {data.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                <td className="p-3 text-[#2C2C2A] font-medium">
-                  {row.ngay_xuat}
-                </td>
-                <td className="p-3 text-[#378ADD] font-medium hover:underline cursor-pointer">
-                  {row.phieu}
-                </td>
-                <td className="p-3 flex items-center gap-2">
-                  <Package size={14} className="text-gray-400" /> {row.san_pham}
-                </td>
-                <td className="p-3 font-mono font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded inline-block mt-2">
-                  {row.qr}
-                </td>
-                <td className="p-3 text-right text-[#1D9E75] font-medium">
-                  <span className="flex items-center justify-end gap-1">
-                    <CheckCircle size={14} /> Đã rời kho
-                  </span>
-                </td>
+      {/* ======================= */}
+      {/* BẢNG 1: LỊCH SỬ NHẬP KHO */}
+      {/* ======================= */}
+      {subTab === "import" && (
+        <div className="overflow-x-auto animate-in fade-in duration-200">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="bg-[#1D9E75]/10 text-[#1D9E75] font-medium">
+                <th className="p-3 rounded-tl-lg">Thời gian</th>
+                <th className="p-3">Mã Phiếu</th>
+                <th className="p-3">Nhà cung cấp</th>
+                <th className="p-3">Sản phẩm chính</th>
+                <th className="p-3 text-right">SL (Thùng)</th>
+                <th className="p-3 rounded-tr-lg">Trạng thái</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {importData.length > 0 ? (
+                importData.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-3 text-gray-500">{item.ngay_nhap}</td>
+                    <td className="p-3 font-mono font-bold text-[#2C2C2A]">
+                      {item.ma_phieu}
+                    </td>
+                    <td className="p-3 text-gray-600">{item.ncc}</td>
+                    <td className="p-3 font-medium text-[#2C2C2A]">
+                      {item.san_pham}
+                    </td>
+                    <td className="p-3 text-right font-bold text-[#1D9E75]">
+                      {item.so_luong}
+                    </td>
+                      <td className="p-3">
+                        {(() => {
+                          const s = item.trang_thai || "N/A";
+                          const cls: Record<string, string> = {
+                            CHO_DUYET:    "bg-amber-50 text-amber-700 border border-amber-200",
+                            CHO_KIEM_TRA: "bg-blue-50 text-blue-700 border border-blue-200",
+                            DA_DUYET:     "bg-green-50 text-green-700 border border-green-200",
+                            HOAN_THANH:   "bg-emerald-50 text-emerald-800 border border-emerald-200",
+                            DA_HUY:       "bg-red-50 text-red-700 border border-red-200",
+                          };
+                          const lbl: Record<string, string> = {
+                            CHO_DUYET: "Chờ duyệt", CHO_KIEM_TRA: "Chờ kiểm tra",
+                            DA_DUYET: "Đã duyệt", HOAN_THANH: "Hoàn thành", DA_HUY: "Đã hủy",
+                          };
+                          return (
+                            <span className={`px-2 py-1 text-[10px] font-bold rounded-full ${cls[s] || "bg-gray-100 text-gray-600"}`}>
+                              {lbl[s] || s}
+                            </span>
+                          );
+                        })()}
+                      </td>
+
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-gray-400">
+                    Không có lịch sử nhập kho
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ======================= */}
+      {/* BẢNG 2: LỊCH SỬ XUẤT KHO */}
+      {/* ======================= */}
+      {subTab === "export" && (
+        <div className="overflow-x-auto animate-in fade-in duration-200">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="bg-[#378ADD]/10 text-[#378ADD] font-medium">
+                <th className="p-3 rounded-tl-lg">Thời gian quét</th>
+                <th className="p-3">Mã QR đã xuất</th>
+                <th className="p-3">Sản phẩm</th>
+                <th className="p-3">Lý do / Số phiếu</th>
+                <th className="p-3 rounded-tr-lg text-right">Người quét</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {exportData.length > 0 ? (
+                exportData.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-3 text-gray-500">{item.ngay_xuat}</td>
+                    <td className="p-3 font-mono font-bold text-[#E24B4A]">
+                      {item.qr}
+                    </td>
+                    <td className="p-3 font-medium text-[#2C2C2A]">
+                      {item.san_pham}
+                    </td>
+                    <td className="p-3 text-gray-600">{item.phieu}</td>
+                    <td className="p-3 text-right text-gray-600">
+                      {item.nguoi_xuat}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-gray-400">
+                    Không có lịch sử xuất kho
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
