@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   Warehouse,
+  MessageCircleMore,
 } from "lucide-react";
 
 const menuItems = [
@@ -30,6 +31,7 @@ const menuItems = [
   { name: "Thanh toán", path: "/admin/payments", icon: CreditCard },
   { name: "Nội dung", path: "/admin/content", icon: FileText },
   { name: "Khuyến mãi", path: "/admin/promotions", icon: Gift },
+  { name: "Bình luận", path: "/admin/reviews", icon: MessageCircleMore },
   { name: "Cài đặt", path: "/admin/settings", icon: Settings },
 ];
 

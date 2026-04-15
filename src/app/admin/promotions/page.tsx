@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
-// Hàm hỗ trợ format Date từ DB ra định dạng input datetime-local
 const formatDateForInput = (dateString: string) => {
   if (!dateString) return "";
   const d = new Date(dateString);
@@ -26,7 +25,6 @@ export default function PromotionsPage() {
   const [promotions, setPromotions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // States form
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -106,6 +104,38 @@ export default function PromotionsPage() {
       return;
     }
 
+    // Chặn số âm
+    if (
+      Number(formData.gia_tri_giam) < 0 ||
+      Number(formData.don_toi_thieu) < 0 ||
+      Number(formData.gioi_han_su_dung) < 0
+    ) {
+      toast.error("Các giá trị số không được là số âm!");
+      return;
+    }
+
+    // === BẮT ĐẦU KIỂM TRA THỜI GIAN LOGIC ===
+    const now = new Date();
+    const startDate = formData.ngay_bat_dau
+      ? new Date(formData.ngay_bat_dau)
+      : null;
+    const endDate = formData.ngay_ket_thuc
+      ? new Date(formData.ngay_ket_thuc)
+      : null;
+
+    // 1. Nếu tạo mới -> Ngày bắt đầu không được ở trong quá khứ
+    if (!editingId && startDate && startDate < now) {
+      toast.error("Thời gian bắt đầu không được ở trong quá khứ!");
+      return;
+    }
+
+    // 2. Cả lúc tạo lẫn sửa -> Ngày kết thúc phải sau ngày bắt đầu
+    if (startDate && endDate && startDate >= endDate) {
+      toast.error("Thời gian kết thúc phải lớn hơn thời gian bắt đầu!");
+      return;
+    }
+    // === KẾT THÚC KIỂM TRA ===
+
     const url = editingId
       ? `/api/admin/promotions/${editingId}`
       : "/api/admin/promotions";
@@ -151,7 +181,6 @@ export default function PromotionsPage() {
     }
   };
 
-  // Logic kiểm tra hạn sử dụng
   const checkStatus = (endDate: string | null) => {
     if (!endDate)
       return {
@@ -174,8 +203,6 @@ export default function PromotionsPage() {
   return (
     <div className="space-y-8 max-w-[1200px] mx-auto pb-10 font-sans">
       <Toaster />
-
-      {/* HEADER */}
       <div className="flex justify-between items-center bg-white p-6 rounded-3xl border shadow-sm">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-rose-50 rounded-2xl flex justify-center items-center text-rose-500">
@@ -198,7 +225,6 @@ export default function PromotionsPage() {
         </button>
       </div>
 
-      {/* LƯỚI DANH SÁCH VOUCHER */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
           <div className="col-span-full text-center py-20">
@@ -219,7 +245,6 @@ export default function PromotionsPage() {
                 key={p.id}
                 className={`bg-white rounded-2xl p-5 border shadow-sm relative overflow-hidden transition-all group ${isExpired ? "border-gray-200 opacity-70" : "border-rose-100 hover:shadow-md hover:border-rose-300"}`}
               >
-                {/* Trang trí cạnh viền như cái vé */}
                 <div
                   className={`absolute top-0 right-0 w-2 h-full ${isExpired ? "bg-gray-300" : "bg-rose-400"}`}
                 ></div>
@@ -237,15 +262,18 @@ export default function PromotionsPage() {
                   </span>
                 </div>
 
+                {/* ĐÃ FIX HIỂN THỊ: Chắc chắn check đúng TIEN_MAT hay PHAN_TRAM */}
                 <p
                   className={`text-3xl font-black mb-4 ${isExpired ? "text-gray-400" : "text-gray-900"}`}
                 >
                   Giảm{" "}
-                  {p.loai_giam_gia === "PHAN_TRAM" ? (
-                    <span className="text-rose-500">{p.gia_tri_giam}%</span>
+                  {p.loai_giam_gia === "TIEN_MAT" ? (
+                    <span className="text-rose-500">
+                      {Number(p.gia_tri_giam).toLocaleString("vi-VN")}đ
+                    </span>
                   ) : (
                     <span className="text-rose-500">
-                      {Number(p.gia_tri_giam).toLocaleString()}đ
+                      {Number(p.gia_tri_giam)}%
                     </span>
                   )}
                 </p>
@@ -255,7 +283,7 @@ export default function PromotionsPage() {
                     <span>Đơn tối thiểu:</span>
                     <strong className="text-gray-700">
                       {p.don_toi_thieu
-                        ? `${Number(p.don_toi_thieu).toLocaleString()}đ`
+                        ? `${Number(p.don_toi_thieu).toLocaleString("vi-VN")}đ`
                         : "Không yêu cầu"}
                     </strong>
                   </div>
@@ -303,7 +331,6 @@ export default function PromotionsPage() {
         )}
       </div>
 
-      {/* MODAL THÊM / SỬA MÃ GIẢM GIÁ */}
       {isModalOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 cursor-pointer"
@@ -363,8 +390,10 @@ export default function PromotionsPage() {
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
                     Giá trị giảm *
                   </label>
+                  {/* ĐÃ FIX: Thêm min="0" chống số âm */}
                   <input
                     type="number"
+                    min="0"
                     name="gia_tri_giam"
                     value={formData.gia_tri_giam}
                     onChange={handleInputChange}
@@ -382,8 +411,10 @@ export default function PromotionsPage() {
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
                       Đơn tối thiểu (Tùy chọn)
                     </label>
+                    {/* ĐÃ FIX: Thêm min="0" chống số âm */}
                     <input
                       type="number"
+                      min="0"
                       name="don_toi_thieu"
                       value={formData.don_toi_thieu}
                       onChange={handleInputChange}
@@ -395,8 +426,10 @@ export default function PromotionsPage() {
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
                       Giới hạn số lượt (Tùy chọn)
                     </label>
+                    {/* ĐÃ FIX: Thêm min="0" chống số âm */}
                     <input
                       type="number"
+                      min="0"
                       name="gioi_han_su_dung"
                       value={formData.gioi_han_su_dung}
                       onChange={handleInputChange}
@@ -453,7 +486,6 @@ export default function PromotionsPage() {
         </div>
       )}
 
-      {/* MODAL XÓA */}
       {deleteModal.isOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center cursor-pointer p-4"
