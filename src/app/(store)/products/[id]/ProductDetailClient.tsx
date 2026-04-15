@@ -201,8 +201,8 @@ export default function ProductDetailClient({
             )}
           </div>
 
-          <p className="text-gray-600 leading-relaxed text-sm mb-6">
-            {product?.mo_ta}
+          <p className="text-gray-600 leading-relaxed text-sm mb-6 whitespace-pre-wrap">
+            {product?.mo_ta || "Chưa có mô tả cho sản phẩm này."}
           </p>
 
           <div className="flex items-center gap-6 mb-8 text-sm font-bold text-gray-700">
@@ -226,9 +226,16 @@ export default function ProductDetailClient({
                     type="button"
                     key={bt.id}
                     onClick={() => setSelectedVariant(bt)}
-                    className={`px-6 py-2.5 rounded-lg font-bold text-sm border transition-all ${selectedVariant?.id === bt.id ? "border-emerald-700 bg-[#E8F3EC] text-emerald-800" : "border-gray-200 text-gray-600 hover:border-emerald-300"}`}
+                    // Thêm chữ capitalize để viết hoa chữ cái đầu (ví dụ: trái -> Trái)
+                    className={`px-6 py-2.5 rounded-lg font-bold text-sm border transition-all capitalize flex items-center gap-1 ${
+                      selectedVariant?.id === bt.id
+                        ? "border-emerald-700 bg-[#E8F3EC] text-emerald-800"
+                        : "border-gray-200 text-gray-600 hover:border-emerald-300"
+                    }`}
                   >
-                    {bt.ten_bien_the}
+                    {/* Nếu trống sẽ hiện "Mặc định", nếu có Tên loại thì thêm dấu gạch ngang */}
+                    <span>{bt.don_vi_tinh || "Mặc định"}</span>
+                    {bt.ten_bien_the ? <span>- {bt.ten_bien_the}</span> : null}
                   </button>
                 ))}
               </div>

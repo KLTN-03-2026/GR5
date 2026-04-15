@@ -41,7 +41,12 @@
     "react-hook-form": "^7.71.2",
     "react-hot-toast": "^2.6.0",
     "react-icons": "^5.6.0",
+ 
     "react-toastify": "^11.0.5",
+
+    "recharts": "^3.8.1",
+    "tailwind-merge": "^3.5.0",
+ 
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -59,5 +64,20 @@
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
     "typescript": "^5"
-  }
+ 
+  },
+  "description": "agricultural-products-trading",
+  "main": "setup.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hung0codon/agricultural-products-trading.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hung0codon/agricultural-products-trading/issues"
+  },
+  "homepage": "https://github.com/Hung0codon/agricultural-products-trading#readme"
+ 
 }
