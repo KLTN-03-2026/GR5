@@ -1,15 +1,12 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-<<<<<<< HEAD
 // 2. Sau đó mới import các thứ khác
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { PrismaClient } from '@/app/generated/prisma/client';
 
 // 3. Khởi tạo Adapter
-=======
 // Cấu hình Adapter theo đúng yêu cầu của bạn
->>>>>>> main
 const adapter = new PrismaMariaDb({
   host: process.env.DATABASE_HOST,
   port: Number(process.env.DATABASE_PORT) || 3307, // Port Docker của bạn
@@ -23,7 +20,6 @@ const adapter = new PrismaMariaDb({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-<<<<<<< HEAD
   console.log("🚀 Đang dọn dẹp dữ liệu cũ...");
   
   // Xóa dữ liệu cũ theo thứ tự (con trước, cha sau)
@@ -157,7 +153,7 @@ async function main() {
   }
 
   console.log("✅ TUYỆT VỜI! Dữ liệu đã được tạo thành công.");
-=======
+
   console.log('🌱 Đang bắt đầu bơm (seed) dữ liệu cho Module Kho...');
 
   // ==========================================
@@ -262,16 +258,11 @@ async function main() {
   });
 
   console.log('✅ Seed dữ liệu Kho thành công! Mọi thứ đã sẵn sàng!');
->>>>>>> main
 }
 
 main()
   .catch((e) => {
-<<<<<<< HEAD
-    console.error("❌ Xảy ra lỗi trong quá trình Seeding:", e);
-=======
-    console.error('❌ Có lỗi xảy ra trong lúc seed:', e);
->>>>>>> main
+
     process.exit(1);
   })
   .finally(async () => {

@@ -21,7 +21,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-libsql": "^7.6.0",
     "@prisma/adapter-mariadb": "^7.5.0",
-    "@prisma/client": "^7.6.0",
+    "@prisma/client": "^7.7.0",
     "aos": "^2.3.4",
     "axios": "^1.13.6",
     "crypto-js": "^4.2.0",

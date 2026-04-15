@@ -30,13 +30,38 @@ export default function MyOrdersPage() {
   const [returnReason, setReturnReason] = useState('');
   const [returnDescription, setReturnDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [returnImages, setReturnImages] = useState([
-    { id: 1, url: 'https://placehold.co/150x150/png?text=Loi+Hop', alt: 'Damaged box' },
-    { id: 2, url: 'https://placehold.co/150x150/png?text=Dap+Nat', alt: 'Bruised apple' }
-  ]);
+  
+  // State lưu ảnh thật từ máy khách hàng
+  const [returnImages, setReturnImages] = useState<any[]>([]);
 
+  // Hàm xóa ảnh khỏi danh sách preview
   const removeImage = (id: number) => setReturnImages(returnImages.filter(img => img.id !== id));
 
+  // Hàm xử lý upload ảnh từ thiết bị
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages = Array.from(files).map((file) => ({
+      id: Date.now() + Math.random(), // Tạo ID duy nhất
+      url: URL.createObjectURL(file), // Tạo link preview để hiển thị
+      file: file, // Giữ lại file gốc để lúc submit gửi lên API (backend)
+      alt: file.name
+    }));
+
+    setReturnImages((prev) => {
+      const totalImages = [...prev, ...newImages];
+      if (totalImages.length > 5) {
+        alert("Bạn chỉ được tải lên tối đa 5 ảnh minh chứng!");
+        return totalImages.slice(0, 5);
+      }
+      return totalImages;
+    });
+
+    // Reset lại input để khách có thể chọn lại ảnh vừa xóa
+    e.target.value = '';
+  };
+  
   useEffect(() => {
     const fetchMyOrders = async () => {
       try {
@@ -60,6 +85,16 @@ export default function MyOrdersPage() {
     activeTab === 'ALL' ? true : order.trang_thai === activeTab
   );
 
+  // 💡 HÀM MỚI: Dịch file ảnh thật sang chuỗi Base64 để gửi qua JSON
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(file);
+      fileReader.onload = () => resolve(fileReader.result as string);
+      fileReader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleSubmitReturn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!returnReason) {
@@ -69,21 +104,29 @@ export default function MyOrdersPage() {
     
     setIsSubmitting(true);
     try {
+      // 💡 BƯỚC QUAN TRỌNG: Chuyển tất cả ảnh khách chọn thành Base64
+      const base64Images = await Promise.all(
+        returnImages.map((img) => convertToBase64(img.file))
+      );
+
       const res = await fetch('/api/store/orders', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           orderId: returnOrder.id, 
           action: 'RETURN', 
-          reason: `${returnReason} - ${returnDescription}` 
+          reason: `${returnReason} - ${returnDescription}`,
+          images: base64Images // 👈 ĐÃ SỬA: Gửi mảng ảnh Base64 lên Server
         })
       });
+
       const data = await res.json();
       if (data.success) {
         alert("Đã gửi yêu cầu đổi trả thành công! Cửa hàng sẽ liên hệ bạn sớm.");
         setReturnOrder(null); 
         setReturnReason('');  
         setReturnDescription('');
+        setReturnImages([]); 
         window.location.reload(); 
       } else {
         alert("Lỗi: " + data.message);
@@ -94,7 +137,6 @@ export default function MyOrdersPage() {
       setIsSubmitting(false);
     }
   };
-
   const renderStatus = (status: string) => {
     const safeStatus = status?.toUpperCase() || ''; 
     switch (safeStatus) {
@@ -202,7 +244,7 @@ export default function MyOrdersPage() {
                         <Eye className="w-4 h-4" /> Chi tiết
                       </button>
                       
-                      {/* ĐÂY LÀ ĐIỀU KIỆN ĐỂ HIỂN THỊ NÚT ĐỔI TRẢ */}
+                      {/* ĐIỀU KIỆN ĐỂ HIỂN THỊ NÚT ĐỔI TRẢ */}
                       {order.trang_thai === 'DA_GIAO' && (
                         <button onClick={() => setReturnOrder(order)} className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-rose-50 text-rose-600 px-5 py-2.5 rounded-xl font-bold hover:bg-rose-100 transition-colors">
                           <RefreshCcw className="w-4 h-4" /> Hoàn trả
@@ -338,7 +380,7 @@ export default function MyOrdersPage() {
       </AnimatePresence>
 
       {/* ========================================= */}
-      {/* MEGA MODAL 2: GIAO DIỆN YÊU CẦU ĐỔI TRẢ MỚI */}
+      {/* MEGA MODAL 2: GIAO DIỆN YÊU CẦU ĐỔI TRẢ */}
       {/* ========================================= */}
       <AnimatePresence>
         {returnOrder && (
@@ -404,24 +446,35 @@ export default function MyOrdersPage() {
                           </div>
                         </div>
 
-                        {/* Upload Hình ảnh */}
+                        {/* Upload Hình ảnh từ Máy tính/Điện thoại */}
                         <div className="space-y-4">
                           <label className="block text-[#007832] font-bold text-sm tracking-wide uppercase">Hình ảnh minh chứng</label>
-                          <motion.div whileHover={{ backgroundColor: '#f9fafb' }} className="border-2 border-dashed border-gray-300 rounded-2xl p-10 bg-gray-50 flex flex-col items-center justify-center cursor-pointer group transition-colors">
+                          
+                          <motion.label 
+                            whileHover={{ backgroundColor: '#f9fafb' }}
+                            className="border-2 border-dashed border-gray-300 rounded-2xl p-10 bg-gray-50 flex flex-col items-center justify-center cursor-pointer group transition-colors relative"
+                          >
+                            <input 
+                              type="file" 
+                              multiple 
+                              accept="image/jpeg, image/png, image/webp" 
+                              className="hidden" 
+                              onChange={handleImageUpload}
+                            />
                             <CloudUpload className="text-gray-400 group-hover:text-[#007832] transition-colors mb-3" size={48} />
-                            <p className="text-gray-600 text-center font-medium">Nhấn để tải lên hoặc kéo thả ảnh vào đây</p>
+                            <p className="text-gray-600 text-center font-medium">Nhấn để chọn ảnh từ thư viện</p>
                             <p className="text-xs text-gray-400 mt-2">Hỗ trợ JPG, PNG (Tối đa 5 ảnh, 5MB mỗi ảnh)</p>
-                          </motion.div>
+                          </motion.label>
 
-                          {/* Previews */}
+                          {/* Previews Ảnh Thật */}
                           <div className="flex gap-4 mt-6">
                             <AnimatePresence>
                               {returnImages.map((img) => (
                                 <motion.div 
                                   key={img.id} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                                  className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 group shadow-sm"
+                                  className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 group shadow-sm flex-shrink-0"
                                 >
-                                  <img src={img.url} alt={img.alt} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                  <img src={img.url} alt={img.alt} className="w-full h-full object-cover" />
                                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                     <button type="button" onClick={() => removeImage(img.id)} className="text-white hover:text-rose-400 transition-colors p-2 bg-black/20 rounded-full">
                                       <X size={20} />

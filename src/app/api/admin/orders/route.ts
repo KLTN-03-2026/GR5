@@ -11,7 +11,6 @@ export async function GET() {
   try {
     const orders = await prisma.don_hang.findMany({
       include: {
-        // Lấy thông tin user (Lội qua bảng ho_so_nguoi_dung như đã fix)
         nguoi_dung: {
           select: {
             id: true,
@@ -19,13 +18,16 @@ export async function GET() {
             ho_so_nguoi_dung: true 
           }
         },
-        // Lấy chi tiết đơn hàng để Admin xem
-        chi_tiet_don_hang: true 
+        chi_tiet_don_hang: true,
+        don_van_chuyen: true,
+        // MUST HAVE THIS LINE
+        yeu_cau_doi_tra: true 
       },
       orderBy: { 
         ngay_tao: 'desc' 
       }
     });
+
 
     return NextResponse.json(orders);
     
@@ -39,73 +41,76 @@ export async function GET() {
 }
 
 // ============================================================================
-// 🚀 [PUT] CẬP NHẬT TRẠNG THÁI + HOÀN KHO + GHI LỊCH SỬ (DÙNG TRANSACTION)
+// 🚀 [PUT] CẬP NHẬT TRẠNG THÁI ĐƠN & XỬ LÝ YÊU CẦU ĐỔI TRẢ
 // ============================================================================
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    // adminId truyền từ fontend lên (nếu có hệ thống đăng nhập Admin)
-    const { orderId, status, adminId = 1 } = body; 
+    
+    // Nhận thêm action và returnStatus để phân biệt luồng xử lý
+    const { orderId, status, action, returnStatus, adminId = 1 } = body; 
 
-    if (!orderId || !status) {
-      return NextResponse.json({ success: false, message: "Thiếu thông tin cập nhật" }, { status: 400 });
+    if (!orderId) {
+      return NextResponse.json({ success: false, message: "Thiếu ID đơn hàng" }, { status: 400 });
     }
 
-    // 🔥 BẮT ĐẦU TRANSACTION: TẤT CẢ CÙNG THÀNH CÔNG HOẶC CÙNG THẤT BẠI
-    const result = await prisma.$transaction(async (tx) => {
-      
-      // 1. Lấy thông tin đơn hàng hiện tại
-      const oldOrder = await tx.don_hang.findUnique({ 
-        where: { id: Number(orderId) },
-        include: { chi_tiet_don_hang: true } // Lấy luôn chi tiết để lát nữa cần thì hoàn kho
-      });
+    // 🔥 LUỒNG 1: XỬ LÝ DUYỆT / TỪ CHỐI ĐỔI TRẢ
+    if (action === 'HANDLE_RETURN') {
+      if (!returnStatus) return NextResponse.json({ success: false, message: "Thiếu trạng thái xử lý" }, { status: 400 });
 
-      if (!oldOrder) throw new Error("Không tìm thấy đơn hàng");
+      const returnResult = await prisma.$transaction(async (tx) => {
+        // 1. Đổi trạng thái phiếu yêu cầu đổi trả
+        await tx.yeu_cau_doi_tra.updateMany({
+          where: { ma_don_hang: Number(orderId), trang_thai: 'CHO_DUYET' },
+          data: { trang_thai: returnStatus } // 'DA_DUYET' hoặc 'TU_CHOI'
+        });
 
-      // 2. Cập nhật trạng thái mới cho đơn hàng
-      const updatedOrder = await tx.don_hang.update({
-        where: { id: Number(orderId) },
-        data: { trang_thai: status }
-      });
-
-      // 3. LOGIC HOÀN KHO KHI HỦY ĐƠN
-      // Nếu trạng thái mới là DA_HUY và trạng thái cũ CHƯA PHẢI là DA_HUY
-    //   if (status === 'DA_HUY' && oldOrder.trang_thai !== 'DA_HUY') {
-    //     for (const item of oldOrder.chi_tiet_don_hang) {
-    //       // Lưu ý: Đổi tên cột `ma_bien_the` và `so_luong` cho đúng với file schema.prisma của bạn
-    //       await tx.bien_the_san_pham.update({
-    //         where: { id: item.ma_bien_the },
-    //         data: {
-    //           so_luong_ton: {
-    //             increment: item.so_luong // CỘNG TRẢ LẠI KHO
-    //           }
-    //         }
-    //       });
-    //     }
-    //   }
-
-      // 4. GHI LẠI NHẬT KÝ (LỊCH SỬ ĐƠN HÀNG)
-      // ⚠️ Lưu ý: Nếu trong file schema.prisma của bạn CHƯA TẠO bảng lich_su_don_hang thì TẠM THỜI XÓA/COMMENT đoạn số 4 này đi để không bị lỗi nhé!
-      /*
-      await tx.lich_su_don_hang.create({
-        data: {
-          ma_don_hang: Number(orderId),
-          ma_nguoi_thuc_hien: adminId,
-          trang_thai_truoc: oldOrder.trang_thai,
-          trang_thai_sau: status,
-          ghi_chu: `Admin đã đổi trạng thái thành ${status}`,
+        // 2. Định tuyến lại trạng thái của Đơn hàng gốc
+        let newOrderStatus = '';
+        if (returnStatus === 'DA_DUYET') {
+          newOrderStatus = 'DA_HOAN_TRA'; // Hoặc trạng thái tương đương trong hệ thống của bạn
+          
+          /* (Tùy chọn) Logic hoàn kho nếu bạn muốn:
+          const order = await tx.don_hang.findUnique({ where: { id: Number(orderId) }, include: { chi_tiet_don_hang: true }});
+          for (const item of order!.chi_tiet_don_hang) {
+            await tx.bien_the_san_pham.update({ where: { id: item.ma_bien_the }, data: { so_luong_ton: { increment: item.so_luong } }});
+          }
+          */
+        } else if (returnStatus === 'TU_CHOI') {
+          newOrderStatus = 'DA_GIAO'; // Bị từ chối thì đơn quay về trạng thái Đã giao
         }
+
+        // 3. Cập nhật Đơn hàng
+        const updatedOrder = await tx.don_hang.update({
+          where: { id: Number(orderId) },
+          data: { trang_thai: newOrderStatus }
+        });
+
+        return updatedOrder;
       });
-      */
 
-      return updatedOrder; // Trả về kết quả sau khi hoàn tất chuỗi logic
-    });
+      return NextResponse.json({ success: true, message: "Xử lý yêu cầu đổi trả thành công!", data: returnResult });
+    }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "Cập nhật và xử lý dữ liệu thành công!", 
-      data: result 
-    });
+    // 🔥 LUỒNG 2: CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG BÌNH THƯỜNG (Code cũ của bạn)
+    if (status) {
+      const result = await prisma.$transaction(async (tx) => {
+        const oldOrder = await tx.don_hang.findUnique({ 
+          where: { id: Number(orderId) }
+        });
+        if (!oldOrder) throw new Error("Không tìm thấy đơn hàng");
+
+        const updatedOrder = await tx.don_hang.update({
+          where: { id: Number(orderId) },
+          data: { trang_thai: status }
+        });
+        return updatedOrder; 
+      });
+
+      return NextResponse.json({ success: true, message: "Cập nhật trạng thái thành công!", data: result });
+    }
+
+    return NextResponse.json({ success: false, message: "Không có hành động nào được thực thi" }, { status: 400 });
 
   } catch (error: any) {
     console.error("🔥 LỖI TRANSACTION PUT ORDERS:", error.message);

@@ -47,7 +47,12 @@ export default function CartPage() {
     (sum, item) => sum + item.gia_ban * item.so_luong,
     0,
   );
-  const finalTotal = subTotal - discountAmount;
+
+  // 💡 THÊM: Tính toán phí ship (Freeship cho đơn từ 500k)
+  const shippingFee = subTotal >= 500000 ? 0 : 30000;
+
+  // 💡 SỬA: Tổng tiền = Tạm tính - Giảm giá + Phí ship
+  const finalTotal = subTotal - discountAmount + shippingFee;
 
   const handleQuantity = (
     id: string | number,
@@ -252,13 +257,13 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Phí vận chuyển</span>
-                  {subTotal >= 500000 ? (
+                  {shippingFee === 0 ? (
                     <span className="text-emerald-700 font-bold italic">
                       Miễn phí
                     </span>
                   ) : (
                     <span className="text-gray-900 font-bold">
-                      30.000đ (Tạm tính)
+                      {shippingFee.toLocaleString("vi-VN")}đ (Tạm tính)
                     </span>
                   )}
                 </div>
