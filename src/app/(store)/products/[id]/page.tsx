@@ -53,20 +53,27 @@ export default async function ProductDetailPage({
   const formattedProduct = {
     id: product.id,
     ten_san_pham: product.ten_san_pham,
-    mo_ta:
-      product.mo_ta ||
-      "Được tuyển chọn từ những vườn đạt chuẩn VietGAP. Giao nhanh 2H.",
+
+    // ĐÃ SỬA: Lấy đúng mô tả từ DB, nếu không có thì trả về rỗng để Client tự xử lý
+    mo_ta: product.mo_ta || "",
+
     xuat_xu: product.xuat_xu || "Nông sản Việt",
     hinh_anh:
       product.anh_san_pham.length > 0
         ? product.anh_san_pham.map((a: any) => a.duong_dan_anh)
         : ["https://images.unsplash.com/photo-1542838132-92c53300491e?w=800"],
+
     bien_the: product.bien_the_san_pham.map((bt: any) => ({
       id: bt.id,
       ten_bien_the: bt.ten_bien_the,
+
+      // DÒNG QUAN TRỌNG NHẤT LÀ ĐÂY: Phải truyền Đơn vị tính ra ngoài thì Client mới có chữ để hiển thị!
+      don_vi_tinh: bt.don_vi_tinh,
+
       gia_ban: Number(bt.gia_ban),
       gia_goc: bt.gia_goc ? Number(bt.gia_goc) : null,
     })),
+
     danh_gia: Number(trungBinhSao),
     luot_danh_gia: soLuotDanhGia,
     danh_sach_danh_gia: product.danh_gia_san_pham.map((dg: any) => ({

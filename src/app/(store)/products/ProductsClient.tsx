@@ -9,6 +9,7 @@ import {
   Filter,
   Search,
   Check,
+  MapPin,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -18,6 +19,7 @@ interface ProductData {
   id: number;
   ten_san_pham: string;
   mo_ta: string;
+  xuat_xu: string;
   anh_chinh: string;
   gia_ban: number;
   gia_goc: number | null;
@@ -34,11 +36,13 @@ interface CategoryData {
 export default function ProductsClient({
   products,
   categories,
+  origins,
   currentPage,
   totalPages,
 }: {
   products: ProductData[];
   categories: CategoryData[];
+  origins: string[];
   currentPage: number;
   totalPages: number;
 }) {
@@ -51,12 +55,10 @@ export default function ProductsClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // State cục bộ cho Live Search
   const [searchValue, setSearchValue] = useState(
     searchParams.get("search") || "",
   );
 
-  // Các tham số hiện tại từ URL
   const currentCategoryId = searchParams.get("category")
     ? Number(searchParams.get("category"))
     : null;
@@ -68,7 +70,11 @@ export default function ProductsClient({
     ? Number(searchParams.get("rating"))
     : null;
 
-  // --- 1. CHỨC NĂNG TÌM KIẾM TỰ ĐỘNG (LIVE SEARCH / DEBOUNCE) ---
+  // TÍNH NĂNG MỚI: Biến chuỗi xuất xứ trên URL thành Mảng để Checkbox nhận diện
+  const currentOrigins =
+    searchParams.get("origin")?.split(",").filter(Boolean) || [];
+
+  // TÌM KIẾM THEO TÊN CÓ CHỐNG GIẬT SCROLL
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       const trimmedSearch = searchValue.trim();
@@ -82,31 +88,46 @@ export default function ProductsClient({
         if (trimmedSearch) params.set("search", trimmedSearch);
         else params.delete("search");
         params.set("page", "1");
-        router.push(`${pathname}?${params.toString()}`);
+        // THÊM SCROLL: FALSE
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
       }
     }, 500);
-
     return () => clearTimeout(delayDebounceFn);
   }, [searchValue, searchParams, pathname, router]);
 
   const toggleCategory = (id: number) =>
     setExpandedCats((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  // Hàm update URL dùng chung
+  // HÀM UPDATE FILTER CHUNG CHỐNG GIẬT
   const updateFilters = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set(key, value);
     else params.delete(key);
-
-    // FIX LỖI PHÂN TRANG: Chỉ reset về trang 1 nếu người dùng đang lọc tiêu chí khác.
-    if (key !== "page") {
-      params.set("page", "1");
-    }
-
-    router.push(`${pathname}?${params.toString()}`);
+    if (key !== "page") params.set("page", "1");
+    // THÊM SCROLL: FALSE
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  // --- 2. CẤU HÌNH KHOẢNG GIÁ ---
+  // HÀM XỬ LÝ CHỌN NHIỀU XUẤT XỨ (MULTI-SELECT)
+  const toggleOrigin = (origin: string) => {
+    let newOrigins = [...currentOrigins];
+    if (newOrigins.includes(origin)) {
+      newOrigins = newOrigins.filter((o) => o !== origin); // Bỏ chọn
+    } else {
+      newOrigins.push(origin); // Chọn thêm
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (newOrigins.length > 0) {
+      params.set("origin", newOrigins.join(",")); // Nối lại bằng dấu phẩy
+    } else {
+      params.delete("origin");
+    }
+    params.set("page", "1");
+    // THÊM SCROLL: FALSE
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
   const PRICE_RANGES = [
     { label: "Tất cả giá", min: null, max: null },
     { label: "Dưới 50.000đ", min: null, max: "50000" },
@@ -122,10 +143,10 @@ export default function ProductsClient({
     if (max) params.set("maxPrice", max);
     else params.delete("maxPrice");
     params.set("page", "1");
-    router.push(`${pathname}?${params.toString()}`);
+    // THÊM SCROLL: FALSE
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  // --- 3. CẤU HÌNH BỘ LỌC SAO ---
   const RATING_FILTERS = [5, 4, 3];
 
   const generatePagination = () => {
@@ -172,13 +193,14 @@ export default function ProductsClient({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24 font-sans bg-gray-50/30">
+      {/* BREADCRUMB */}
       <div className="flex items-center text-sm text-gray-500 mb-8 font-medium">
         <a href="/" className="hover:text-emerald-600 transition-colors">
           Trang chủ
         </a>
         <ChevronRight className="w-4 h-4 mx-2" />
         <button
-          onClick={() => router.push(pathname)}
+          onClick={() => router.push(pathname, { scroll: false })}
           className="hover:text-emerald-600 transition-colors"
         >
           Sản phẩm
@@ -203,9 +225,7 @@ export default function ProductsClient({
 
         {/* --- SIDEBAR BÊN TRÁI --- */}
         <aside
-          className={`w-full lg:w-1/4 flex-shrink-0 ${
-            isSidebarOpen ? "block" : "hidden lg:block"
-          }`}
+          className={`w-full lg:w-1/4 flex-shrink-0 ${isSidebarOpen ? "block" : "hidden lg:block"}`}
         >
           {/* LỌC DANH MỤC */}
           <div className="mb-8 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
@@ -218,7 +238,7 @@ export default function ProductsClient({
                   onClick={() => updateFilters("category", null)}
                   className="text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 px-2 py-1 rounded"
                 >
-                  Xóa
+                  Xóa lọc
                 </button>
               )}
             </div>
@@ -236,18 +256,12 @@ export default function ProductsClient({
                           ? toggleCategory(cat.id)
                           : updateFilters("category", cat.id.toString())
                       }
-                      className={`w-full flex items-center justify-between font-bold px-4 py-3 rounded-xl transition-all duration-200 ${
-                        isParentActive
-                          ? "bg-emerald-600 text-white"
-                          : "text-gray-700 hover:bg-emerald-50"
-                      }`}
+                      className={`w-full flex items-center justify-between font-bold px-4 py-3 rounded-xl transition-all duration-200 ${isParentActive ? "bg-emerald-600 text-white" : "text-gray-700 hover:bg-emerald-50"}`}
                     >
                       {cat.ten_danh_muc}
                       {hasChildren && (
                         <ChevronDown
-                          className={`w-4 h-4 ${
-                            isOpen ? "rotate-180" : ""
-                          } transition-transform`}
+                          className={`w-4 h-4 ${isOpen ? "rotate-180" : ""} transition-transform`}
                         />
                       )}
                     </button>
@@ -259,11 +273,7 @@ export default function ProductsClient({
                             onClick={() =>
                               updateFilters("category", child.id.toString())
                             }
-                            className={`cursor-pointer py-1.5 ${
-                              currentCategoryId === child.id
-                                ? "text-emerald-600 font-bold"
-                                : "hover:text-emerald-600"
-                            }`}
+                            className={`cursor-pointer py-1.5 ${currentCategoryId === child.id ? "text-emerald-600 font-bold" : "hover:text-emerald-600"}`}
                           >
                             {child.ten_danh_muc}
                           </li>
@@ -275,6 +285,54 @@ export default function ProductsClient({
               })}
             </ul>
           </div>
+
+          {/* LỌC NƠI XUẤT XỨ (NHIỀU LỰA CHỌN) */}
+          {origins.length > 0 && (
+            <div className="mb-8 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-lg font-extrabold text-emerald-800 flex items-center gap-2">
+                  <MapPin className="w-5 h-5" /> Xuất Xứ
+                </h3>
+                {currentOrigins.length > 0 && (
+                  <button
+                    onClick={() => updateFilters("origin", null)}
+                    className="text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 px-2 py-1 rounded"
+                  >
+                    Xóa lọc
+                  </button>
+                )}
+              </div>
+              <ul className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                {origins.map((origin, idx) => {
+                  const isActive = currentOrigins.includes(origin);
+                  return (
+                    <li key={idx}>
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={isActive}
+                          onChange={() => toggleOrigin(origin)}
+                          className="hidden"
+                        />
+                        <div
+                          className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${isActive ? "bg-emerald-600 border-emerald-600" : "border-gray-300 border-2 group-hover:border-emerald-500"}`}
+                        >
+                          {isActive && (
+                            <Check className="w-3.5 h-3.5 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-sm font-medium ${isActive ? "text-emerald-700 font-bold" : "text-gray-600 group-hover:text-emerald-600"}`}
+                        >
+                          {origin}
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
           {/* LỌC MỨC GIÁ CHỌN NHANH */}
           <div className="mb-8 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
@@ -297,22 +355,14 @@ export default function ProductsClient({
                         className="hidden"
                       />
                       <div
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          isActive
-                            ? "border-emerald-600 bg-emerald-600"
-                            : "border-gray-300 group-hover:border-emerald-500"
-                        }`}
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isActive ? "border-emerald-600 bg-emerald-600" : "border-gray-300 group-hover:border-emerald-500"}`}
                       >
                         {isActive && (
                           <div className="w-2 h-2 bg-white rounded-full" />
                         )}
                       </div>
                       <span
-                        className={`text-sm font-medium ${
-                          isActive
-                            ? "text-emerald-700 font-bold"
-                            : "text-gray-600 group-hover:text-emerald-600"
-                        }`}
+                        className={`text-sm font-medium ${isActive ? "text-emerald-700 font-bold" : "text-gray-600 group-hover:text-emerald-600"}`}
                       >
                         {range.label}
                       </span>
@@ -334,7 +384,7 @@ export default function ProductsClient({
                   onClick={() => updateFilters("rating", null)}
                   className="text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 px-2 py-1 rounded"
                 >
-                  Xóa
+                  Xóa lọc
                 </button>
               )}
             </div>
@@ -354,11 +404,7 @@ export default function ProductsClient({
                         className="hidden"
                       />
                       <div
-                        className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                          isActive
-                            ? "bg-emerald-600 border-emerald-600"
-                            : "border-gray-300 group-hover:border-emerald-500"
-                        }`}
+                        className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isActive ? "bg-emerald-600 border-emerald-600" : "border-gray-300 border-2 group-hover:border-emerald-500"}`}
                       >
                         {isActive && (
                           <Check className="w-3.5 h-3.5 text-white" />
@@ -368,11 +414,7 @@ export default function ProductsClient({
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-4 h-4 ${
-                              i < starCount
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "fill-gray-200 text-gray-200"
-                            }`}
+                            className={`w-4 h-4 ${i < starCount ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"}`}
                           />
                         ))}
                         {starCount < 5 && (
@@ -395,9 +437,7 @@ export default function ProductsClient({
             <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 font-headline line-clamp-1 w-full lg:w-1/3">
               {pageTitle}
             </h1>
-
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-2/3 justify-end">
-              {/* THANH LIVE SEARCH (GÕ LÀ TÌM) */}
               <div className="relative w-full sm:w-72">
                 <input
                   type="text"
@@ -417,8 +457,6 @@ export default function ProductsClient({
                   </button>
                 )}
               </div>
-
-              {/* Sắp Xếp */}
               <select
                 value={currentSort}
                 onChange={(e) => updateFilters("sort", e.target.value)}
@@ -431,7 +469,6 @@ export default function ProductsClient({
             </div>
           </div>
 
-          {/* LƯỚI SẢN PHẨM */}
           {products.length === 0 ? (
             <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200">
               <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -446,7 +483,7 @@ export default function ProductsClient({
               <button
                 onClick={() => {
                   setSearchValue("");
-                  router.push(pathname);
+                  router.push(pathname, { scroll: false });
                 }}
                 className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:bg-emerald-700"
               >
@@ -481,6 +518,10 @@ export default function ProductsClient({
                         )}
                       </div>
                       <div className="flex-1 flex flex-col px-1">
+                        <p className="text-xs text-gray-500 mb-1 font-medium capitalize flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-emerald-600" />{" "}
+                          {product.xuat_xu}
+                        </p>
                         <h3 className="font-bold text-gray-900 text-[17px] mb-2 leading-tight">
                           {product.ten_san_pham}
                         </h3>
@@ -502,11 +543,7 @@ export default function ProductsClient({
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`w-3.5 h-3.5 ${
-                                  i < Math.floor(product.danh_gia)
-                                    ? "fill-yellow-400"
-                                    : "fill-gray-200"
-                                }`}
+                                className={`w-3.5 h-3.5 ${i < Math.floor(product.danh_gia) ? "fill-yellow-400" : "fill-gray-200"}`}
                               />
                             ))}
                           </div>
@@ -546,11 +583,7 @@ export default function ProductsClient({
                   <button
                     key={`page-${item}`}
                     onClick={() => updateFilters("page", item.toString())}
-                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all ${
-                      currentPage === item
-                        ? "bg-emerald-600 text-white shadow-md scale-105"
-                        : "bg-white text-gray-600 border border-gray-200 hover:border-emerald-600"
-                    }`}
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all ${currentPage === item ? "bg-emerald-600 text-white shadow-md scale-105" : "bg-white text-gray-600 border border-gray-200 hover:border-emerald-600"}`}
                   >
                     {item}
                   </button>
