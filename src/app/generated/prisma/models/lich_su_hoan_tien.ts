@@ -211,7 +211,7 @@ export type Lich_su_hoan_tienGroupByOutputType = {
   _max: Lich_su_hoan_tienMaxAggregateOutputType | null
 }
 
-type GetLich_su_hoan_tienGroupByPayload<T extends lich_su_hoan_tienGroupByArgs> = Prisma.PrismaPromise<
+export type GetLich_su_hoan_tienGroupByPayload<T extends lich_su_hoan_tienGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Lich_su_hoan_tienGroupByOutputType, T['by']> &
       {

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Gift,
   LayoutDashboard,
   BarChart2,
   Package,
@@ -16,6 +17,7 @@ import {
   Settings,
   LogOut,
   Warehouse,
+  MessageCircleMore,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -32,6 +34,8 @@ const menuItems = [
   { name: "Danh mục", path: "/admin/categories", icon: Layers },
   { name: "Thanh toán", path: "/admin/payments", icon: CreditCard },
   { name: "Nội dung", path: "/admin/content", icon: FileText },
+  { name: "Khuyến mãi", path: "/admin/promotions", icon: Gift },
+  { name: "Bình luận", path: "/admin/reviews", icon: MessageCircleMore },
   { name: "Cài đặt", path: "/admin/settings", icon: Settings },
   {
     name: "Nhân sự",

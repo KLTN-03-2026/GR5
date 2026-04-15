@@ -250,7 +250,7 @@ export type Canh_bao_lo_hangGroupByOutputType = {
   _max: Canh_bao_lo_hangMaxAggregateOutputType | null
 }
 
-type GetCanh_bao_lo_hangGroupByPayload<T extends canh_bao_lo_hangGroupByArgs> = Prisma.PrismaPromise<
+export type GetCanh_bao_lo_hangGroupByPayload<T extends canh_bao_lo_hangGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Canh_bao_lo_hangGroupByOutputType, T['by']> &
       {

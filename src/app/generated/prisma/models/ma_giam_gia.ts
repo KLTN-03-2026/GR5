@@ -225,7 +225,7 @@ export type Ma_giam_giaGroupByOutputType = {
   _max: Ma_giam_giaMaxAggregateOutputType | null
 }
 
-type GetMa_giam_giaGroupByPayload<T extends ma_giam_giaGroupByArgs> = Prisma.PrismaPromise<
+export type GetMa_giam_giaGroupByPayload<T extends ma_giam_giaGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Ma_giam_giaGroupByOutputType, T['by']> &
       {

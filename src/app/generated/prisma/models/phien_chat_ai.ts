@@ -189,7 +189,7 @@ export type Phien_chat_aiGroupByOutputType = {
   _max: Phien_chat_aiMaxAggregateOutputType | null
 }
 
-type GetPhien_chat_aiGroupByPayload<T extends phien_chat_aiGroupByArgs> = Prisma.PrismaPromise<
+export type GetPhien_chat_aiGroupByPayload<T extends phien_chat_aiGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Phien_chat_aiGroupByOutputType, T['by']> &
       {

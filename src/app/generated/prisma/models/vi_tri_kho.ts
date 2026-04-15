@@ -221,7 +221,7 @@ export type Vi_tri_khoGroupByOutputType = {
   _max: Vi_tri_khoMaxAggregateOutputType | null
 }
 
-type GetVi_tri_khoGroupByPayload<T extends vi_tri_khoGroupByArgs> = Prisma.PrismaPromise<
+export type GetVi_tri_khoGroupByPayload<T extends vi_tri_khoGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Vi_tri_khoGroupByOutputType, T['by']> &
       {

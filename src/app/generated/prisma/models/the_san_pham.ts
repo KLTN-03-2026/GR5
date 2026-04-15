@@ -175,7 +175,7 @@ export type The_san_phamGroupByOutputType = {
   _max: The_san_phamMaxAggregateOutputType | null
 }
 
-type GetThe_san_phamGroupByPayload<T extends the_san_phamGroupByArgs> = Prisma.PrismaPromise<
+export type GetThe_san_phamGroupByPayload<T extends the_san_phamGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<The_san_phamGroupByOutputType, T['by']> &
       {

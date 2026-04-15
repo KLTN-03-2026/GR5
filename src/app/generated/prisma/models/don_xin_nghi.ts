@@ -246,7 +246,7 @@ export type Don_xin_nghiGroupByOutputType = {
   _max: Don_xin_nghiMaxAggregateOutputType | null
 }
 
-type GetDon_xin_nghiGroupByPayload<T extends don_xin_nghiGroupByArgs> = Prisma.PrismaPromise<
+export type GetDon_xin_nghiGroupByPayload<T extends don_xin_nghiGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Don_xin_nghiGroupByOutputType, T['by']> &
       {

@@ -199,7 +199,7 @@ export type Kho_tri_thuc_aiGroupByOutputType = {
   _max: Kho_tri_thuc_aiMaxAggregateOutputType | null
 }
 
-type GetKho_tri_thuc_aiGroupByPayload<T extends kho_tri_thuc_aiGroupByArgs> = Prisma.PrismaPromise<
+export type GetKho_tri_thuc_aiGroupByPayload<T extends kho_tri_thuc_aiGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Kho_tri_thuc_aiGroupByOutputType, T['by']> &
       {

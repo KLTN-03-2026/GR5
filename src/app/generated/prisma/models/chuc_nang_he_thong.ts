@@ -182,7 +182,7 @@ export type Chuc_nang_he_thongGroupByOutputType = {
   _max: Chuc_nang_he_thongMaxAggregateOutputType | null
 }
 
-type GetChuc_nang_he_thongGroupByPayload<T extends chuc_nang_he_thongGroupByArgs> = Prisma.PrismaPromise<
+export type GetChuc_nang_he_thongGroupByPayload<T extends chuc_nang_he_thongGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Chuc_nang_he_thongGroupByOutputType, T['by']> &
       {

@@ -270,7 +270,7 @@ export type Bang_luong_thangGroupByOutputType = {
   _max: Bang_luong_thangMaxAggregateOutputType | null
 }
 
-type GetBang_luong_thangGroupByPayload<T extends bang_luong_thangGroupByArgs> = Prisma.PrismaPromise<
+export type GetBang_luong_thangGroupByPayload<T extends bang_luong_thangGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Bang_luong_thangGroupByOutputType, T['by']> &
       {
