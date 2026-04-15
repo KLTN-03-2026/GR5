@@ -192,7 +192,7 @@ export type Nha_cung_capGroupByOutputType = {
   _max: Nha_cung_capMaxAggregateOutputType | null
 }
 
-type GetNha_cung_capGroupByPayload<T extends nha_cung_capGroupByArgs> = Prisma.PrismaPromise<
+export type GetNha_cung_capGroupByPayload<T extends nha_cung_capGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Nha_cung_capGroupByOutputType, T['by']> &
       {

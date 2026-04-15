@@ -196,7 +196,7 @@ export type Nguoi_dungGroupByOutputType = {
   _max: Nguoi_dungMaxAggregateOutputType | null
 }
 
-type GetNguoi_dungGroupByPayload<T extends nguoi_dungGroupByArgs> = Prisma.PrismaPromise<
+export type GetNguoi_dungGroupByPayload<T extends nguoi_dungGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Nguoi_dungGroupByOutputType, T['by']> &
       {

@@ -218,7 +218,7 @@ export type Yeu_cau_doi_traGroupByOutputType = {
   _max: Yeu_cau_doi_traMaxAggregateOutputType | null
 }
 
-type GetYeu_cau_doi_traGroupByPayload<T extends yeu_cau_doi_traGroupByArgs> = Prisma.PrismaPromise<
+export type GetYeu_cau_doi_traGroupByPayload<T extends yeu_cau_doi_traGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Yeu_cau_doi_traGroupByOutputType, T['by']> &
       {

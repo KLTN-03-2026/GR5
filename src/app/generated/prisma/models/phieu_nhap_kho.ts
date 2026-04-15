@@ -243,7 +243,7 @@ export type Phieu_nhap_khoGroupByOutputType = {
   _max: Phieu_nhap_khoMaxAggregateOutputType | null
 }
 
-type GetPhieu_nhap_khoGroupByPayload<T extends phieu_nhap_khoGroupByArgs> = Prisma.PrismaPromise<
+export type GetPhieu_nhap_khoGroupByPayload<T extends phieu_nhap_khoGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Phieu_nhap_khoGroupByOutputType, T['by']> &
       {

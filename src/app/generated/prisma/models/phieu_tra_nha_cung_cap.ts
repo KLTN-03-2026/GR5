@@ -211,7 +211,7 @@ export type Phieu_tra_nha_cung_capGroupByOutputType = {
   _max: Phieu_tra_nha_cung_capMaxAggregateOutputType | null
 }
 
-type GetPhieu_tra_nha_cung_capGroupByPayload<T extends phieu_tra_nha_cung_capGroupByArgs> = Prisma.PrismaPromise<
+export type GetPhieu_tra_nha_cung_capGroupByPayload<T extends phieu_tra_nha_cung_capGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Phieu_tra_nha_cung_capGroupByOutputType, T['by']> &
       {

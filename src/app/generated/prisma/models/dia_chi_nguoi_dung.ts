@@ -189,7 +189,7 @@ export type Dia_chi_nguoi_dungGroupByOutputType = {
   _max: Dia_chi_nguoi_dungMaxAggregateOutputType | null
 }
 
-type GetDia_chi_nguoi_dungGroupByPayload<T extends dia_chi_nguoi_dungGroupByArgs> = Prisma.PrismaPromise<
+export type GetDia_chi_nguoi_dungGroupByPayload<T extends dia_chi_nguoi_dungGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Dia_chi_nguoi_dungGroupByOutputType, T['by']> &
       {

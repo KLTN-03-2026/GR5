@@ -189,7 +189,7 @@ export type Lich_su_don_hangGroupByOutputType = {
   _max: Lich_su_don_hangMaxAggregateOutputType | null
 }
 
-type GetLich_su_don_hangGroupByPayload<T extends lich_su_don_hangGroupByArgs> = Prisma.PrismaPromise<
+export type GetLich_su_don_hangGroupByPayload<T extends lich_su_don_hangGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Lich_su_don_hangGroupByOutputType, T['by']> &
       {

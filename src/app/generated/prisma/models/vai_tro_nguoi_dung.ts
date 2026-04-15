@@ -175,7 +175,7 @@ export type Vai_tro_nguoi_dungGroupByOutputType = {
   _max: Vai_tro_nguoi_dungMaxAggregateOutputType | null
 }
 
-type GetVai_tro_nguoi_dungGroupByPayload<T extends vai_tro_nguoi_dungGroupByArgs> = Prisma.PrismaPromise<
+export type GetVai_tro_nguoi_dungGroupByPayload<T extends vai_tro_nguoi_dungGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Vai_tro_nguoi_dungGroupByOutputType, T['by']> &
       {

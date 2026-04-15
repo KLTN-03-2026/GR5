@@ -193,7 +193,7 @@ export type Lich_phan_cong_caGroupByOutputType = {
   _max: Lich_phan_cong_caMaxAggregateOutputType | null
 }
 
-type GetLich_phan_cong_caGroupByPayload<T extends lich_phan_cong_caGroupByArgs> = Prisma.PrismaPromise<
+export type GetLich_phan_cong_caGroupByPayload<T extends lich_phan_cong_caGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Lich_phan_cong_caGroupByOutputType, T['by']> &
       {

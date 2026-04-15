@@ -47,6 +47,10 @@ export default function CartPage() {
     0,
   );
 
+  // 💡 THÊM: Tính toán phí ship (Freeship cho đơn từ 500k)
+  const shippingFee = subTotal >= 500000 ? 0 : 30000;
+
+
   // THEO DÕI: Nếu tiền hàng thay đổi (do tăng/giảm SP) -> Tính lại tiền giảm giá
   useEffect(() => {
     if (appliedCoupon) {
@@ -64,6 +68,7 @@ export default function CartPage() {
 
   const finalTotal =
     subTotal - discountAmount > 0 ? subTotal - discountAmount : 0;
+
 
   const handleQuantity = (
     id: string | number,
@@ -262,7 +267,8 @@ export default function CartPage() {
 
           {/* CỘT PHẢI: TỔNG KẾT & VOUCHER */}
           <div className="lg:col-span-4">
-            <div className="bg-[#F4F8F4] rounded-3xl p-7 sticky top-32 shadow-sm border border-emerald-50">
+            <div
+            className ="bg-[#F4F8F4] rounded-3xl p-7 sticky top-32 shadow-sm border border-emerald-50" >
               <h2 className="text-xl font-extrabold text-gray-900 mb-6 font-headline flex items-center gap-2">
                 Tổng kết đơn hàng
               </h2>
@@ -276,13 +282,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Phí vận chuyển</span>
-                  {subTotal >= 500000 ? (
-                    <span className="text-emerald-700 font-bold italic bg-emerald-100 px-2 py-0.5 rounded">
-                      Miễn phí
-                    </span>
-                  ) : (
-                    <span className="text-gray-900 font-bold">30.000đ</span>
-                  )}
+                  
                 </div>
 
                 {discountAmount > 0 && (
@@ -412,25 +412,12 @@ export default function CartPage() {
                   </b>{" "}
                   để được Freeship!
                 </p>
-              )}
+              )} 
+              
 
-              <div className="border-t border-emerald-100 pt-5 mb-8 flex justify-between items-center">
-                <span className="font-bold text-gray-900 text-lg">
-                  Tổng thanh toán
-                </span>
-                <span className="text-2xl font-extrabold text-[#006b2c]">
-                  {finalTotal.toLocaleString("vi-VN")}đ
-                </span>
-              </div>
+        </div> 
 
-              <Link
-                href="/checkout"
-                className="w-full bg-[#006b2c] text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 hover:bg-emerald-800 transition-all shadow-xl shadow-emerald-900/20 active:scale-95"
-              >
-                Tiến hành thanh toán <ChevronRight className="w-5 h-5" />
-              </Link>
-            </div>
-          </div>
+        </div>
         </div>
       </div>
     </div>

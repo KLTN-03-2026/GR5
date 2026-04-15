@@ -171,7 +171,7 @@ export type The_tu_khoaGroupByOutputType = {
   _max: The_tu_khoaMaxAggregateOutputType | null
 }
 
-type GetThe_tu_khoaGroupByPayload<T extends the_tu_khoaGroupByArgs> = Prisma.PrismaPromise<
+export type GetThe_tu_khoaGroupByPayload<T extends the_tu_khoaGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<The_tu_khoaGroupByOutputType, T['by']> &
       {

@@ -218,7 +218,7 @@ export type Kien_hang_da_xuatGroupByOutputType = {
   _max: Kien_hang_da_xuatMaxAggregateOutputType | null
 }
 
-type GetKien_hang_da_xuatGroupByPayload<T extends kien_hang_da_xuatGroupByArgs> = Prisma.PrismaPromise<
+export type GetKien_hang_da_xuatGroupByPayload<T extends kien_hang_da_xuatGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Kien_hang_da_xuatGroupByOutputType, T['by']> &
       {

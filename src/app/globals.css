@@ -5,6 +5,21 @@
    ========================================= */
 @layer base {
   body {
+
+    /* Màu xanh lá cực nhạt, tạo cảm giác sạch sẽ */
+    background-color: #F4FCF0; 
+    color: #064e3b;
+  }
+
+
+
+/* Thêm vào cuối file globals.css */
+
+
+@layer base {
+  body {
+    
+
     background-color: #F4FCF0; 
     color: #064e3b;
   }
@@ -17,6 +32,8 @@
   width: 6px;
   height: 6px;
 }
+
+
 
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -55,4 +72,4 @@
 
 .shake {
   animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-}
+}}

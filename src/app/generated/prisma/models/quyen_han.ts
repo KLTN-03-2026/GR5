@@ -178,7 +178,7 @@ export type Quyen_hanGroupByOutputType = {
   _max: Quyen_hanMaxAggregateOutputType | null
 }
 
-type GetQuyen_hanGroupByPayload<T extends quyen_hanGroupByArgs> = Prisma.PrismaPromise<
+export type GetQuyen_hanGroupByPayload<T extends quyen_hanGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<Quyen_hanGroupByOutputType, T['by']> &
       {
