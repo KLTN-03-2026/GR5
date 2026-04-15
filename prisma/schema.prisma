@@ -10,6 +10,7 @@ datasource db {
 
 enum TrangThaiPhieuNhap {
   CHO_DUYET
+  CHO_KIEM_TRA
   DA_DUYET
   DA_HUY
   HOAN_THANH
@@ -71,14 +72,18 @@ model ca_lam_viec {
 }
 
 model canh_bao_lo_hang {
-  id            Int       @id @default(autoincrement())
-  ma_lo_hang    Int
-  loai_canh_bao String    @db.VarChar(50)
-  so_ngay_con   Int?
-  da_xu_ly      Boolean   @default(false)
-  ngay_tao      DateTime  @default(now())
-  ngay_xu_ly    DateTime?
-  lo_hang       lo_hang   @relation(fields: [ma_lo_hang], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                Int       @id @default(autoincrement())
+  ma_lo_hang        Int
+  loai_canh_bao     String    @db.VarChar(50)
+  so_ngay_con       Int?
+  da_xu_ly          Boolean   @default(false)
+  ngay_tao          DateTime  @default(now())
+  ngay_xu_ly        DateTime?
+  phuong_thuc_xu_ly String?   @db.VarChar(50)
+  nguoi_xu_ly_id    Int?
+  ghi_chu_xu_ly     String?   @db.Text
+  ma_phieu_xu_ly    Int?
+  lo_hang           lo_hang   @relation(fields: [ma_lo_hang], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([da_xu_ly])
   @@index([ma_lo_hang])
@@ -504,6 +509,7 @@ model lo_hang {
   ngay_nhap_kho      DateTime?            @db.Date
   han_su_dung        DateTime             @db.Date
   ma_phieu_nhap      Int?
+  trang_thai         String?              @default("BINH_THUONG") @db.VarChar(30)
   canh_bao_lo_hang   canh_bao_lo_hang[]
   kien_hang_chi_tiet kien_hang_chi_tiet[]
   bien_the_san_pham  bien_the_san_pham?   @relation(fields: [ma_bien_the], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "lo_hang_ibfk_1")
@@ -637,6 +643,10 @@ model phieu_nhap_kho {
   ngay_tao                 DateTime?                  @default(now()) @db.DateTime(0)
   ngay_duyet               DateTime?                  @db.DateTime(0)
   ghi_chu                  String?                    @db.Text
+  ma_nguoi_kiem_tra        Int?
+  ngay_kiem_tra            DateTime?                  @db.DateTime(3)
+  ghi_chu_kiem_tra         String?                    @db.Text
+  ly_do_chenh_lech         String?                    @db.Text
   chi_tiet_luan_chuyen_kho chi_tiet_luan_chuyen_kho[]
 
   chi_tiet chi_tiet_phieu_nhap[]
@@ -809,6 +819,8 @@ model vi_tri_kho {
   day                String?              @db.VarChar(50)
   ke                 String?              @db.VarChar(50)
   tang               String?              @db.VarChar(50)
+  suc_chua_toi_da    Int?                 @default(100)
+  ghi_chu            String?              @db.VarChar(255)
   kien_hang_chi_tiet kien_hang_chi_tiet[]
   ton_kho_tong       ton_kho_tong[]
   kho_hang           kho_hang?            @relation(fields: [ma_kho], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "vi_tri_kho_ibfk_1")

@@ -77,11 +77,28 @@ export default function IssueHistory({
                     <td className="p-3 text-right font-bold text-[#1D9E75]">
                       {item.so_luong}
                     </td>
-                    <td className="p-3">
-                      <span className="px-2 py-1 text-[10px] font-bold rounded bg-gray-100 text-gray-600">
-                        {String(item.trang_thai || "N/A").replace("_", " ")}
-                      </span>
-                    </td>
+                      <td className="p-3">
+                        {(() => {
+                          const s = item.trang_thai || "N/A";
+                          const cls: Record<string, string> = {
+                            CHO_DUYET:    "bg-amber-50 text-amber-700 border border-amber-200",
+                            CHO_KIEM_TRA: "bg-blue-50 text-blue-700 border border-blue-200",
+                            DA_DUYET:     "bg-green-50 text-green-700 border border-green-200",
+                            HOAN_THANH:   "bg-emerald-50 text-emerald-800 border border-emerald-200",
+                            DA_HUY:       "bg-red-50 text-red-700 border border-red-200",
+                          };
+                          const lbl: Record<string, string> = {
+                            CHO_DUYET: "Chờ duyệt", CHO_KIEM_TRA: "Chờ kiểm tra",
+                            DA_DUYET: "Đã duyệt", HOAN_THANH: "Hoàn thành", DA_HUY: "Đã hủy",
+                          };
+                          return (
+                            <span className={`px-2 py-1 text-[10px] font-bold rounded-full ${cls[s] || "bg-gray-100 text-gray-600"}`}>
+                              {lbl[s] || s}
+                            </span>
+                          );
+                        })()}
+                      </td>
+
                   </tr>
                 ))
               ) : (

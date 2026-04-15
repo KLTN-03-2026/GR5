@@ -60,16 +60,18 @@ export const WarehouseService = {
         include: { chi_tiet: true }
       });
 
-      if (!phieu || phieu.trang_thai !== 'CHO_DUYET') {
-        throw new Error("Phiếu không hợp lệ hoặc đã được duyệt!");
+      if (!phieu) throw new Error("Phiếu không tồn tại!");
+      // Allow DA_DUYET (set by review API before calling this) or CHO_DUYET (direct approve)
+      if (!['CHO_DUYET', 'DA_DUYET'].includes(phieu.trang_thai || '')) {
+        throw new Error("Phiếu không hợp lệ hoặc đã được xử lý!");
       }
 
       const chiTiet = phieu.chi_tiet[0]; 
 
-      // THÊM ĐOẠN IF NÀY ĐỂ BẢO KÊ KIỂU DỮ LIỆU
-      if (!chiTiet.han_su_dung) {
+      if (!chiTiet?.han_su_dung) {
         throw new Error("Dữ liệu lỗi: Chi tiết phiếu nhập thiếu Hạn sử dụng!");
       }
+
 
       const maLoHang = `LO-${Date.now().toString().slice(-6)}`;
 
