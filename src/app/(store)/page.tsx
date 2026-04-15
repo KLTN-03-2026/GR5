@@ -133,6 +133,7 @@ export default function HomePage() {
   return (
     <main className="grow pt-24">
       {/* Hero Section */}
+
       <section className="px-6 mb-16">
         <div className="max-w-7xl mx-auto relative h-[600px] rounded-[2.5rem] overflow-hidden group bg-gray-900">
           {/* Lặp qua các banner để tạo hiệu ứng Fade mượt mà */}
