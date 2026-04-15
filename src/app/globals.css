@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 /* Tùy chỉnh thanh cuộn cho Sidebar */
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -7,7 +8,7 @@
 
 @layer base {
   body {
-    /* Màu xanh lá cực nhạt, tạo cảm giác sạch sẽ */
+    
     background-color: #F4FCF0; 
     color: #064e3b;
   }
@@ -23,4 +24,5 @@
 }
 .shake {
   animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-} }
+}
+}

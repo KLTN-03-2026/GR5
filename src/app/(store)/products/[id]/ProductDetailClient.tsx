@@ -15,20 +15,19 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
+import toast from "react-hot-toast";
 
-export default function ProductDetail({
+export default function ProductDetailClient({
   product,
   relatedProducts,
 }: {
   product: any;
   relatedProducts: any[];
 }) {
-  // Lấy an toàn biến thể (tránh crash nếu Prisma không có biến thể nào)
   const hasVariants = product?.bien_the && product.bien_the.length > 0;
   const [selectedVariant, setSelectedVariant] = useState(
     hasVariants ? product.bien_the[0] : null,
   );
-
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(
     product?.hinh_anh?.length > 0
@@ -43,10 +42,10 @@ export default function ProductDetail({
     if (type === "plus" && quantity < 99) setQuantity((q) => q + 1);
   };
 
-  const handleAddToCart = () => {
-    console.log("🔥 Đã bấm nút thêm vào giỏ hàng!"); // Check F12
+  // --- HÀM ĐÃ ĐƯỢC LÀM LẠI HIỆU ỨNG BAY CỰC MƯỢT ---
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (hasVariants && !selectedVariant) return;
 
-    // Lấy giá và tên theo thực tế (Có biến thể lấy biến thể, không thì lấy giá gốc)
     const finalPrice = selectedVariant
       ? selectedVariant.gia_ban
       : product.gia_ban;
@@ -63,7 +62,57 @@ export default function ProductDetail({
       so_luong: quantity,
     });
 
-    alert(`Đã thêm ${quantity} x ${product.ten_san_pham} vào giỏ hàng!`);
+    toast.success(
+      <div>
+        Đã thêm <b>{product.ten_san_pham}</b> vào giỏ!
+      </div>,
+      { duration: 4000 },
+    );
+
+    const imgElement = document.getElementById("main-product-image");
+    const cartIcon = document.getElementById("cart-icon");
+
+    if (imgElement && cartIcon) {
+      const imgRect = imgElement.getBoundingClientRect();
+      const cartRect = cartIcon.getBoundingClientRect();
+
+      const clone = imgElement.cloneNode(true) as HTMLImageElement;
+
+      // 1. Trạng thái bắt đầu (Đứng yên tại chỗ)
+      clone.style.position = "fixed";
+      clone.style.top = `${imgRect.top}px`;
+      clone.style.left = `${imgRect.left}px`;
+      clone.style.width = `${imgRect.width}px`;
+      clone.style.height = `${imgRect.height}px`;
+      clone.style.borderRadius = "1rem";
+      clone.style.objectFit = "cover";
+      clone.style.zIndex = "9999";
+      clone.style.pointerEvents = "none"; // Không che chắn cú click của user
+      clone.style.transition = "all 0.8s ease-in-out"; // ease-in-out làm mượt 2 đầu
+
+      document.body.appendChild(clone);
+
+      // 2. Bí quyết chống giật: Ép trình duyệt ghi nhận vị trí trước khi bay
+      void clone.offsetWidth;
+
+      // 3. Trạng thái kết thúc (Bay vào giỏ hàng)
+      clone.style.top = `${cartRect.top + 5}px`;
+      clone.style.left = `${cartRect.left + 5}px`;
+      clone.style.width = "20px";
+      clone.style.height = "20px";
+      clone.style.opacity = "0"; // Mờ dần khi hạ cánh
+      clone.style.borderRadius = "50%"; // Bo tròn thành viên bi lúc đang bay
+
+      // 4. Xóa ảnh sau đúng 1.5s bay
+      setTimeout(() => {
+        clone.remove();
+        cartIcon.classList.add("scale-125", "text-emerald-600");
+        setTimeout(
+          () => cartIcon.classList.remove("scale-125", "text-emerald-600"),
+          300,
+        );
+      }, 1500);
+    }
   };
 
   return (
@@ -85,8 +134,9 @@ export default function ProductDetail({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
         <div className="flex flex-col gap-4">
-          <div className="w-full aspect-[4/3] bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
+          <div className="w-full aspect-[4/3] bg-gray-100 rounded-2xl overflow-hidden shadow-sm relative">
             <img
+              id="main-product-image"
               src={mainImage}
               alt={product?.ten_san_pham}
               className="w-full h-full object-cover"
@@ -96,14 +146,10 @@ export default function ProductDetail({
             <div className="flex gap-4 overflow-x-auto pb-2">
               {product.hinh_anh.map((img: string, idx: number) => (
                 <button
-                  type="button" // Chống refresh trang
+                  type="button"
                   key={idx}
                   onClick={() => setMainImage(img)}
-                  className={`w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden transition-all ${
-                    mainImage === img
-                      ? "ring-2 ring-emerald-700 ring-offset-2"
-                      : "opacity-70 hover:opacity-100"
-                  }`}
+                  className={`w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden transition-all ${mainImage === img ? "ring-2 ring-emerald-700 ring-offset-2" : "opacity-70 hover:opacity-100"}`}
                 >
                   <img src={img} className="w-full h-full object-cover" />
                 </button>
@@ -112,6 +158,7 @@ export default function ProductDetail({
           )}
         </div>
 
+        {/* --- PHẦN THÔNG TIN BÊN PHẢI --- */}
         <div className="flex flex-col pt-2">
           <span className="inline-block bg-[#E8F3EC] text-emerald-800 font-bold text-[10px] px-2.5 py-1 rounded uppercase tracking-wider mb-4 w-max">
             ĐẶC SẢN {product?.xuat_xu?.toUpperCase() || "VIỆT NAM"}
@@ -168,7 +215,6 @@ export default function ProductDetail({
             </div>
           </div>
 
-          {/* CHỈ RENDER NẾU CÓ BIẾN THỂ TỪ DATABASE */}
           {hasVariants && (
             <div className="mb-8">
               <h3 className="font-bold text-xs uppercase tracking-widest text-gray-500 mb-3">
@@ -177,14 +223,10 @@ export default function ProductDetail({
               <div className="flex flex-wrap gap-3">
                 {product.bien_the.map((bt: any) => (
                   <button
-                    type="button" // Chống refresh trang
+                    type="button"
                     key={bt.id}
                     onClick={() => setSelectedVariant(bt)}
-                    className={`px-6 py-2.5 rounded-lg font-bold text-sm border transition-all ${
-                      selectedVariant?.id === bt.id
-                        ? "border-emerald-700 bg-[#E8F3EC] text-emerald-800"
-                        : "border-gray-200 text-gray-600 hover:border-emerald-300"
-                    }`}
+                    className={`px-6 py-2.5 rounded-lg font-bold text-sm border transition-all ${selectedVariant?.id === bt.id ? "border-emerald-700 bg-[#E8F3EC] text-emerald-800" : "border-gray-200 text-gray-600 hover:border-emerald-300"}`}
                   >
                     {bt.ten_bien_the}
                   </button>
@@ -213,7 +255,7 @@ export default function ProductDetail({
             </div>
 
             <button
-              type="button" // THÊM CÁI NÀY ĐỂ TRÁNH FORM SUBMIT NGẦM
+              type="button"
               onClick={handleAddToCart}
               className="flex-1 bg-[#065F46] hover:bg-emerald-800 text-white h-12 rounded-lg font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95"
             >
@@ -227,7 +269,7 @@ export default function ProductDetail({
         </div>
       </div>
 
-      {/* KHU VỰC BÊN DƯỚI (Giữ nguyên) */}
+      {/* --- PHẦN REVIEWS BÊN DƯỚI --- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8">
           <div className="flex items-center gap-2 mb-6">
