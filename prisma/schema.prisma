@@ -297,7 +297,7 @@ model giao_dich_thanh_toan {
   ma_giao_dich_ben_ngoai String?                 @db.VarChar(100)
   ngay_tao               DateTime?               @default(now()) @db.DateTime(0)
   don_hang               don_hang?               @relation(fields: [ma_don_hang], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "giao_dich_thanh_toan_ibfk_1")
-  phuong_thuc_thanh_toan phuong_thuc_thanh_toan? @relation(fields: [ma_phuong_thuc], references: [id], onUpdate: NoAction, map: "giao_dich_thanh_toan_ibfk_2")
+  phuong_thuc_thanh_toan  String?   @default("COD") @db.VarChar(50)
   lich_su_hoan_tien      lich_su_hoan_tien[]
 
   @@index([ma_don_hang], map: "ma_don_hang")
@@ -543,14 +543,146 @@ model nguoi_dung {
 
 model nha_cung_cap {
   id                     Int                      @id @default(autoincrement())
+  // Thông tin cơ bản
   ten_ncc                String                   @db.VarChar(100)
-  so_dien_thoai          String?                  @db.VarChar(15)
-  email                  String?                  @db.VarChar(100)
+  ma_ncc                 String?                  @unique @db.VarChar(20)
+  loai_ncc               String?                  @db.VarChar(30)      // NONG_DAN / HTX / CONG_TY / DANH_LE
+  tinh_thanh             String?                  @db.VarChar(100)
   dia_chi                String?                  @db.Text
+  // Liên hệ
+  nguoi_lien_he          String?                  @db.VarChar(100)
+  so_dien_thoai          String?                  @db.VarChar(15)
+  zalo                   String?                  @db.VarChar(15)
+  email                  String?                  @db.VarChar(100)
+  // Pháp lý & Thanh toán
+  ma_so_thue             String?                  @db.VarChar(20)
+  co_hoa_don_vat         Boolean?                 @default(false)
+  hinh_thuc_thanh_toan   String?                  @db.VarChar(30)      // TIEN_MAT / CHUYEN_KHOAN / COD
+  so_tai_khoan           String?                  @db.VarChar(30)
+  ten_ngan_hang          String?                  @db.VarChar(100)
+  chu_ky_thanh_toan      String?                  @db.VarChar(30)      // NGAY_GIAO / 7_NGAY / 15_NGAY / 30_NGAY
+  // Trạng thái & Đánh giá
+  trang_thai             String?                  @default("DANG_HOP_TAC") @db.VarChar(20)
+  diem_uy_tin            Decimal?                 @default(5.0) @db.Decimal(3, 1)
+  // Nội bộ
+  ghi_chu_noi_bo         String?                  @db.Text
+  ngay_bat_dau_hop_tac   DateTime?                @db.Date
+  hinh_anh               String?                  @db.VarChar(500)     // S3 URL
+
+  // Relations hiện có
   lo_hang                lo_hang[]
   phieu_nhap_kho         phieu_nhap_kho[]
   phieu_tra_nha_cung_cap phieu_tra_nha_cung_cap[]
+  // Relations mới
+  ncc_san_pham           ncc_san_pham[]
+  hop_dong_ncc           hop_dong_ncc[]
+  danh_gia_giao_hang_ncc danh_gia_giao_hang_ncc[]
+  lich_dat_hang_ncc      lich_dat_hang_ncc[]
+  cong_no_ncc            cong_no_ncc[]
 }
+
+// Sản phẩm & giá từng NCC
+model ncc_san_pham {
+  id                        Int           @id @default(autoincrement())
+  ma_ncc                    Int
+  ma_san_pham               Int
+  gia_nhap_gan_nhat         Decimal?      @db.Decimal(15, 2)
+  don_vi_tinh               String?       @db.VarChar(20)
+  so_luong_toi_thieu        Int?          @default(1)
+  thoi_gian_giao_hang_ngay  Int?          @default(1)
+  ghi_chu                   String?       @db.VarChar(255)
+  ngay_cap_nhat_gia         DateTime?     @default(now()) @db.DateTime(0)
+
+  nha_cung_cap  nha_cung_cap @relation(fields: [ma_ncc], references: [id], onDelete: Cascade)
+  san_pham      san_pham     @relation(fields: [ma_san_pham], references: [id], onDelete: Cascade)
+
+  @@unique([ma_ncc, ma_san_pham])
+  @@index([ma_ncc])
+  @@index([ma_san_pham])
+}
+
+// Hợp đồng & tài liệu
+model hop_dong_ncc {
+  id                 Int           @id @default(autoincrement())
+  ma_ncc             Int
+  so_hop_dong        String?       @db.VarChar(50)
+  loai_hop_dong      String?       @db.VarChar(30)      // CHINH_THUC / THOA_THUAN_MIENG / EMAIL
+  ngay_ky            DateTime?     @db.Date
+  ngay_het_han       DateTime?     @db.Date
+  gia_tri_hop_dong   Decimal?      @db.Decimal(15, 2)
+  dieu_khoan_phat    String?       @db.Text
+  file_hop_dong      String?       @db.VarChar(500)     // S3 URL
+  trang_thai         String?       @default("HIEU_LUC") @db.VarChar(30)
+  ghi_chu            String?       @db.Text
+  ngay_tao           DateTime?     @default(now()) @db.DateTime(0)
+
+  nha_cung_cap nha_cung_cap @relation(fields: [ma_ncc], references: [id], onDelete: Cascade)
+
+  @@index([ma_ncc])
+}
+
+// Đánh giá chất lượng từng lần giao hàng
+model danh_gia_giao_hang_ncc {
+  id                 Int           @id @default(autoincrement())
+  ma_phieu_nhap      Int
+  ma_ncc             Int
+  nguoi_danh_gia_id  Int
+  // Điểm đánh giá 1–5
+  diem_chat_luong    Int?
+  diem_dung_so_luong Int?
+  diem_dung_han      Int?
+  diem_bao_goi       Int?
+  diem_trung_binh    Decimal?      @db.Decimal(3, 1)
+  // Vấn đề phát sinh
+  co_van_de          Boolean?      @default(false)
+  mo_ta_van_de       String?       @db.Text
+  hinh_anh_van_de    Json?                              // mảng S3 URLs
+  da_xu_ly           Boolean?      @default(false)
+  ngay_danh_gia      DateTime?     @default(now()) @db.DateTime(0)
+
+  nha_cung_cap  nha_cung_cap  @relation(fields: [ma_ncc], references: [id], onDelete: Cascade)
+  phieu_nhap_kho phieu_nhap_kho @relation(fields: [ma_phieu_nhap], references: [id], onDelete: Cascade)
+
+  @@index([ma_ncc])
+  @@index([ma_phieu_nhap])
+}
+
+// Lịch đặt hàng định kỳ
+model lich_dat_hang_ncc {
+  id                 Int           @id @default(autoincrement())
+  ma_ncc             Int
+  ma_san_pham        Int
+  tan_suat           String?       @db.VarChar(20)      // HANG_NGAY / 2_LAN_TUAN / HANG_TUAN
+  ngay_trong_tuan    Json?                              // [2, 4, 6]
+  gio_giao           String?       @db.VarChar(5)       // "07:00"
+  so_luong_mac_dinh  Int?
+  dang_hoat_dong     Boolean?      @default(true)
+  ghi_chu            String?       @db.VarChar(255)
+
+  nha_cung_cap nha_cung_cap @relation(fields: [ma_ncc], references: [id], onDelete: Cascade)
+
+  @@index([ma_ncc])
+}
+
+// Công nợ & thanh toán
+model cong_no_ncc {
+  id                 Int           @id @default(autoincrement())
+  ma_ncc             Int
+  ma_phieu_nhap      Int?
+  loai_giao_dich     String?       @db.VarChar(20)      // PHAT_SINH_NO / THANH_TOAN / TRA_HANG_HOAN_TIEN
+  so_tien            Decimal?      @db.Decimal(15, 2)
+  so_du_sau          Decimal?      @db.Decimal(15, 2)
+  phuong_thuc        String?       @db.VarChar(30)      // TIEN_MAT / CHUYEN_KHOAN
+  ma_giao_dich       String?       @db.VarChar(100)
+  nguoi_thuc_hien_id Int?
+  ghi_chu            String?       @db.Text
+  ngay_giao_dich     DateTime?     @default(now()) @db.DateTime(0)
+
+  nha_cung_cap nha_cung_cap @relation(fields: [ma_ncc], references: [id], onDelete: Cascade)
+
+  @@index([ma_ncc])
+}
+
 
 model nhiem_vu_cong_viec {
   id                   Int         @id @default(autoincrement())
@@ -619,6 +751,7 @@ model phieu_nhap_kho {
   nha_cung_cap             nha_cung_cap?              @relation(fields: [ma_ncc], references: [id], onUpdate: NoAction, map: "phieu_nhap_kho_ibfk_1")
   nguoi_dung               nguoi_dung?                @relation(fields: [ma_nguoi_tao], references: [id], onUpdate: NoAction, map: "phieu_nhap_kho_ibfk_2")
   kho_hang                 kho_hang?                  @relation(fields: [ma_kho], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "phieu_nhap_kho_ibfk_3")
+  danh_gia_giao_hang_ncc   danh_gia_giao_hang_ncc[]
 
   @@index([ma_kho], map: "ma_kho")
   @@index([ma_ncc], map: "ma_ncc")
@@ -698,6 +831,7 @@ model san_pham {
   danh_gia_san_pham  danh_gia_san_pham[]
   danh_muc           danh_muc?            @relation(fields: [ma_danh_muc], references: [id], onUpdate: NoAction, map: "san_pham_ibfk_1")
   the_san_pham       the_san_pham[]
+  ncc_san_pham       ncc_san_pham[]
 
   @@index([ma_danh_muc], map: "ma_danh_muc")
 }
