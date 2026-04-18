@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
-import { PrismaClient } from '@/app/generated/prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
   // PrismaMariaDb tự động tạo pool ngầm bên trong, chỉ cần ném config cho nó!
