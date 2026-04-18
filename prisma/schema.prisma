@@ -294,7 +294,7 @@ model giao_dich_thanh_toan {
   ma_giao_dich_ben_ngoai String?                 @db.VarChar(100)
   ngay_tao               DateTime?               @default(now()) @db.DateTime(0)
   don_hang               don_hang?               @relation(fields: [ma_don_hang], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "giao_dich_thanh_toan_ibfk_1")
-  phuong_thuc_thanh_toan phuong_thuc_thanh_toan? @relation(fields: [ma_phuong_thuc], references: [id], onUpdate: NoAction, map: "giao_dich_thanh_toan_ibfk_2")
+  phuong_thuc_thanh_toan  String?   @default("COD") @db.VarChar(50)
   lich_su_hoan_tien      lich_su_hoan_tien[]
 
   @@index([ma_don_hang], map: "ma_don_hang")
