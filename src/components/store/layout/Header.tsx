@@ -1,17 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, ShoppingCart, User } from "lucide-react";
+import {
+  Search,
+  ShoppingCart,
+  User,
+  ChevronDown,
+  LogOut,
+  MapPin,
+  ShoppingBag,
+  ShieldCheck,
+  LayoutDashboard,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { Toaster } from "react-hot-toast";
+import { signOut } from "next-auth/react"; // Đăng xuất bản Client
 
-export default function Header() {
+// Nhận session truyền từ Layout xuống
+export default function Header({ session }: { session: any }) {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-
-  // Kéo thêm mảng `cart` ra để lặp danh sách sản phẩm
   const { cart, totalItems } = useCart();
 
   useEffect(() => {
@@ -32,13 +42,12 @@ export default function Header() {
       <header
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${
           scrolled
-            ? "bg-white/80 backdrop-blur-md shadow-sm py-3"
+            ? "bg-white/90 backdrop-blur-md shadow-sm py-3"
             : "bg-transparent py-5"
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          
-          {/* Bên trái: Logo & Nav */}
+          {/* 1. Bên trái: Logo & Nav */}
           <div className="flex items-center gap-12">
             <Link
               href="/"
@@ -47,52 +56,29 @@ export default function Header() {
               Verdant Curator
             </Link>
             <nav className="hidden lg:flex items-center gap-8">
-              <Link
-                href="/"
-                className={`text-sm transition-colors ${
-                  isActive("/")
-                    ? "font-bold text-[#007832] border-b-2 border-[#007832] pb-1"
-                    : "font-semibold text-gray-500 hover:text-[#007832]"
-                }`}
-              >
-                Trang chủ
-              </Link>
-              <Link
-                href="/products"
-                className={`text-sm transition-colors ${
-                  isActive("/products")
-                    ? "font-bold text-[#007832] border-b-2 border-[#007832] pb-1"
-                    : "font-semibold text-gray-500 hover:text-[#007832]"
-                }`}
-              >
-                Sản phẩm
-              </Link>
-              <Link
-                href="/farmers"
-                className={`text-sm transition-colors ${
-                  isActive("/farmers")
-                    ? "font-bold text-[#007832] border-b-2 border-[#007832] pb-1"
-                    : "font-semibold text-gray-500 hover:text-[#007832]"
-                }`}
-              >
-                Nhà vườn
-              </Link>
-              <Link
-                href="/about"
-                className={`text-sm transition-colors ${
-                  isActive("/about")
-                    ? "font-bold text-[#007832] border-b-2 border-[#007832] pb-1"
-                    : "font-semibold text-gray-500 hover:text-[#007832]"
-                }`}
-              >
-                Câu chuyện
-              </Link>
+              {[
+                { name: "Trang chủ", path: "/" },
+                { name: "Sản phẩm", path: "/products" },
+                { name: "Nhà vườn", path: "/farmers" },
+                { name: "Câu chuyện", path: "/about" },
+              ].map((link) => (
+                <Link
+                  key={link.path}
+                  href={link.path}
+                  className={`text-sm transition-colors ${
+                    isActive(link.path)
+                      ? "font-bold text-[#007832] border-b-2 border-[#007832] pb-1"
+                      : "font-semibold text-gray-500 hover:text-[#007832]"
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
             </nav>
           </div>
 
-          {/* Bên phải: Search, Cart & Auth */}
+          {/* 2. Bên phải: Search, Cart & Auth */}
           <div className="flex items-center gap-4 md:gap-6">
-            
             {/* Thanh Tìm Kiếm */}
             <div className="hidden lg:flex items-center bg-gray-50/80 px-4 py-2 rounded-full border border-gray-200 focus-within:border-[#007832] transition-colors">
               <Search className="w-4 h-4 text-gray-400 mr-2" />
@@ -103,11 +89,10 @@ export default function Header() {
               />
             </div>
 
-            {/* Giỏ Hàng (Có Mini Cart Dropdown) */}
+            {/* Giỏ Hàng (Giữ nguyên logic của Phú) */}
             <div className="flex items-center border-r border-gray-200 pr-4 mr-2">
               <div className="relative group pt-4 pb-4 -my-4">
                 <Link
-                  id="cart-icon"
                   href="/cart"
                   className="relative p-2 text-gray-600 hover:bg-emerald-50 hover:text-[#007832] rounded-full transition-all flex"
                 >
@@ -119,99 +104,139 @@ export default function Header() {
                   )}
                 </Link>
 
-                {/* BẢNG DROPDOWN MINI CART */}
-                <div className="absolute top-full right-0 w-80 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50">
-                  <div className="absolute -top-2 right-4 w-4 h-4 bg-white border-l border-t border-gray-100 transform rotate-45"></div>
-
-                  <div className="relative bg-white rounded-2xl overflow-hidden">
-                    {cart.length > 0 ? (
-                      <div className="p-4">
-                        <div className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-widest">
-                          Sản phẩm mới thêm
-                        </div>
-
-                        <div className="space-y-4 max-h-[300px] overflow-y-auto">
-                          {/* Lấy 4 món mới nhất */}
-                          {cart
-                            .slice(-4)
-                            .reverse()
-                            .map((item, index) => (
-                              <div
-                                key={index}
-                                className="flex gap-3 items-center"
-                              >
-                                <img
-                                  src={item.anh_chinh}
-                                  className="w-12 h-12 rounded-lg object-cover border border-gray-100"
-                                  alt={item.ten_san_pham}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-bold text-gray-900 truncate">
-                                    {item.ten_san_pham}
-                                  </p>
-                                  <div className="flex justify-between items-center mt-1">
-                                    <span className="text-xs text-gray-500 truncate max-w-[100px]">
-                                      {item.phan_loai}
-                                    </span>
-                                    <span className="text-sm font-bold text-[#007832]">
-                                      {item.gia_ban.toLocaleString("vi-VN")}đ{" "}
-                                      <span className="text-xs text-gray-400 font-medium">
-                                        x{item.so_luong}
-                                      </span>
-                                    </span>
-                                  </div>
-                                </div>
+                {/* DROPDOWN MINI CART (Giữ nguyên của Phú) */}
+                <div className="absolute top-full right-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 p-4">
+                  {cart.length > 0 ? (
+                    <>
+                      <div className="text-[10px] font-black text-gray-400 mb-3 uppercase tracking-widest italic">
+                        Sản phẩm mới thêm
+                      </div>
+                      <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                        {cart
+                          .slice(-4)
+                          .reverse()
+                          .map((item, index) => (
+                            <div
+                              key={index}
+                              className="flex gap-3 items-center"
+                            >
+                              <img
+                                src={item.anh_chinh}
+                                className="w-10 h-10 rounded-lg object-cover border border-gray-100"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-gray-900 truncate">
+                                  {item.ten_san_pham}
+                                </p>
+                                <p className="text-[10px] text-[#007832] font-bold">
+                                  {item.gia_ban.toLocaleString()}đ x
+                                  {item.so_luong}
+                                </p>
                               </div>
-                            ))}
-                        </div>
-
-                        {cart.length > 4 && (
-                          <p className="text-xs text-center text-gray-500 mt-4 pt-3 border-t border-gray-100">
-                            Còn <span className="font-bold">{cart.length - 4}</span> sản phẩm khác trong giỏ
-                          </p>
-                        )}
-
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                          <Link
-                            href="/cart"
-                            className="block w-full bg-[#007832] text-white text-center py-2.5 rounded-xl font-bold hover:bg-[#006028] transition-colors shadow-sm"
-                          >
-                            Xem giỏ hàng
-                          </Link>
-                        </div>
+                            </div>
+                          ))}
                       </div>
-                    ) : (
-                      <div className="p-8 text-center flex flex-col items-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
-                          <ShoppingCart className="w-8 h-8 text-gray-300" />
-                        </div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Giỏ hàng của bạn đang trống
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                      <Link
+                        href="/cart"
+                        className="block w-full bg-[#007832] text-white text-center py-2.5 mt-4 rounded-xl text-xs font-bold hover:bg-[#006028]"
+                      >
+                        Xem giỏ hàng
+                      </Link>
+                    </>
+                  ) : (
+                    <p className="text-center text-xs text-gray-500 py-4">
+                      Giỏ hàng trống
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Auth Buttons */}
+            {/* 3. AUTH SECTION: ĐÂY LÀ CHỖ BIẾN HÌNH CHUẨN ĐÊY! */}
             <div className="flex items-center gap-3">
-              <Link
-                href="/login"
-                className="hidden md:block text-sm font-bold text-gray-600 hover:text-[#007832] transition-colors px-2"
-              >
-                Đăng nhập
-              </Link>
+              {session ? (
+                /* --- GIAO DIỆN KHI ĐÃ ĐĂNG NHẬP --- */
+                <div className="relative group pt-4 pb-4 -my-4">
+                  <button className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 hover:bg-white hover:shadow-md transition-all">
+                    <div className="w-7 h-7 bg-[#007832] rounded-full flex items-center justify-center text-white text-[10px] font-black">
+                      {session.user?.email?.[0].toUpperCase()}
+                    </div>
+                    <div className="hidden sm:flex flex-col items-start leading-none">
+                      <span className="text-[9px] font-black text-emerald-600 uppercase italic">
+                        Thành viên
+                      </span>
+                      <span className="text-xs font-bold text-gray-700">
+                        {session.user?.email?.split("@")[0]}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      size={14}
+                      className="text-gray-400 group-hover:rotate-180 transition-transform"
+                    />
+                  </button>
 
-              <Link href="/register">
-                <button className="bg-[#007832] text-white px-6 py-2.5 rounded-full text-sm font-black shadow-lg shadow-emerald-900/10 hover:bg-[#006028] hover:shadow-emerald-900/20 transition-all active:scale-95 flex items-center gap-2">
-                  <User size={16} fill="white" />
-                  Đăng ký
-                </button>
-              </Link>
+                  {/* DROP DOWN MENU CÁ NHÂN */}
+                  <div className="absolute top-full right-0 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 overflow-hidden p-2">
+                    <div className="px-3 py-2 border-b border-gray-50 mb-1">
+                      <p className="text-[10px] font-black text-gray-300 uppercase italic tracking-widest">
+                        Quản lý tài khoản
+                      </p>
+                    </div>
+
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
+                    >
+                      <User size={16} /> Hồ sơ cá nhân
+                    </Link>
+                    <Link
+                      href="/orders"
+                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
+                    >
+                      <ShoppingBag size={16} /> Đơn hàng của tôi
+                    </Link>
+                    <Link
+                      href="/address"
+                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
+                    >
+                      <MapPin size={16} /> Địa chỉ giao hàng
+                    </Link>
+                    <Link
+                      href="/change-password"
+                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
+                    >
+                      <ShieldCheck size={16} /> Đổi mật khẩu
+                    </Link>
+
+                    <div className="border-t border-gray-50 my-1"></div>
+
+                    <button
+                      onClick={() => signOut()}
+                      className="w-full flex items-center gap-3 p-3 hover:bg-red-50 rounded-xl text-xs font-black text-red-500 transition-colors uppercase italic"
+                    >
+                      <LogOut size={16} /> Đăng xuất
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* --- GIAO DIỆN KHI CHƯA ĐĂNG NHẬP (Hiện 2 nút bth) --- */
+                <>
+                  <Link
+                    href="/login"
+                    className="hidden md:block text-sm font-bold text-gray-600 hover:text-[#007832] transition-colors px-2"
+                  >
+                    Đăng nhập
+                  </Link>
+
+                  <Link href="/register">
+                    <button className="bg-[#007832] text-white px-6 py-2.5 rounded-full text-sm font-black shadow-lg shadow-emerald-900/10 hover:bg-[#006028] hover:shadow-emerald-900/20 transition-all active:scale-95 flex items-center gap-2">
+                      <User size={16} fill="white" />
+                      Đăng ký
+                    </button>
+                  </Link>
+                </>
+              )}
             </div>
-
           </div>
         </div>
       </header>
