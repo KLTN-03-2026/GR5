@@ -10,21 +10,22 @@ import {
   MapPin,
   ShoppingBag,
   ShieldCheck,
-  LayoutDashboard,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
 import { Toaster } from "react-hot-toast";
-import { signOut } from "next-auth/react"; // Đăng xuất bản Client
+import { signOut } from "next-auth/react";
 
-// Nhận session truyền từ Layout xuống
 export default function Header({ session }: { session: any }) {
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false); // Bước 1: Trạng thái chờ mount
   const pathname = usePathname();
   const { cart, totalItems } = useCart();
 
+  // Đánh dấu khi component đã thực sự chạy trên trình duyệt
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -42,7 +43,7 @@ export default function Header({ session }: { session: any }) {
       <header
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${
           scrolled
-            ? "bg-white/90 backdrop-blur-md shadow-sm py-3"
+            ? "bg-white/95 backdrop-blur-md shadow-sm py-3"
             : "bg-transparent py-5"
         }`}
       >
@@ -89,8 +90,8 @@ export default function Header({ session }: { session: any }) {
               />
             </div>
 
-            {/* Giỏ Hàng (Giữ nguyên logic của Phú) */}
-            <div className="flex items-center border-r border-gray-200 pr-4 mr-2">
+            {/* Giỏ Hàng */}
+            <div className="flex items-center border-r border-gray-200 pr-4">
               <div className="relative group pt-4 pb-4 -my-4">
                 <Link
                   href="/cart"
@@ -104,7 +105,7 @@ export default function Header({ session }: { session: any }) {
                   )}
                 </Link>
 
-                {/* DROPDOWN MINI CART (Giữ nguyên của Phú) */}
+                {/* DROPDOWN MINI CART */}
                 <div className="absolute top-full right-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 p-4">
                   {cart.length > 0 ? (
                     <>
@@ -152,9 +153,12 @@ export default function Header({ session }: { session: any }) {
               </div>
             </div>
 
-            {/* 3. AUTH SECTION: ĐÂY LÀ CHỖ BIẾN HÌNH CHUẨN ĐÊY! */}
-            <div className="flex items-center gap-3">
-              {session ? (
+            {/* 3. AUTH SECTION: FIX TRIỆT ĐỂ LỖI CHẰN NHAU */}
+            <div className="flex items-center min-w-[120px] justify-end">
+              {!mounted ? (
+                // Hiển thị khoảng trống để giữ layout ổn định khi đang mount
+                <div className="h-10 w-24" />
+              ) : session ? (
                 /* --- GIAO DIỆN KHI ĐÃ ĐĂNG NHẬP --- */
                 <div className="relative group pt-4 pb-4 -my-4">
                   <button className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 hover:bg-white hover:shadow-md transition-all">
@@ -175,41 +179,36 @@ export default function Header({ session }: { session: any }) {
                     />
                   </button>
 
-                  {/* DROP DOWN MENU CÁ NHÂN */}
+                  {/* DROP DOWN MENU */}
                   <div className="absolute top-full right-0 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 overflow-hidden p-2">
-                    <div className="px-3 py-2 border-b border-gray-50 mb-1">
-                      <p className="text-[10px] font-black text-gray-300 uppercase italic tracking-widest">
-                        Quản lý tài khoản
-                      </p>
+                    <div className="px-3 py-2 border-b border-gray-50 mb-1 text-[10px] font-black text-gray-300 uppercase italic tracking-widest">
+                      Quản lý tài khoản
                     </div>
-
                     <Link
-                      href="/profile"
+                      href="/account/profile"
                       className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
                     >
                       <User size={16} /> Hồ sơ cá nhân
                     </Link>
                     <Link
-                      href="/orders"
+                      href="/account/orders"
                       className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
                     >
                       <ShoppingBag size={16} /> Đơn hàng của tôi
                     </Link>
                     <Link
-                      href="/address"
+                      href="/account/addresses"
                       className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
                     >
                       <MapPin size={16} /> Địa chỉ giao hàng
                     </Link>
                     <Link
-                      href="/change-password"
+                      href="/account/change-password"
                       className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
                     >
                       <ShieldCheck size={16} /> Đổi mật khẩu
                     </Link>
-
                     <div className="border-t border-gray-50 my-1"></div>
-
                     <button
                       onClick={() => signOut()}
                       className="w-full flex items-center gap-3 p-3 hover:bg-red-50 rounded-xl text-xs font-black text-red-500 transition-colors uppercase italic"
@@ -219,22 +218,20 @@ export default function Header({ session }: { session: any }) {
                   </div>
                 </div>
               ) : (
-                /* --- GIAO DIỆN KHI CHƯA ĐĂNG NHẬP (Hiện 2 nút bth) --- */
-                <>
+                /* --- GIAO DIỆN KHI CHƯA ĐĂNG NHẬP --- */
+                <div className="flex items-center gap-3">
                   <Link
                     href="/login"
                     className="hidden md:block text-sm font-bold text-gray-600 hover:text-[#007832] transition-colors px-2"
                   >
                     Đăng nhập
                   </Link>
-
                   <Link href="/register">
-                    <button className="bg-[#007832] text-white px-6 py-2.5 rounded-full text-sm font-black shadow-lg shadow-emerald-900/10 hover:bg-[#006028] hover:shadow-emerald-900/20 transition-all active:scale-95 flex items-center gap-2">
-                      <User size={16} fill="white" />
-                      Đăng ký
+                    <button className="bg-[#007832] text-white px-6 py-2.5 rounded-full text-sm font-black shadow-lg hover:bg-[#006028] transition-all active:scale-95 flex items-center gap-2">
+                      <User size={16} fill="white" /> Đăng ký
                     </button>
                   </Link>
-                </>
+                </div>
               )}
             </div>
           </div>
