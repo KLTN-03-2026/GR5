@@ -3,22 +3,22 @@ import Header from "@/components/store/layout/Header";
 import Footer from "@/components/store/layout/Footer";
 import Chatbot from "@/components/store/chatbot/ChatbotAI";
 import { CartProvider } from "@/lib/CartContext";
+import { auth } from "@/lib/auth"; // <--- 1. Import hàm check
 
-export default function StoreLayout({
+export default async function StoreLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth(); // <--- 2. Lấy session ở đây
+
   return (
     <CartProvider>
-      <Header />
-      <main className="min-h-screen pt-24">{children}</main>
-      {/* Bọc thêm div này kết hợp với flex-grow ở main để Footer luôn nằm ở đáy */}
       <div className="flex flex-col min-h-screen">
-        <Header />
+        {/* 3. Truyền session vào Header */}
+        <Header session={session} />
 
-        {/* pt-24 (khoảng 96px) để tránh nội dung bị Header che khuất */}
-        <main className="grow pt-10">{children}</main>
+        <main className="grow pt-24">{children}</main>
 
         <Chatbot />
         <Footer />
