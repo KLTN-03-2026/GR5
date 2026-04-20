@@ -7,11 +7,13 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const trang_thai = searchParams.get('trang_thai'); // CHO_DUYET, DA_DUYET, TU_CHOI
+    const trang_thai = searchParams.get('trang_thai');
+    const ma_nguoi_dung = searchParams.get('ma_nguoi_dung');
 
     const danhSachDon = await prisma.don_xin_nghi.findMany({
       where: {
-        ...(trang_thai ? { trang_thai: trang_thai as any } : {})
+        ...(trang_thai ? { trang_thai: trang_thai as any } : {}),
+        ...(ma_nguoi_dung ? { ma_nguoi_dung: Number(ma_nguoi_dung) } : {}),
       },
       include: {
         nguoi_dung: {

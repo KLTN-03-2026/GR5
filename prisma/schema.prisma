@@ -48,6 +48,7 @@ model bien_the_san_pham {
   chi_tiet_phieu_nhap chi_tiet_phieu_nhap[]
   chi_tiet_phieu_xuat chi_tiet_phieu_xuat[]
   lo_hang             lo_hang[]
+  ma_giam_gia         ma_giam_gia[]
 
   @@index([ma_san_pham], map: "ma_san_pham")
 }
@@ -298,6 +299,7 @@ model giao_dich_thanh_toan {
   ngay_tao               DateTime?               @default(now()) @db.DateTime(0)
   don_hang               don_hang?               @relation(fields: [ma_don_hang], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "giao_dich_thanh_toan_ibfk_1")
   phuong_thuc_thanh_toan  String?   @default("COD") @db.VarChar(50)
+  phuong_thuc_thanh_toan_ref phuong_thuc_thanh_toan? @relation(fields: [ma_phuong_thuc], references: [id], onDelete: NoAction, onUpdate: NoAction)
   lich_su_hoan_tien      lich_su_hoan_tien[]
 
   @@index([ma_don_hang], map: "ma_don_hang")
@@ -406,11 +408,11 @@ model kien_hang_chi_tiet {
 
 model kien_hang_da_xuat {
   id                  Int                 @id @default(autoincrement())
-  ma_chi_tiet_xuat    Int
-  ma_kien_hang        Int
+  ma_chi_tiet_xuat    Int?
+  ma_kien_hang        Int?
   thoi_gian_xuat      DateTime            @default(now())
-  chi_tiet_phieu_xuat chi_tiet_phieu_xuat @relation(fields: [ma_chi_tiet_xuat], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  kien_hang_chi_tiet  kien_hang_chi_tiet  @relation(fields: [ma_kien_hang], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  chi_tiet_phieu_xuat chi_tiet_phieu_xuat? @relation(fields: [ma_chi_tiet_xuat], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  kien_hang_chi_tiet  kien_hang_chi_tiet?  @relation(fields: [ma_kien_hang], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([ma_chi_tiet_xuat])
   @@index([ma_kien_hang])
@@ -504,11 +506,16 @@ model ma_giam_gia {
   loai_giam_gia    String?    @db.VarChar(20)
   gia_tri_giam     Decimal?   @db.Decimal(15, 2)
   don_toi_thieu    Decimal?   @db.Decimal(15, 2)
-  gioi_han_su_dung Int?
-  ngay_bat_dau     DateTime?  @db.DateTime(0)
-  ngay_ket_thuc    DateTime?  @db.DateTime(0)
-  don_hang         don_hang[]
-  gio_hang         gio_hang[]
+  gioi_han_su_dung    Int?
+  ngay_bat_dau        DateTime?          @db.DateTime(0)
+  ngay_ket_thuc       DateTime?          @db.DateTime(0)
+  ma_bien_the_ap_dung Int?
+  
+  don_hang            don_hang[]
+  gio_hang            gio_hang[]
+  bien_the_san_pham   bien_the_san_pham? @relation(fields: [ma_bien_the_ap_dung], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([ma_bien_the_ap_dung])
 }
 
 model nguoi_dung {

@@ -1,55 +1,38 @@
 "use server";
 
-import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { signIn } from "@/lib/auth"; // Import hàm signIn của Auth.js
+import { signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
 
-// --- 1. ACTION ĐĂNG KÝ (Tự viết logic lưu DB) ---
-export async function handleRegister(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  try {
-    // Băm mật khẩu bằng Bcrypt
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Lưu vào bảng nguoi_dung của Phú
-    await prisma.nguoi_dung.create({
-      data: {
-        email,
-        mat_khau: hashedPassword,
-        trang_thai: 1,
-      },
-    });
-    return { success: "Đăng ký thành công!" };
-  } catch (error: any) {
-    if (error.code === "P2002") return { error: "Email này đã tồn tại!" };
-    return { error: "Lỗi hệ thống khi đăng ký." };
-  }
-}
-
-// --- 2. ACTION ĐĂNG NHẬP (Dùng hàm của Auth.js) ---
+// ── 1. Đăng nhập bằng Email + Password ──────────────────────────────────────
 export async function handleLogin(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
   try {
-    // Auth.js sẽ tự gọi cái authorize trong file config để check pass
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/", // Đăng nhập xong đẩy về trang chủ
+      redirectTo: "/",
     });
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return { error: "Sai email hoặc mật khẩu Phú ơi!" };
+          return { error: "Sai email hoặc mật khẩu. Vui lòng kiểm tra lại!" };
         default:
-          return { error: "Đã xảy ra lỗi xác thực." };
+          return { error: "Đã xảy ra lỗi xác thực. Vui lòng thử lại." };
       }
     }
-    throw error; // Bắt buộc phải throw để Next.js thực hiện redirect
+    throw error; // Bắt buộc throw để Next.js thực hiện redirect
   }
+}
+
+// ── 2. Đăng nhập bằng Google ─────────────────────────────────────────────────
+export async function handleGoogleLogin() {
+  await signIn("google", { redirectTo: "/" });
+}
+
+// ── 3. Đăng nhập bằng Facebook ───────────────────────────────────────────────
+export async function handleFacebookLogin() {
+  await signIn("facebook", { redirectTo: "/" });
 }

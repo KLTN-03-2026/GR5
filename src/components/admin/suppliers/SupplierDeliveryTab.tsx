@@ -125,7 +125,7 @@ export default function SupplierDeliveryTab({ ncc, nccId, onRefresh }: Props) {
               ].map(({ key, label }) => (
                 <div key={key}>
                   <label className="block text-xs font-medium text-gray-700 mb-2">{label}</label>
-                  <StarRating value={(form as Record<string, number>)[key]} onChange={(v) => setForm({ ...form, [key]: v })} />
+                  <StarRating value={(form as unknown as Record<string, number>)[key]} onChange={(v) => setForm({ ...form, [key]: v })} />
                 </div>
               ))}
             </div>

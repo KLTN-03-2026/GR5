@@ -1,32 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { WarehouseAdminService } from "@/services/admin/warehouse-admin.service";
 
 // ── GET: Danh sách phiếu nhập CHO_DUYET / CHO_KIEM_TRA ──
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") || "all";
-
-  const where =
-    status === "all"
-      ? {}
-      : status === "pending"
-      ? { trang_thai: { in: ["CHO_DUYET", "CHO_KIEM_TRA"] as any } }
-      : { trang_thai: status as any };
-
-  const phieus = await prisma.phieu_nhap_kho.findMany({
-    where,
-    orderBy: { ngay_tao: "desc" },
-    take: 50,
-    include: {
-      nha_cung_cap: { select: { ten_ncc: true } },
-      chi_tiet: {
-        include: {
-          bien_the_san_pham: { select: { ten_bien_the: true } },
-        },
-      },
-    },
-  });
-
+  const phieus = await WarehouseAdminService.getReceiptList(status);
   return NextResponse.json({ phieus });
 }
 

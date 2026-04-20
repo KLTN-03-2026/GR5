@@ -12,6 +12,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import { useSearchParams } from "next/navigation";
 
 const formatDateForInput = (dateString: string) => {
   if (!dateString) return "";
@@ -24,6 +25,8 @@ const formatDateForInput = (dateString: string) => {
 export default function PromotionsPage() {
   const [promotions, setPromotions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get("highlight");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -58,6 +61,15 @@ export default function PromotionsPage() {
   useEffect(() => {
     fetchPromotions();
   }, []);
+
+  useEffect(() => {
+    if (!highlightId) return;
+
+    const element = document.getElementById(`promotion-${highlightId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightId, promotions]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -243,10 +255,11 @@ export default function PromotionsPage() {
             return (
               <div
                 key={p.id}
-                className={`bg-white rounded-2xl p-5 border shadow-sm relative overflow-hidden transition-all group ${isExpired ? "border-gray-200 opacity-70" : "border-rose-100 hover:shadow-md hover:border-rose-300"}`}
+                id={`promotion-${p.id}`}
+                className={`bg-white rounded-2xl p-5 border shadow-sm relative overflow-hidden transition-all group ${highlightId === String(p.id) ? "border-amber-400 ring-2 ring-amber-200 shadow-lg" : isExpired ? "border-gray-200 opacity-70" : "border-rose-100 hover:shadow-md hover:border-rose-300"}`}
               >
                 <div
-                  className={`absolute top-0 right-0 w-2 h-full ${isExpired ? "bg-gray-300" : "bg-rose-400"}`}
+                  className={`absolute top-0 right-0 w-2 h-full ${highlightId === String(p.id) ? "bg-amber-400" : isExpired ? "bg-gray-300" : "bg-rose-400"}`}
                 ></div>
 
                 <div className="flex justify-between items-start mb-4 pr-2">

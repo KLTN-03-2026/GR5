@@ -1,50 +1,284 @@
 "use client";
 
-import React, { useState } from "react";
-import { PackageOpen, AlertTriangle, FileInput, Plus, QrCode } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  PackageOpen,
+  AlertTriangle,
+  FileInput,
+  Plus,
+  QrCode,
+  Camera,
+  X,
+  Upload,
+  ImagePlus,
+  Loader2,
+  CheckCircle2,
+  Trash2,
+  ShoppingBag,
+  ClipboardList,
+  RefreshCw,
+  Send,
+  ChevronDown,
+} from "lucide-react";
 
+// ─── Types ──────────────────────────────────────────────────────────────
+type AlertItem = {
+  id: number;
+  ma_lo: string;
+  san_pham: string;
+  so_luong: number;
+  vi_tri: string;
+  han_su_dung: string;
+  days_left: number | null;
+  loai_canh_bao: string;
+};
+
+type ProposeModal = {
+  alertItem: AlertItem;
+  actionType: "TIEU_HUY" | "XA_KHO";
+  actionText: string;
+};
+
+type NCC = { id: number; ten_ncc: string };
+type BienThe = { id: number; ten_bien_the: string; ma_sku: string };
+type PhieuNhap = {
+  id: number;
+  ma_phieu: string;
+  ncc_ten: string;
+  trang_thai: string;
+  ngay_tao: string;
+  tong_san_pham: number;
+  tong_so_luong: number;
+};
+
+// ─── Status badge ────────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    CHO_DUYET: { label: "Chờ Duyệt", cls: "bg-amber-100 text-amber-700" },
+    CHO_KIEM_TRA: { label: "Chờ Kiểm Tra", cls: "bg-blue-100 text-blue-700" },
+    DA_DUYET: { label: "Đã Duyệt", cls: "bg-green-100 text-green-700" },
+    HOAN_THANH: { label: "Hoàn Thành", cls: "bg-emerald-100 text-emerald-700" },
+    DA_HUY: { label: "Đã Hủy", cls: "bg-red-100 text-red-700" },
+  };
+  const s = map[status] ?? { label: status, cls: "bg-gray-100 text-gray-600" };
+  return (
+    <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full ${s.cls}`}>
+      {s.label}
+    </span>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────
 export default function StaffWarehousePage() {
   const [activeTab, setActiveTab] = useState("TON_KHO");
 
+  // --- Alerts state ---
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [alertCount, setAlertCount] = useState(0);
+  const [proposeModal, setProposeModal] = useState<ProposeModal | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitDone, setSubmitDone] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+
+  // --- Phiếu nhập state ---
+  const [phieus, setPhieus] = useState<PhieuNhap[]>([]);
+  const [loadingPhieu, setLoadingPhieu] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Form tạo phiếu
+  const [nccList, setNccList] = useState<NCC[]>([]);
+  const [bienTheList, setBienTheList] = useState<BienThe[]>([]);
+  const [form, setForm] = useState({
+    ma_ncc: "",
+    ma_bien_the: "",
+    so_luong_thung: "",
+    han_su_dung: "",
+    ngay_nhap_kho: new Date().toISOString().slice(0, 10),
+    ngay_thu_hoach: "",
+    ghi_chu: "",
+  });
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createDone, setCreateDone] = useState<{ ma_phieu: string } | null>(null);
+
+  // ─── Load data ─────────────────────────────────────────────────────────
+  const loadAlerts = useCallback(() => {
+    fetch("/api/admin/warehouse/alerts?filter=action-needed")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.items) { setAlerts(d.items); setAlertCount(d.items.length); }
+      });
+  }, []);
+
+  const loadPhieus = useCallback(() => {
+    setLoadingPhieu(true);
+    fetch("/api/admin/warehouse/import?status=all")
+      .then((r) => r.json())
+      .then((d) => { if (d.phieus) setPhieus(d.phieus); })
+      .finally(() => setLoadingPhieu(false));
+  }, []);
+
+  const loadNCC = useCallback(() => {
+    fetch("/api/admin/ncc?limit=100")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.data) setNccList(d.data.map((n: any) => ({ id: n.id, ten_ncc: n.ten_ncc })));
+      });
+  }, []);
+
+  const loadBienThe = useCallback(() => {
+    fetch("/api/admin/products?limit=200")
+      .then((r) => r.json())
+      .then((d) => {
+        const variants: BienThe[] = [];
+        (d.products || d.data || d.items || []).forEach((p: any) => {
+          (p.bien_the_san_pham || []).forEach((bt: any) => {
+            variants.push({ id: bt.id, ten_bien_the: bt.ten_bien_the || p.ten_san_pham, ma_sku: bt.ma_sku || "" });
+          });
+        });
+        setBienTheList(variants);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { loadAlerts(); }, [loadAlerts]);
+  useEffect(() => { if (activeTab === "NHAP_KHO") { loadPhieus(); loadNCC(); loadBienThe(); } }, [activeTab, loadPhieus, loadNCC, loadBienThe]);
+
+  // ─── Alert propose logic ────────────────────────────────────────────────
+  const openModal = (alertItem: AlertItem, actionType: "TIEU_HUY" | "XA_KHO", actionText: string) => {
+    setImages([]); setPreviews([]); setNote(""); setSubmitDone(false);
+    setProposeModal({ alertItem, actionType, actionText });
+  };
+
+  const closeModal = () => {
+    if (submitting) return;
+    previews.forEach((u) => URL.revokeObjectURL(u));
+    setImages([]); setPreviews([]); setNote(""); setSubmitDone(false);
+    setProposeModal(null);
+  };
+
+  const addFiles = (files: FileList | null) => {
+    if (!files) return;
+    const newFiles = Array.from(files).slice(0, 5 - images.length);
+    const newPreviews = newFiles.map((f) => URL.createObjectURL(f));
+    setImages((p) => [...p, ...newFiles]);
+    setPreviews((p) => [...p, ...newPreviews]);
+  };
+
+  const removeImage = (idx: number) => {
+    URL.revokeObjectURL(previews[idx]);
+    setImages((p) => p.filter((_, i) => i !== idx));
+    setPreviews((p) => p.filter((_, i) => i !== idx));
+  };
+
+  const handleSubmitPropose = async () => {
+    if (!proposeModal) return;
+    if (images.length === 0) { alert("Vui lòng chụp hoặc chọn ít nhất 1 ảnh minh chứng!"); return; }
+    setSubmitting(true);
+    try {
+      const fd = new FormData();
+      images.forEach((f) => fd.append("files", f));
+      const upRes = await fetch("/api/staff/warehouse/upload", { method: "POST", body: fd });
+      if (!upRes.ok) throw new Error("Upload ảnh thất bại");
+      const { urls } = await upRes.json();
+      const origin = window.location.origin;
+      const absoluteUrls = (urls as string[]).map((u) => `${origin}${u}`);
+      const proposeRes = await fetch(`/api/staff/warehouse/alerts/${proposeModal.alertItem.id}/propose`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: proposeModal.actionType, imageUrls: absoluteUrls, note }),
+      });
+      if (!proposeRes.ok) throw new Error("Gửi đề xuất thất bại");
+      setSubmitDone(true);
+      setAlerts((p) => p.filter((a) => a.id !== proposeModal.alertItem.id));
+      setAlertCount((p) => Math.max(0, p - 1));
+    } catch (err: any) {
+      alert(err.message || "Có lỗi xảy ra");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ─── Create phiếu logic ─────────────────────────────────────────────────
+  const openCreateModal = () => {
+    setForm({ ma_ncc: "", ma_bien_the: "", so_luong_thung: "", han_su_dung: "", ngay_nhap_kho: new Date().toISOString().slice(0, 10), ngay_thu_hoach: "", ghi_chu: "" });
+    setCreateError(""); setCreateDone(null);
+    setShowCreateModal(true);
+  };
+
+  const handleCreate = async () => {
+    setCreateError("");
+    if (!form.ma_ncc || !form.ma_bien_the || !form.so_luong_thung || !form.han_su_dung) {
+      setCreateError("Vui lòng điền đầy đủ các trường bắt buộc (*)"); return;
+    }
+    setCreating(true);
+    try {
+      const res = await fetch("/api/admin/warehouse/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ma_ncc: Number(form.ma_ncc),
+          ma_bien_the: Number(form.ma_bien_the),
+          so_luong_thung: Number(form.so_luong_thung),
+          han_su_dung: form.han_su_dung,
+          ngay_nhap_kho: form.ngay_nhap_kho,
+          ngay_thu_hoach: form.ngay_thu_hoach || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setCreateError(json.error || "Lỗi tạo phiếu"); setCreating(false); return; }
+      setCreateDone({ ma_phieu: json.ma_phieu });
+      loadPhieus();
+    } catch (e: any) {
+      setCreateError(e.message || "Lỗi kết nối");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  // ─── Submit phiếu (CHO_DUYET → CHO_KIEM_TRA) ─────────────────────────
+  const handleSubmitPhieu = async (id: number) => {
+    if (!confirm("Xác nhận nộp phiếu này để Admin kiểm tra?")) return;
+    const res = await fetch(`/api/admin/warehouse/import/${id}/review`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "submit" }),
+    });
+    if (res.ok) { alert("Đã nộp phiếu thành công!"); loadPhieus(); }
+    else { const j = await res.json(); alert(j.error || "Lỗi nộp phiếu"); }
+  };
+
+  // ─── Render ──────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      {/* Tabs */}
+      {/* ── Tabs ── */}
       <div className="flex space-x-2 bg-white p-2 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("TON_KHO")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            activeTab === "TON_KHO" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          <PackageOpen size={18} className={activeTab === "TON_KHO" ? "text-white" : "text-blue-500"} />
-          Tồn kho tổng
-        </button>
-        <button
-          onClick={() => setActiveTab("NHAP_KHO")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            activeTab === "NHAP_KHO" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          <FileInput size={18} className={activeTab === "NHAP_KHO" ? "text-white" : "text-green-500"} />
-          Phiếu Nhập & In Mã
-        </button>
-        <button
-          onClick={() => setActiveTab("CANH_BAO")}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            activeTab === "CANH_BAO" ? "bg-red-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          <AlertTriangle size={18} className={activeTab === "CANH_BAO" ? "text-white" : "text-red-500"} />
-          Cảnh Báo HSD
-          <span className={`ml-1 text-xs font-bold px-2 py-0.5 rounded-full ${activeTab === "CANH_BAO" ? "bg-white/20 text-white" : "bg-red-100 text-red-600"}`}>
-            3
-          </span>
-        </button>
+        {[
+          { key: "TON_KHO", label: "Tồn kho tổng", Icon: PackageOpen, activeColor: "bg-blue-600" },
+          { key: "NHAP_KHO", label: "Phiếu Nhập & In Mã", Icon: FileInput, activeColor: "bg-blue-600" },
+          { key: "CANH_BAO", label: "Cảnh Báo HSD", Icon: AlertTriangle, activeColor: "bg-red-600" },
+        ].map(({ key, label, Icon, activeColor }) => {
+          const isActive = activeTab === key;
+          return (
+            <button key={key} onClick={() => setActiveTab(key)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${isActive ? `${activeColor} text-white shadow-md` : "text-gray-600 hover:bg-gray-50"}`}>
+              <Icon size={18} className={isActive ? "text-white" : key === "CANH_BAO" ? "text-red-500" : key === "NHAP_KHO" ? "text-green-500" : "text-blue-500"} />
+              {label}
+              {key === "CANH_BAO" && alertCount > 0 && (
+                <span className={`ml-1 text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-red-100 text-red-600"}`}>{alertCount}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Tab Nội dung */}
+      {/* ── Tab content ── */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        
+
         {/* TỒN KHO */}
         {activeTab === "TON_KHO" && (
           <div>
@@ -58,25 +292,13 @@ export default function StaffWarehousePage() {
                   <th className="px-4 py-3">Mã Lô</th>
                   <th className="px-4 py-3">Sản phẩm</th>
                   <th className="px-4 py-3">Số Lượng CÒN</th>
-                  <th className="px-4 py-3">Vị trí (Khu-Ngày-Kệ)</th>
+                  <th className="px-4 py-3">Vị trí</th>
                   <th className="px-4 py-3">HSD (Còn lại)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                <tr className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">LO-RM-001</td>
-                  <td className="px-4 py-3">Rau muống thủy canh</td>
-                  <td className="px-4 py-3 font-bold text-blue-600">80 bó</td>
-                  <td className="px-4 py-3 font-mono text-gray-600">A-D1-K1</td>
-                  <td className="px-4 py-3 text-green-600 font-medium">10 ngày</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">LO-DT-002</td>
-                  <td className="px-4 py-3">Dâu Tây Đà Lạt</td>
-                  <td className="px-4 py-3 font-bold text-amber-600">15 hộp</td>
-                  <td className="px-4 py-3 font-mono text-gray-600">B-D2-K1</td>
-                  <td className="px-4 py-3 text-red-600 font-medium whitespace-nowrap"><AlertTriangle size={14} className="inline mr-1" /> 2 ngày</td>
-                </tr>
+                <tr className="hover:bg-gray-50"><td className="px-4 py-3 font-medium">LO-RM-001</td><td className="px-4 py-3">Rau muống thủy canh</td><td className="px-4 py-3 font-bold text-blue-600">80 bó</td><td className="px-4 py-3 font-mono text-gray-600">A-D1-K1</td><td className="px-4 py-3 text-green-600 font-medium">10 ngày</td></tr>
+                <tr className="hover:bg-gray-50"><td className="px-4 py-3 font-medium">LO-DT-002</td><td className="px-4 py-3">Dâu Tây Đà Lạt</td><td className="px-4 py-3 font-bold text-amber-600">15 hộp</td><td className="px-4 py-3 font-mono text-gray-600">B-D2-K1</td><td className="px-4 py-3 text-red-600 font-medium whitespace-nowrap"><AlertTriangle size={14} className="inline mr-1" />2 ngày</td></tr>
               </tbody>
             </table>
           </div>
@@ -84,69 +306,316 @@ export default function StaffWarehousePage() {
 
         {/* NHẬP KHO */}
         {activeTab === "NHAP_KHO" && (
-          <div className="space-y-6">
+          <div className="space-y-5">
+            {/* Header */}
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-800">Tạo mới Phiếu Nhập (Draft)</h2>
-              <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-bold rounded-lg transition-colors">
-                <Plus size={16} /> Tạo Phiếu Trình Duyệt
-              </button>
-            </div>
-            
-            <div className="border border-gray-100 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-100 font-semibold text-gray-700">
-                Các phiếu đã duyệt (Cần thao tác)
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <ClipboardList size={20} className="text-blue-600" />
+                Danh sách Phiếu Nhập
+              </h2>
+              <div className="flex gap-2">
+                <button onClick={loadPhieus} className="flex items-center gap-1.5 border border-gray-200 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                  <RefreshCw size={15} /> Làm mới
+                </button>
+                <button onClick={openCreateModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-bold rounded-lg transition-colors shadow-sm">
+                  <Plus size={16} /> Tạo Phiếu Mới
+                </button>
               </div>
-              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border border-green-200 bg-green-50/30 p-4 rounded-xl flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-gray-800 text-sm mb-1">PN-005: Nhập 500kg Bắp Cải</h3>
-                    <p className="text-xs text-gray-500">Người duyệt: Admin • 10 phút trước</p>
-                    <span className="inline-block mt-2 text-xs bg-green-100 text-green-700 font-bold px-2 py-1 rounded">Trạng thái: Đã duyệt (Chờ In Mã)</span>
+            </div>
+
+            {/* Phiếu list */}
+            {loadingPhieu ? (
+              <div className="flex justify-center py-10">
+                <Loader2 size={24} className="animate-spin text-blue-500" />
+              </div>
+            ) : phieus.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                <ClipboardList size={40} className="mb-3 opacity-40" />
+                <p className="text-sm">Chưa có phiếu nhập nào. Hãy tạo phiếu mới!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {phieus.map((p) => (
+                  <div key={p.id} className="border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:shadow-sm transition-shadow">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-gray-800 text-sm">{p.ma_phieu}</span>
+                        <StatusBadge status={p.trang_thai} />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        NCC: <span className="font-medium text-gray-700">{p.ncc_ten}</span>
+                        {" "}• {p.tong_so_luong} thùng
+                        {" "}• {p.ngay_tao ? new Date(p.ngay_tao).toLocaleDateString("vi-VN") : ""}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      {p.trang_thai === "CHO_DUYET" && (
+                        <button onClick={() => handleSubmitPhieu(p.id)}
+                          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors">
+                          <Send size={13} /> Nộp phiếu
+                        </button>
+                      )}
+                      {p.trang_thai === "DA_DUYET" && (
+                        <button className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors">
+                          <QrCode size={13} /> In Mã QR
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <button className="flex items-center gap-2 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-bold text-gray-700">
-                    <QrCode size={18} className="text-blue-600" />
-                    In Mã & Nhập Kệ
-                  </button>
-                </div>
+                ))}
               </div>
-            </div>
+            )}
           </div>
         )}
 
         {/* CẢNH BÁO */}
         {activeTab === "CANH_BAO" && (
           <div>
-             <h2 className="text-lg font-bold text-red-700 flex items-center gap-2 mb-4">
-              <AlertTriangle size={24} /> 
-              Các lô hàng sắp hỏng / Hết hạn
+            <h2 className="text-lg font-bold text-red-700 flex items-center gap-2 mb-4">
+              <AlertTriangle size={24} /> Các lô hàng sắp hỏng / Hết hạn
             </h2>
             <div className="space-y-3">
-              {/* Lô 1 - Đỏ đậm */}
-              <div className="border border-red-200 bg-red-50 p-4 rounded-xl flex justify-between items-center">
-                <div>
-                  <h3 className="font-bold text-red-800">Dâu Tây Đà Lạt (Khay 1kg) • Mã Lô: LO-DT-001</h3>
-                  <p className="text-sm text-red-600 mt-1">ĐÃ HẾT HẠN (Quá 1 ngày) • Tồn: 5 Khay</p>
+              {alerts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                  <CheckCircle2 size={40} className="text-green-400 mb-3" />
+                  <p className="text-sm font-medium text-gray-500">Không có lô hàng nào cần xử lý.</p>
                 </div>
-                <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-md">
-                  Đề xuất Tiêu Hủy
-                </button>
-              </div>
-
-               {/* Lô 2 - Cam */}
-               <div className="border border-amber-200 bg-amber-50 p-4 rounded-xl flex justify-between items-center">
-                <div>
-                  <h3 className="font-bold text-amber-800">Cải Kale Khủng Long • Mã Lô: LO-KALE-002</h3>
-                  <p className="text-sm text-amber-700 mt-1">Còn 2 ngày sử dụng • Tồn: 15 Bó</p>
-                </div>
-                <button className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-md">
-                  Đề xuất Xả Kho (-50%)
-                </button>
-              </div>
+              ) : (
+                alerts.map((alertItem) => {
+                  const isExpired = alertItem.days_left !== null && alertItem.days_left <= 0;
+                  const isSoon = alertItem.days_left !== null && alertItem.days_left > 0 && alertItem.days_left <= 3;
+                  const isDestroyAction = isExpired || isSoon;
+                  const boxClass = isDestroyAction ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50";
+                  const titleClass = isDestroyAction ? "text-red-800" : "text-amber-800";
+                  const textClass = isDestroyAction ? "text-red-600" : "text-amber-700";
+                  const btnClass = isDestroyAction ? "bg-red-600 hover:bg-red-700" : "bg-amber-500 hover:bg-amber-600";
+                  const actionText = isDestroyAction ? "Đề xuất Tiêu Hủy" : "Đề xuất Xả Kho (-50%)";
+                  const actionType = isDestroyAction ? "TIEU_HUY" : "XA_KHO" as "TIEU_HUY" | "XA_KHO";
+                  const Icon = isDestroyAction ? Trash2 : ShoppingBag;
+                  return (
+                    <div key={alertItem.id} className={`border ${boxClass} p-4 rounded-xl`}>
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`font-bold ${titleClass} truncate`}>{alertItem.san_pham} • Mã Lô: {alertItem.ma_lo}</h3>
+                          <p className={`text-sm ${textClass} mt-1`}>
+                            {isExpired ? `ĐÃ HẾT HẠN (Quá ${Math.abs(alertItem.days_left!)} ngày)` : alertItem.days_left !== null ? `Còn ${alertItem.days_left} ngày sử dụng` : "Không xác định HSD"}
+                            {" "}• Tồn: {alertItem.so_luong} • {alertItem.vi_tri}
+                          </p>
+                        </div>
+                        <button onClick={() => openModal(alertItem, actionType, actionText)}
+                          className={`flex items-center gap-1.5 ${btnClass} text-white font-bold py-2 px-3 rounded-lg text-xs shadow-md transition-all whitespace-nowrap`}>
+                          <Icon size={14} /> {actionText}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         )}
-
       </div>
+
+      {/* ═════════════════════════════════════
+          MODAL TẠO PHIẾU NHẬP
+      ═════════════════════════════════════ */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-4 bg-blue-600 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <FileInput size={22} className="text-white" />
+                <div>
+                  <h3 className="font-bold text-white text-lg">Tạo Phiếu Nhập Kho</h3>
+                  <p className="text-blue-100 text-xs">Điền đầy đủ thông tin, Admin sẽ kiểm tra và duyệt</p>
+                </div>
+              </div>
+              <button onClick={() => setShowCreateModal(false)} className="text-white/80 hover:text-white"><X size={24} /></button>
+            </div>
+
+            {/* Body */}
+            <div className="overflow-y-auto flex-1 p-6">
+              {createDone ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <CheckCircle2 size={56} className="text-green-500 mb-4" />
+                  <h4 className="text-xl font-bold text-gray-800 mb-2">Tạo phiếu thành công!</h4>
+                  <p className="text-sm text-gray-500 text-center mb-1">Mã phiếu: <span className="font-bold text-blue-600">{createDone.ma_phieu}</span></p>
+                  <p className="text-sm text-gray-500 text-center">Nhấn <strong>Nộp phiếu</strong> trong danh sách để gửi Admin kiểm tra.</p>
+                  <button onClick={() => { setShowCreateModal(false); setActiveTab("NHAP_KHO"); }}
+                    className="mt-6 bg-blue-600 text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-blue-700 transition-colors">
+                    Xem danh sách phiếu
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {createError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
+                      {createError}
+                    </div>
+                  )}
+
+                  {/* NCC */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Nhà Cung Cấp <span className="text-red-500">*</span>
+                    </label>
+                    <select value={form.ma_ncc} onChange={(e) => setForm({ ...form, ma_ncc: e.target.value })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 appearance-none">
+                      <option value="">-- Chọn nhà cung cấp --</option>
+                      {nccList.map((n) => <option key={n.id} value={n.id}>{n.ten_ncc}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Biến thể sản phẩm */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Sản Phẩm / Biến Thể <span className="text-red-500">*</span>
+                    </label>
+                    <select value={form.ma_bien_the} onChange={(e) => setForm({ ...form, ma_bien_the: e.target.value })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 appearance-none">
+                      <option value="">-- Chọn sản phẩm --</option>
+                      {bienTheList.map((bt) => <option key={bt.id} value={bt.id}>{bt.ten_bien_the}{bt.ma_sku ? ` (${bt.ma_sku})` : ""}</option>)}
+                    </select>
+                    {bienTheList.length === 0 && (
+                      <p className="text-xs text-gray-400 mt-1">Không tải được danh sách sản phẩm</p>
+                    )}
+                  </div>
+
+                  {/* Số lượng */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Số Lượng (thùng) <span className="text-red-500">*</span>
+                    </label>
+                    <input type="number" min={1} value={form.so_luong_thung}
+                      onChange={(e) => setForm({ ...form, so_luong_thung: e.target.value })}
+                      placeholder="VD: 100"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+                  </div>
+
+                  {/* Ngày nhập kho & HSD */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Ngày Nhập Kho <span className="text-red-500">*</span>
+                      </label>
+                      <input type="date" value={form.ngay_nhap_kho}
+                        onChange={(e) => setForm({ ...form, ngay_nhap_kho: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Hạn Sử Dụng <span className="text-red-500">*</span>
+                      </label>
+                      <input type="date" value={form.han_su_dung}
+                        onChange={(e) => setForm({ ...form, han_su_dung: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+                    </div>
+                  </div>
+
+                  {/* Ngày thu hoạch (tuỳ chọn) */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Ngày Thu Hoạch (tuỳ chọn)</label>
+                    <input type="date" value={form.ngay_thu_hoach}
+                      onChange={(e) => setForm({ ...form, ngay_thu_hoach: e.target.value })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            {!createDone && (
+              <div className="px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0">
+                <button onClick={() => setShowCreateModal(false)} disabled={creating}
+                  className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">
+                  Huỷ
+                </button>
+                <button onClick={handleCreate} disabled={creating}
+                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                  {creating ? <><Loader2 size={16} className="animate-spin" /> Đang tạo...</> : <><Plus size={16} /> Tạo Phiếu</>}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════
+          MODAL ĐỀ XUẤT + UPLOAD ẢNH
+      ═════════════════════════════════════ */}
+      {proposeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div className={`px-6 py-4 flex items-center justify-between ${proposeModal.actionType === "TIEU_HUY" ? "bg-red-600" : "bg-amber-500"}`}>
+              <div className="flex items-center gap-3">
+                {proposeModal.actionType === "TIEU_HUY" ? <Trash2 size={22} className="text-white" /> : <ShoppingBag size={22} className="text-white" />}
+                <div>
+                  <h3 className="font-bold text-white text-lg">{proposeModal.actionText}</h3>
+                  <p className="text-white/80 text-sm">{proposeModal.alertItem.san_pham} • {proposeModal.alertItem.ma_lo}</p>
+                </div>
+              </div>
+              <button onClick={closeModal} disabled={submitting} className="text-white/80 hover:text-white"><X size={24} /></button>
+            </div>
+            {submitDone ? (
+              <div className="flex flex-col items-center justify-center py-14 px-6">
+                <CheckCircle2 size={56} className="text-green-500 mb-4" />
+                <h4 className="text-xl font-bold text-gray-800 mb-2">Đề xuất đã được gửi!</h4>
+                <p className="text-sm text-gray-500 text-center">Admin sẽ xem và duyệt đề xuất của bạn. Cảm ơn!</p>
+                <button onClick={closeModal} className="mt-6 bg-gray-900 text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-gray-700">Đóng</button>
+              </div>
+            ) : (
+              <div className="p-6 space-y-5">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">📸 Ảnh minh chứng <span className="text-red-500">*</span> <span className="ml-1 text-xs font-normal text-gray-400">(Tối đa 5 ảnh)</span></p>
+                  {previews.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {previews.map((src, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={src} alt="" className="w-full h-full object-cover" />
+                          <button onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full p-0.5"><X size={12} /></button>
+                        </div>
+                      ))}
+                      {previews.length < 5 && (
+                        <button onClick={() => fileInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 text-gray-400 hover:text-blue-400 flex items-center justify-center transition-colors">
+                          <ImagePlus size={24} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {previews.length === 0 && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <button onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 py-5 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-all">
+                        <Camera size={28} /><span className="text-xs font-medium">Chụp ảnh</span>
+                      </button>
+                      <button onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center gap-2 py-5 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-all">
+                        <Upload size={28} /><span className="text-xs font-medium">Chọn từ thư viện</span>
+                      </button>
+                    </div>
+                  )}
+                  <input ref={cameraRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-2 block">📝 Ghi chú thêm (tuỳ chọn)</label>
+                  <textarea value={note} onChange={(e) => setNote(e.target.value)}
+                    placeholder={proposeModal.actionType === "TIEU_HUY" ? "Mô tả tình trạng hàng hóa cần tiêu hủy..." : "Mô tả lý do đề xuất xả kho..."}
+                    rows={3} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button onClick={closeModal} disabled={submitting} className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">Huỷ</button>
+                  <button onClick={handleSubmitPropose} disabled={submitting || images.length === 0}
+                    className={`flex-1 py-3 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2 ${proposeModal.actionType === "TIEU_HUY" ? "bg-red-600 hover:bg-red-700" : "bg-amber-500 hover:bg-amber-600"} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                    {submitting ? <><Loader2 size={16} className="animate-spin" />Đang gửi...</> : <><Upload size={16} />Gửi đề xuất</>}
+                  </button>
+                </div>
+                {images.length === 0 && <p className="text-center text-xs text-red-500">⚠ Bắt buộc phải có ít nhất 1 ảnh minh chứng</p>}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
