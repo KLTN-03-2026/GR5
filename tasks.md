@@ -82,3 +82,78 @@
 - Điền OAuth credentials thật vào `.env` (Google Cloud Console + Facebook Developers)
 - Thêm Redirect URI vào Google: `http://localhost:3001/api/auth/callback/google`
 - Thêm Redirect URI vào Facebook: `http://localhost:3001/api/auth/callback/facebook`
+
+---
+
+## Nhật ký hoàn thành — 20/04/2026 (Update 2)
+
+### ✅ Tính năng mới — Đổi Mật Khẩu & Đăng Nhập FaceID
+
+- **[Feature] Đổi Mật Khẩu** (`/staff/hr` → Tab "Đổi Mật Khẩu")
+  - API `POST /api/user/change-password`: xác minh pass cũ (bcrypt.compare), hash pass mới, update DB
+  - Validation client: mật khẩu mới ≥ 6 ký tự, confirm khớp
+  - Toggle hiện/ẩn mật khẩu cho cả 3 field
+  - Tài khoản OAuth không có mật khẩu → báo lỗi cụ thể
+
+- **[Feature] Đăng ký FaceID** (`/staff/hr` → Tab "Đăng Nhập FaceID")
+  - API `GET/POST/DELETE /api/user/face-data`: quản lý bảng `du_lieu_khuon_mat`
+  - Component `FaceRegister.tsx`: chụp 5 frame, tính trung bình descriptor, lưu vào DB
+  - Hiển thị trạng thái đã đăng ký / chưa đăng ký
+  - Nút cập nhật FaceID và xóa dữ liệu
+
+- **[Feature] Đăng Nhập FaceID thực sự** (`/login/face-id`)
+  - API `POST /api/auth/face-login`: so sánh Euclidean distance với toàn bộ `du_lieu_khuon_mat`
+  - Trả về short-lived JWT (30 giây) nếu khớp (distance < 0.5)
+  - `auth.ts`: thêm credentials provider `face-id` verify JWT token và cấp session
+  - Cài thêm package: `jsonwebtoken`
+  - Fix tên file model: `face_recognition_model-shard2 (1)` → `face_recognition_model-shard2`
+
+---
+
+## Nhật ký hoàn thành — 20/04/2026 (Update 3)
+
+### ✅ Tính năng mới — RBAC (Role-Based Access Control)
+
+**Luồng nghiệp vụ:**
+1. User đăng nhập → JWT callback load roles từ bảng `vai_tro_nguoi_dung` → lưu vào `token.roles`
+2. `session.user.roles` được expose cho cả server và client
+3. Middleware chặn route trước khi render:
+   - `/admin/**` → yêu cầu role `ADMIN` → redirect `/403` nếu thiếu quyền
+   - `/staff/**` → yêu cầu role `STAFF` hoặc `ADMIN` → redirect `/403`
+   - `/account/**` → yêu cầu đăng nhập → redirect `/login`
+   - `/login`, `/register` → nếu đã login → redirect `/`
+4. Layout server components xác minh lần 2 (defense in depth)
+
+**Files tạo mới:**
+- `src/middleware.ts` – Route protection middleware (NextAuth v5 `auth` wrapper)
+- `src/lib/rbac.ts` – Helper: `hasRole()`, `isAdmin()`, `isStaff()`, `isAuthenticated()`
+- `src/app/403/page.tsx` – Trang 403 Forbidden
+
+**Files cập nhật:**
+- `src/lib/auth.ts` – JWT callback load `token.roles` từ DB, session callback expose `session.user.roles`
+- `src/app/admin/layout.tsx` – Guard: isAdmin() → redirect /403
+- `src/app/staff/layout.tsx` – Guard: isStaff() → redirect /403
+
+**DB Seed:**
+- Bảng `vai_tro`: ADMIN (id=1), STAFF (id=2), CUSTOMER (id=3)
+- Gán role mặc định:
+  - `nva@nongsan.vn`, `lvc@nongsan.vn` → ADMIN
+  - `ttb@nongsan.vn` → STAFF
+  - Các tài khoản Google OAuth → CUSTOMER
+
+> ⚠️ Sau khi thay đổi role trong DB, user phải **đăng xuất và đăng nhập lại** để JWT token refresh roles mới.
+
+---
+
+## Nhật ký hoàn thành — 20/04/2026 (Update 4)
+
+### ✅ Tạo tài khoản Mock Data
+
+| Email | Mật khẩu | Role | Tên |
+|---|---|---|---|
+| `admin@nongsan.vn` | `123456` | ADMIN | Admin Hệ Thống |
+| `staff@nongsan.vn` | `123456` | STAFF | Staff Vận Hành |
+
+- Password hash bằng bcrypt (10 rounds)
+- Có đầy đủ hồ sơ trong bảng `ho_so_nguoi_dung`
+- Role gán trong bảng `vai_tro_nguoi_dung`

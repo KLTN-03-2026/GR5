@@ -3,7 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import Facebook from "next-auth/providers/facebook";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
+
+const FACE_LOGIN_SECRET = (process.env.AUTH_SECRET ?? "fallback") + "_face";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -20,6 +23,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!isMatch) return null;
 
         return { id: user.id.toString(), email: user.email };
+      },
+    }),
+
+    // ── 2. FaceID Login ───────────────────────────────────────────────────────
+    Credentials({
+      id: "face-id",
+      authorize: async (credentials) => {
+        const faceToken = credentials?.faceToken as string;
+        if (!faceToken) return null;
+
+        try {
+          const payload = jwt.verify(faceToken, FACE_LOGIN_SECRET) as {
+            userId: number;
+            email: string;
+          };
+          const user = await prisma.nguoi_dung.findUnique({
+            where: { id: payload.userId },
+            select: { id: true, email: true },
+          });
+          if (!user) return null;
+          return { id: user.id.toString(), email: user.email };
+        } catch {
+          return null;
+        }
       },
     }),
 
@@ -88,8 +115,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
 
-    // Đưa numeric id vào JWT token
-    async jwt({ token, user, account }) {
+    // Đưa numeric id + roles vào JWT token
+    async jwt({ token, user, account, trigger }) {
       if (user?.id) {
         token.id = user.id;
       }
@@ -101,13 +128,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
         if (dbUser) token.id = dbUser.id.toString();
       }
+
+      // Load roles: chạy khi lần đầu login (account != null) hoặc khi trigger update
+      if (account || trigger === "update" || !token.roles) {
+        const numericId = Number(token.id);
+        if (numericId && !isNaN(numericId)) {
+          const userRoles = await prisma.vai_tro_nguoi_dung.findMany({
+            where: { ma_nguoi_dung: numericId },
+            include: { vai_tro: { select: { ten_vai_tro: true } } },
+          });
+          token.roles = userRoles.map((r) => r.vai_tro.ten_vai_tro);
+        }
+      }
+
       return token;
     },
 
-    // Đưa id vào session.user để dùng ở client
+    // Đưa id + roles vào session.user để dùng ở client
     async session({ session, token }) {
       if (token.id) {
         (session.user as any).id = Number(token.id);
+      }
+      if (token.roles) {
+        (session.user as any).roles = token.roles as string[];
       }
       return session;
     },

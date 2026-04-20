@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { CalendarDays, FileText, Send, Clock, AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
+import dynamic from "next/dynamic";
+import { CalendarDays, FileText, Send, Clock, AlertCircle, CheckCircle2, Loader2, X, KeyRound, ScanFace, ShieldCheck, Trash2, Eye, EyeOff } from "lucide-react";
+
+const FaceRegister = dynamic(() => import("@/components/FaceRegister"), { ssr: false });
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Props {
   userId: number | null;
 }
+
+type Tab = "LICH_CA" | "NGHI_PHEP" | "DOI_MAT_KHAU" | "FACE_ID";
 
 interface DonXinNghi {
   id: number;
@@ -32,9 +37,9 @@ const TRANG_THAI_CONFIG: Record<string, { label: string; cls: string }> = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function HRClient({ userId }: Props) {
-  const [activeTab, setActiveTab] = useState("LICH_CA");
+  const [activeTab, setActiveTab] = useState<Tab>("LICH_CA");
 
-  // Form state
+  // Leave form state
   const [form, setForm] = useState({
     loai_nghi: "PHEP",
     ngay_bat_dau: "",
@@ -48,6 +53,97 @@ export default function HRClient({ userId }: Props) {
   // History state
   const [donList, setDonList] = useState<DonXinNghi[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // ── Đổi mật khẩu ─────────────────────────────────────────────────────────
+  const [pwForm, setPwForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError(null);
+    setPwSuccess(false);
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      setPwError("Mật khẩu mới và xác nhận không khớp");
+      return;
+    }
+    if (pwForm.newPassword.length < 6) {
+      setPwError("Mật khẩu mới phải ít nhất 6 ký tự");
+      return;
+    }
+    setPwLoading(true);
+    try {
+      const res = await fetch("/api/user/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldPassword: pwForm.oldPassword, newPassword: pwForm.newPassword }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+      setPwSuccess(true);
+      setPwForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      setTimeout(() => setPwSuccess(false), 4000);
+    } catch (err: any) {
+      setPwError(err.message ?? "Lỗi không xác định");
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
+  // ── FaceID ────────────────────────────────────────────────────────────────
+  const [hasFaceData, setHasFaceData] = useState<boolean | null>(null);
+  const [faceLoading, setFaceLoading] = useState(false);
+  const [showFaceScanner, setShowFaceScanner] = useState(false);
+  const [faceMsg, setFaceMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const fetchFaceStatus = useCallback(async () => {
+    const res = await fetch("/api/user/face-data");
+    const json = await res.json();
+    if (json.success) setHasFaceData(json.hasFaceData);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "FACE_ID") fetchFaceStatus();
+  }, [activeTab, fetchFaceStatus]);
+
+  const handleFaceSuccess = async (descriptor: number[]) => {
+    setShowFaceScanner(false);
+    setFaceLoading(true);
+    setFaceMsg(null);
+    try {
+      const res = await fetch("/api/user/face-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ descriptor }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+      setFaceMsg({ type: "success", text: "Đã lưu dữ liệu khuôn mặt thành công!" });
+      setHasFaceData(true);
+    } catch (err: any) {
+      setFaceMsg({ type: "error", text: err.message ?? "Lưu thất bại" });
+    } finally {
+      setFaceLoading(false);
+    }
+  };
+
+  const handleDeleteFace = async () => {
+    if (!confirm("Bạn chắc muốn xóa dữ liệu FaceID?")) return;
+    setFaceLoading(true);
+    try {
+      await fetch("/api/user/face-data", { method: "DELETE" });
+      setHasFaceData(false);
+      setFaceMsg({ type: "success", text: "Đã xóa dữ liệu FaceID" });
+    } catch {
+      setFaceMsg({ type: "error", text: "Xóa thất bại" });
+    } finally {
+      setFaceLoading(false);
+    }
+  };
 
   // ── Fetch history ────────────────────────────────────────────────────────
   const fetchHistory = useCallback(async () => {
@@ -125,7 +221,7 @@ export default function HRClient({ userId }: Props) {
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex space-x-2 bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+      <div className="flex flex-wrap gap-2 bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
         <button
           onClick={() => setActiveTab("LICH_CA")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
@@ -133,7 +229,7 @@ export default function HRClient({ userId }: Props) {
           }`}
         >
           <CalendarDays size={18} className={activeTab === "LICH_CA" ? "text-white" : "text-blue-500"} />
-          Lịch Làm Việc Cá Nhân
+          Lịch Làm Việc
         </button>
         <button
           onClick={() => setActiveTab("NGHI_PHEP")}
@@ -143,6 +239,24 @@ export default function HRClient({ userId }: Props) {
         >
           <FileText size={18} className={activeTab === "NGHI_PHEP" ? "text-white" : "text-green-500"} />
           Đơn Xin Nghỉ Phép
+        </button>
+        <button
+          onClick={() => setActiveTab("DOI_MAT_KHAU")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            activeTab === "DOI_MAT_KHAU" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          <KeyRound size={18} className={activeTab === "DOI_MAT_KHAU" ? "text-white" : "text-amber-500"} />
+          Đổi Mật Khẩu
+        </button>
+        <button
+          onClick={() => setActiveTab("FACE_ID")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            activeTab === "FACE_ID" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          <ScanFace size={18} className={activeTab === "FACE_ID" ? "text-white" : "text-purple-500"} />
+          Đăng Nhập FaceID
         </button>
       </div>
 
@@ -371,6 +485,210 @@ export default function HRClient({ userId }: Props) {
               </div>
             </div>
           </>
+        )}
+
+        {/* ─── ĐỔI MẬT KHẨU ──────────────────────────────────────────────────────── */}
+        {activeTab === "DOI_MAT_KHAU" && (
+          <div className="col-span-3">
+            <div className="max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-amber-100 rounded-xl">
+                  <KeyRound size={22} className="text-amber-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800">Đổi Mật Khẩu</h2>
+                  <p className="text-xs text-gray-400">Bảo vệ tài khoản với mật khẩu mạnh</p>
+                </div>
+              </div>
+
+              {pwSuccess && (
+                <div className="mb-5 flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm font-medium">
+                  <CheckCircle2 size={18} className="text-green-600 flex-shrink-0" />
+                  Đổi mật khẩu thành công!
+                </div>
+              )}
+              {pwError && (
+                <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
+                  <AlertCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
+                  <span>{pwError}</span>
+                  <button onClick={() => setPwError(null)} className="ml-auto"><X size={14} /></button>
+                </div>
+              )}
+
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                {/* Old password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu hiện tại <span className="text-red-500">*</span></label>
+                  <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 px-3 focus-within:ring-2 focus-within:ring-blue-500/30">
+                    <input
+                      type={showOld ? "text" : "password"}
+                      required
+                      value={pwForm.oldPassword}
+                      onChange={(e) => setPwForm({ ...pwForm, oldPassword: e.target.value })}
+                      placeholder="••••••••"
+                      className="flex-1 bg-transparent py-2.5 text-sm outline-none"
+                    />
+                    <button type="button" onClick={() => setShowOld(!showOld)} className="text-gray-400 hover:text-gray-600">
+                      {showOld ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới <span className="text-red-500">*</span></label>
+                  <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 px-3 focus-within:ring-2 focus-within:ring-blue-500/30">
+                    <input
+                      type={showNew ? "text" : "password"}
+                      required
+                      value={pwForm.newPassword}
+                      onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })}
+                      placeholder="Ít nhất 6 ký tự"
+                      className="flex-1 bg-transparent py-2.5 text-sm outline-none"
+                    />
+                    <button type="button" onClick={() => setShowNew(!showNew)} className="text-gray-400 hover:text-gray-600">
+                      {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu mới <span className="text-red-500">*</span></label>
+                  <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 px-3 focus-within:ring-2 focus-within:ring-blue-500/30">
+                    <input
+                      type={showConfirm ? "text" : "password"}
+                      required
+                      value={pwForm.confirmPassword}
+                      onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })}
+                      placeholder="Nhập lại mật khẩu mới"
+                      className="flex-1 bg-transparent py-2.5 text-sm outline-none"
+                    />
+                    <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-gray-400 hover:text-gray-600">
+                      {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword && (
+                    <p className="text-xs text-red-500 mt-1">Mật khẩu không khớp</p>
+                  )}
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={pwLoading}
+                    className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-bold py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {pwLoading ? <><Loader2 size={16} className="animate-spin" /> Đang xử lý...</> : <><KeyRound size={16} /> Đổi Mật Khẩu</>}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ─── FACE ID ──────────────────────────────────────────────────────────── */}
+        {activeTab === "FACE_ID" && (
+          <div className="col-span-3">
+            <div className="max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-purple-100 rounded-xl">
+                  <ScanFace size={22} className="text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800">Đăng Nhập FaceID</h2>
+                  <p className="text-xs text-gray-400">Đăng nhập nhanh bằng nhận diện khuôn mặt</p>
+                </div>
+              </div>
+
+              {faceMsg && (
+                <div className={`mb-5 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium border ${
+                  faceMsg.type === "success"
+                    ? "bg-green-50 border-green-200 text-green-800"
+                    : "bg-red-50 border-red-200 text-red-800"
+                }`}>
+                  {faceMsg.type === "success" ? <CheckCircle2 size={18} className="text-green-600" /> : <AlertCircle size={18} className="text-red-500" />}
+                  {faceMsg.text}
+                </div>
+              )}
+
+              {/* Trạng thái */}
+              {hasFaceData === null ? (
+                <div className="flex items-center justify-center py-8 text-gray-400">
+                  <Loader2 size={22} className="animate-spin mr-2" /> Đang kiểm tra...
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Status card */}
+                  <div className={`rounded-xl p-4 flex items-center gap-4 border ${
+                    hasFaceData
+                      ? "bg-emerald-50 border-emerald-200"
+                      : "bg-gray-50 border-gray-200"
+                  }`}>
+                    <div className={`p-3 rounded-full ${ hasFaceData ? "bg-emerald-100" : "bg-gray-200" }`}>
+                      <ShieldCheck size={28} className={hasFaceData ? "text-emerald-600" : "text-gray-400"} />
+                    </div>
+                    <div>
+                      <p className={`font-bold text-sm ${ hasFaceData ? "text-emerald-800" : "text-gray-600" }`}>
+                        {hasFaceData ? "✅ Đã đăng ký FaceID" : "⛔ Chưa đăng ký FaceID"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {hasFaceData
+                          ? "Bạn có thể đăng nhập nhanh bằng khuôn mặt tại trang đăng nhập."
+                          : "Đăng ký khuôn mặt để đăng nhập nhanh không cần mật khẩu."}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Hướng dẫn */}
+                  {!hasFaceData && !showFaceScanner && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700 space-y-1">
+                      <p className="font-bold">📋 Hướng dẫn:</p>
+                      <p>1. Nhấn "Đăng ký khuôn mặt" và cho phép truy cập camera</p>
+                      <p>2. Nhìn thẳng vào camera, giữ yên trong 5 giây</p>
+                      <p>3. Hệ thống tự động chụp 5 ảnh và lưu dữ liệu</p>
+                      <p>4. Sau đó bạn có thể dùng FaceID để đăng nhập</p>
+                    </div>
+                  )}
+
+                  {/* Camera scanner */}
+                  {showFaceScanner && (
+                    <FaceRegister
+                      onSuccess={handleFaceSuccess}
+                      onCancel={() => setShowFaceScanner(false)}
+                    />
+                  )}
+
+                  {/* Action buttons */}
+                  {!showFaceScanner && (
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => { setFaceMsg(null); setShowFaceScanner(true); }}
+                        disabled={faceLoading}
+                        className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-all"
+                      >
+                        {faceLoading ? (
+                          <><Loader2 size={16} className="animate-spin" /> Đang lưu...</>
+                        ) : (
+                          <><ScanFace size={16} /> {hasFaceData ? "Cập nhật FaceID" : "Đăng ký khuôn mặt"}</>
+                        )}
+                      </button>
+
+                      {hasFaceData && (
+                        <button
+                          onClick={handleDeleteFace}
+                          disabled={faceLoading}
+                          className="w-full bg-red-50 hover:bg-red-100 disabled:opacity-60 text-red-600 font-bold py-3 rounded-xl text-sm border border-red-200 flex items-center justify-center gap-2 transition-all"
+                        >
+                          <Trash2 size={16} /> Xóa dữ liệu FaceID
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
       </div>

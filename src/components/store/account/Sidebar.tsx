@@ -9,6 +9,7 @@ import {
   Heart,
   Settings,
   LogOut,
+  KeyRound,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -49,6 +50,12 @@ export default function Sidebar({ user }: { user: any }) {
       name: "Yêu thích",
       icon: Heart,
       path: "/account/favorites",
+    },
+    {
+      id: "change-password",
+      name: "Bảo mật",
+      icon: KeyRound,
+      path: "/account/change-password",
     },
   ];
 

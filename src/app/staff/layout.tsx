@@ -1,17 +1,26 @@
 import React from "react";
 import StaffSidebar from "@/components/staff/layout/StaffSidebar";
 import StaffTopbar from "@/components/staff/layout/StaffTopbar";
+import { auth } from "@/lib/auth";
+import { isStaff } from "@/lib/rbac";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Vận Hành - Nông Sản",
   description: "Trang dành cho nhân viên vận hành",
 };
 
-export default function StaffLayout({
+export default async function StaffLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
+  // Double-check: middleware đã chặn rồi nhưng layout guard thêm lớp bảo vệ
+  if (!session?.user) redirect("/login");
+  if (!isStaff(session.user)) redirect("/403");
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
       {/* Sidebar cố định bên trái */}

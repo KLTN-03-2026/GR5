@@ -1,12 +1,21 @@
 import React from "react";
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
 import AdminTopbar from "@/components/admin/layout/AdminTopbar";
+import { auth } from "@/lib/auth";
+import { isAdmin } from "@/lib/rbac";
+import { redirect } from "next/navigation";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
+  // Double-check: middleware đã chặn rồi nhưng layout guard thêm lớp bảo vệ
+  if (!session?.user) redirect("/login");
+  if (!isAdmin(session.user)) redirect("/403");
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar cố định bên trái */}
