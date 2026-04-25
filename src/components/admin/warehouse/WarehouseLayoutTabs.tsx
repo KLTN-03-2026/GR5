@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Download, AlertTriangle } from "lucide-react";
+import { LayoutGrid, Download, AlertTriangle, Clock } from "lucide-react";
 
 const tabs = [
   {
@@ -12,16 +12,16 @@ const tabs = [
     match: "/admin/warehouse/map",
   },
   {
-    href: "/admin/warehouse/receiving",
-    label: "Nhập kho",
-    icon: Download,
-    match: "/admin/warehouse/receiving",
-  },
-  {
     href: "/admin/warehouse/alerts",
     label: "Cảnh báo HSD",
     icon: AlertTriangle,
     match: "/admin/warehouse/alerts",
+  },
+  {
+    href: "/admin/warehouse/history",
+    label: "Lịch sử",
+    icon: Clock,
+    match: "/admin/warehouse/history",
   },
 ];
 

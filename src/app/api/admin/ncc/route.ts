@@ -8,14 +8,26 @@ export async function GET(req: NextRequest) {
   const tinh_thanh = searchParams.get("tinh_thanh");
   const trang_thai = searchParams.get("trang_thai");
   const diem_thap = searchParams.get("diem_thap"); // "1" = lọc dưới 6 điểm
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "15");
+  const search = searchParams.get("search") || "";
+
+  const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = {};
   if (loai_ncc) where.loai_ncc = loai_ncc;
   if (tinh_thanh) where.tinh_thanh = tinh_thanh;
   if (trang_thai) where.trang_thai = trang_thai;
   if (diem_thap === "1") where.diem_uy_tin = { lt: 6 };
+  if (search) {
+    where.OR = [
+      { ten_ncc: { contains: search } },
+      { ma_ncc: { contains: search } },
+    ];
+  }
 
-  const [nccList, tongDangHopTac, nccDiemThap, hopDongSapHetHan] = await Promise.all([
+  const [total, nccList, tongDangHopTac, nccDiemThap, hopDongSapHetHan] = await Promise.all([
+    prisma.nha_cung_cap.count({ where }),
     prisma.nha_cung_cap.findMany({
       where,
       include: {
@@ -24,6 +36,8 @@ export async function GET(req: NextRequest) {
         cong_no_ncc: true,
       },
       orderBy: { id: "desc" },
+      skip,
+      take: limit,
     }),
     prisma.nha_cung_cap.count({ where: { trang_thai: "DANG_HOP_TAC" } }),
     prisma.nha_cung_cap.count({ where: { diem_uy_tin: { lt: 6 } } }),
@@ -61,6 +75,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     data: nccWithDebt,
+    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     kpi: {
       tong_dang_hop_tac: tongDangHopTac,
       tong_cong_no: tongCongNo._sum.so_du_sau ?? 0,

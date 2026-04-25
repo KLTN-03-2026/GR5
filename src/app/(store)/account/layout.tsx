@@ -16,9 +16,15 @@ export default async function AccountLayout({
   });
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div style={{ display: "flex", minHeight: "100vh", background: "var(--color-bg)" }}>
       <Sidebar user={user} />
-      <main className="flex-1 p-12 bg-slate-50/30 overflow-y-auto">
+      <main style={{
+        flex: 1,
+        padding: "2.5rem 3rem",
+        overflowY: "auto",
+        background: "var(--color-bg)",
+        minWidth: 0,
+      }}>
         {children}
       </main>
     </div>

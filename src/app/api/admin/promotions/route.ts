@@ -1,12 +1,32 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const promos = await prisma.ma_giam_gia.findMany({
-      orderBy: { id: 'desc' }
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "15");
+
+    const skip = (page - 1) * limit;
+
+    const [total, promos] = await Promise.all([
+      prisma.ma_giam_gia.count(),
+      prisma.ma_giam_gia.findMany({
+        orderBy: { id: 'desc' },
+        skip,
+        take: limit,
+      })
+    ]);
+
+    return NextResponse.json({
+      data: promos,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
     });
-    return NextResponse.json(promos);
   } catch (error) {
     console.error("LỖI GET KHUYẾN MÃI:", error);
     return NextResponse.json({ error: "Lỗi Server" }, { status: 500 });

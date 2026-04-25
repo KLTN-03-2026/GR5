@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   UserPlus,
@@ -8,47 +8,50 @@ import {
   Search,
   Download,
   Eye,
-  ClipboardList,
-  ChevronLeft,
-  ChevronRight,
   X,
-  ShoppingBasket,
-  CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Mock Data (Sau này Phú sẽ thay bằng fetch API từ MySQL)
-const CUSTOMERS = [
-  {
-    id: "KH2903",
-    name: "Lê Hoàng Nam",
-    email: "nam.lh@verdant.vn",
-    phone: "0987 123 456",
-    orders: 24,
-    spent: "45.200.000đ",
-    lastPurchase: "14/05/2024",
-    segment: "VIP",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=256&h=256&auto=format&fit=crop",
-    joined: "2022",
-    points: "1,240",
-    refundRate: "0%",
-    notes: "Ưu tiên hỗ trợ vận chuyển hỏa tốc cho các đơn nông sản hữu cơ.",
-    recentOrders: [
-      {
-        id: "ORD-7892",
-        name: 'Giỏ quà Tết "An Khang"',
-        date: "14/05/2024",
-        price: "3.200k",
-      },
-    ],
-  },
-  // Phú có thể thêm các khách hàng khác vào đây...
-];
+import Pagination from "@/components/ui/Pagination";
 
 export default function CustomersPage() {
-  const [selectedCustomer, setSelectedCustomer] = useState(CUSTOMERS[0]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Pagination & Filtering
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const itemsPerPage = 15;
+
+  const fetchCustomers = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: searchQuery
+      });
+      const res = await fetch(`/api/admin/customers?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data.data || []);
+        setTotalPages(data.meta?.totalPages || 1);
+        if (!selectedCustomer && data.data?.length > 0) {
+          setSelectedCustomer(data.data[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi fetch khách hàng:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [currentPage, searchQuery]);
 
   return (
     <div className="relative">
@@ -106,16 +109,20 @@ export default function CustomersPage() {
               <input
                 className="w-full bg-white border-none rounded-xl py-2.5 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-[#006b2c]/20"
                 placeholder="Tìm theo tên, email, sđt..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
             </div>
             <div className="flex gap-3">
               <select className="bg-white rounded-xl px-4 py-2.5 text-sm font-medium outline-none">
-                <option>VIP</option>
-                <option>Loyal</option>
+                <option value="">Tất cả phân khúc</option>
+                <option value="VIP">VIP</option>
+                <option value="Loyal">Loyal</option>
+                <option value="Mới">Mới</option>
               </select>
-              <button className="bg-[#171d16] text-white py-2.5 px-6 rounded-xl font-bold text-sm hover:opacity-90">
-                Lọc
-              </button>
             </div>
           </div>
 
@@ -142,56 +149,77 @@ export default function CustomersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#bdcaba]/10">
-                {CUSTOMERS.map((customer) => (
-                  <tr
-                    key={customer.id}
-                    onClick={() => {
-                      setSelectedCustomer(customer);
-                      setIsPanelOpen(true);
-                    }}
-                    className="hover:bg-[#eff6ea]/30 cursor-pointer"
-                  >
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700">
-                          {customer.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm">{customer.name}</p>
-                          <p className="text-[10px] text-[#6e7b6c]">
-                            ID: #{customer.id}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <p className="text-xs font-medium">{customer.phone}</p>
-                      <p className="text-[11px] text-[#6e7b6c]">
-                        {customer.email}
-                      </p>
-                    </td>
-                    <td className="px-6 py-5 text-center font-bold text-sm">
-                      {customer.orders}
-                    </td>
-                    <td className="px-6 py-5 font-bold text-sm text-[#006b2c]">
-                      {customer.spent}
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <button className="p-2 hover:bg-green-50 rounded-lg text-green-600">
-                        <Eye size={16} />
-                      </button>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-20">
+                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#006b2c] border-t-transparent mx-auto"></div>
                     </td>
                   </tr>
-                ))}
+                ) : customers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-16 text-gray-400 font-medium">
+                      Không tìm thấy khách hàng nào.
+                    </td>
+                  </tr>
+                ) : (
+                  customers.map((customer) => (
+                    <tr
+                      key={customer.id}
+                      onClick={() => {
+                        setSelectedCustomer(customer);
+                        setIsPanelOpen(true);
+                      }}
+                      className="hover:bg-[#eff6ea]/30 cursor-pointer"
+                    >
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700 overflow-hidden">
+                            <img src={customer.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm">{customer.name}</p>
+                            <p className="text-[10px] text-[#6e7b6c]">
+                              ID: #{customer.id}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <p className="text-xs font-medium">{customer.phone}</p>
+                        <p className="text-[11px] text-[#6e7b6c]">
+                          {customer.email}
+                        </p>
+                      </td>
+                      <td className="px-6 py-5 text-center font-bold text-sm">
+                        {customer.orders}
+                      </td>
+                      <td className="px-6 py-5 font-bold text-sm text-[#006b2c]">
+                        {customer.spent}
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <button className="p-2 hover:bg-green-50 rounded-lg text-green-600">
+                          <Eye size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
+            
+            {/* Pagination Component */}
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
       </div>
 
       {/* Right Detail Panel - Dùng AnimatePresence để trượt ra trượt vào */}
       <AnimatePresence>
-        {isPanelOpen && (
+        {isPanelOpen && selectedCustomer && (
           <motion.aside
             initial={{ x: 380 }}
             animate={{ x: 0 }}
@@ -209,8 +237,8 @@ export default function CustomersPage() {
             </div>
             <div className="p-6 space-y-6 overflow-y-auto">
               <div className="text-center space-y-2">
-                <div className="w-24 h-24 rounded-3xl bg-green-50 mx-auto flex items-center justify-center text-3xl font-black text-green-600">
-                  {selectedCustomer.name.charAt(0)}
+                <div className="w-24 h-24 rounded-3xl bg-green-50 mx-auto flex items-center justify-center text-3xl font-black text-green-600 overflow-hidden">
+                  <img src={selectedCustomer.avatar} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
                 <h5 className="text-xl font-black">{selectedCustomer.name}</h5>
                 <span className="bg-[#006b2c] text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase">

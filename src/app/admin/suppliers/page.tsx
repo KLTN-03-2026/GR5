@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Star,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import Pagination from "@/components/ui/Pagination";
 
 interface NCC {
   id: number;
@@ -82,28 +84,36 @@ export default function AdminSuppliersPage() {
   const [filterLoai, setFilterLoai] = useState("");
   const [filterTrangThai, setFilterTrangThai] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pathname = usePathname();
+  const baseUrl = pathname?.startsWith("/warehouse-manager") ? "/warehouse-manager/suppliers" : "/admin/suppliers";
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (page = 1, currentSearch = "") => {
     setLoading(true);
     const params = new URLSearchParams();
     if (filterLoai) params.set("loai_ncc", filterLoai);
     if (filterTrangThai) params.set("trang_thai", filterTrangThai);
+    params.set("page", page.toString());
+    params.set("limit", "15");
+    if (currentSearch) params.set("search", currentSearch);
+
     const res = await fetch(`/api/admin/ncc?${params.toString()}`);
     const json = await res.json();
     setData(json.data ?? []);
+    setTotalPages(json.meta?.totalPages || 1);
     setKpi(json.kpi ?? null);
     setLoading(false);
   }, [filterLoai, filterTrangThai]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const timer = setTimeout(() => {
+      fetchData(currentPage, search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fetchData, currentPage, search]);
 
-  const filtered = data.filter(
-    (ncc) =>
-      ncc.ten_ncc.toLowerCase().includes(search.toLowerCase()) ||
-      ncc.ma_ncc?.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = data; // Already filtered by backend
 
   return (
     <div className="space-y-6">
@@ -341,7 +351,7 @@ export default function AdminSuppliersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <Link
-                          href={`/admin/suppliers/${ncc.id}/info`}
+                          href={`${baseUrl}/${ncc.id}/info`}
                           className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-medium"
                         >
                           Chi tiết <ChevronRight size={14} />
@@ -354,6 +364,14 @@ export default function AdminSuppliersPage() {
             </tbody>
           </table>
         </div>
+        
+        {totalPages > 1 && (
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
 
       {/* Modal Thêm NCC mới */}

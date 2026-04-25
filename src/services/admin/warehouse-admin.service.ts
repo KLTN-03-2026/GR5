@@ -179,7 +179,7 @@ export const WarehouseAdminService = {
     };
   },
 
-  async getReceiptList(status: string) {
+  async getReceiptList(status: string, page = 1, limit = 15) {
     const normalizedStatus = status || "pending";
     const where =
       normalizedStatus === "all"
@@ -188,22 +188,28 @@ export const WarehouseAdminService = {
           ? { trang_thai: { in: ["CHO_DUYET", "CHO_KIEM_TRA"] as any } }
           : { trang_thai: normalizedStatus as any };
 
-    const receipts = await prisma.phieu_nhap_kho.findMany({
-      where,
-      orderBy: { ngay_tao: "desc" },
-      take: 100,
-      include: {
-        nha_cung_cap: { select: { ten_ncc: true } },
-        nguoi_dung: { select: { email: true, ho_so_nguoi_dung: { select: { ho_ten: true } } } },
-        chi_tiet_phieu_nhap: {
-          include: {
-            bien_the_san_pham: { select: { ten_bien_the: true } },
+    const skip = (page - 1) * limit;
+
+    const [total, receipts] = await Promise.all([
+      prisma.phieu_nhap_kho.count({ where }),
+      prisma.phieu_nhap_kho.findMany({
+        where,
+        orderBy: { ngay_tao: "desc" },
+        skip,
+        take: limit,
+        include: {
+          nha_cung_cap: { select: { ten_ncc: true } },
+          nguoi_dung: { select: { email: true, ho_so_nguoi_dung: { select: { ho_ten: true } } } },
+          chi_tiet_phieu_nhap: {
+            include: {
+              bien_the_san_pham: { select: { ten_bien_the: true } },
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
 
-    return receipts.map((receipt) => ({
+    const items = receipts.map((receipt) => ({
       id: receipt.id,
       ma_phieu: `PN-${receipt.id}`,
       ncc_ten: receipt.nha_cung_cap?.ten_ncc || "N/A",
@@ -214,6 +220,11 @@ export const WarehouseAdminService = {
       tong_so_luong: receipt.chi_tiet_phieu_nhap.reduce((sum, item) => sum + Number(item.so_luong_yeu_cau ?? 0), 0),
       co_chenh_lech: receipt.chi_tiet_phieu_nhap.some((item) => Number(item.so_luong_thuc_nhan ?? 0) !== Number(item.so_luong_yeu_cau ?? 0)),
     }));
+
+    return {
+      items,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   },
 
   async getReceiptDetail(receiptId: number) {
@@ -640,5 +651,124 @@ export const WarehouseAdminService = {
     });
 
     return { promoId: promo.id, promoCode: promo.ma_code };
+  },
+
+  async getHistory(type: "import" | "export", page: number = 1, limit: number = 15) {
+    const skip = (page - 1) * limit;
+
+    if (type === "import") {
+      const [total, importReceipts] = await Promise.all([
+        prisma.phieu_nhap_kho.count(),
+        prisma.phieu_nhap_kho.findMany({
+          orderBy: { ngay_tao: "desc" },
+          skip,
+          take: limit,
+          include: {
+            nha_cung_cap: { select: { ten_ncc: true } },
+            nguoi_dung: { select: { ho_so_nguoi_dung: { select: { ho_ten: true } }, email: true } },
+            chi_tiet_phieu_nhap: {
+              include: {
+                bien_the_san_pham: {
+                  include: { san_pham: { select: { ten_san_pham: true } } },
+                },
+              },
+            },
+          },
+        })
+      ]);
+
+      const imports = importReceipts.map((receipt) => {
+        const spChinh = receipt.chi_tiet_phieu_nhap[0]?.bien_the_san_pham?.ten_bien_the 
+                        || receipt.chi_tiet_phieu_nhap[0]?.bien_the_san_pham?.san_pham?.ten_san_pham 
+                        || "Không rõ";
+        const totalQty = receipt.chi_tiet_phieu_nhap.reduce((sum, item) => sum + Number(item.so_luong_thuc_nhan || item.so_luong_yeu_cau || 0), 0);
+        return {
+          ngay_nhap: receipt.ngay_tao?.toLocaleString("vi-VN") || "N/A",
+          ma_phieu: `PN-${receipt.id}`,
+          ncc: receipt.nha_cung_cap?.ten_ncc || "N/A",
+          san_pham: spChinh,
+          so_luong: totalQty,
+          trang_thai: receipt.trang_thai,
+        };
+      });
+
+      return {
+        data: imports,
+        meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
+      };
+    }
+
+    if (type === "export") {
+      let exports = [];
+      let total = 0;
+      
+      try {
+        const [totalCount, exportLogsRaw] = await Promise.all([
+          prisma.chi_tiet_phieu_xuat.count(),
+          prisma.chi_tiet_phieu_xuat.findMany({
+            orderBy: { phieu_xuat_kho: { ngay_tao: "desc" } },
+            skip,
+            take: limit,
+            include: {
+              bien_the_san_pham: { select: { ten_bien_the: true } },
+              phieu_xuat_kho: { select: { id: true, ly_do_xuat: true, ngay_tao: true, nguoi_dung: { select: { email: true } } } }
+            }
+          })
+        ]);
+        
+        total = totalCount;
+        exports = exportLogsRaw.map((log: any) => ({
+          ngay_xuat: log.phieu_xuat_kho?.ngay_tao?.toLocaleString("vi-VN") || "N/A",
+          qr: "-",
+          san_pham: log.bien_the_san_pham?.ten_bien_the || "Không rõ",
+          phieu: log.phieu_xuat_kho ? `${log.phieu_xuat_kho.ly_do_xuat || "Xuất kho"} (PX-${log.phieu_xuat_kho.id})` : "N/A",
+          nguoi_xuat: log.phieu_xuat_kho?.nguoi_dung?.email || "Hệ thống"
+        }));
+        
+        if (exports.length === 0) {
+          const [totalTx, txs] = await Promise.all([
+            prisma.phieu_xuat_kho.count(),
+            prisma.phieu_xuat_kho.findMany({
+              orderBy: { ngay_tao: "desc" },
+              skip,
+              take: limit,
+              include: { nguoi_dung: { select: { email: true } } }
+            })
+          ]);
+          total = totalTx;
+          exports = txs.map((t: any) => ({
+            ngay_xuat: t.ngay_tao?.toLocaleString("vi-VN") || "N/A",
+            qr: "N/A",
+            san_pham: "Đa sản phẩm",
+            phieu: `${t.ly_do_xuat} (PX-${t.id})`,
+            nguoi_xuat: t.nguoi_dung?.email || "Hệ thống",
+          }));
+        }
+      } catch (e) {
+        const [totalTx, txs] = await Promise.all([
+          prisma.phieu_xuat_kho.count(),
+          prisma.phieu_xuat_kho.findMany({
+            orderBy: { ngay_tao: "desc" },
+            skip,
+            take: limit,
+          })
+        ]);
+        total = totalTx;
+        exports = txs.map((t: any) => ({
+          ngay_xuat: t.ngay_tao?.toLocaleString("vi-VN") || "N/A",
+          qr: "N/A",
+          san_pham: "Đa sản phẩm",
+          phieu: `${t.ly_do_xuat} (PX-${t.id})`,
+          nguoi_xuat: "Hệ thống",
+        }));
+      }
+
+      return {
+        data: exports,
+        meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
+      };
+    }
+
+    return { data: [], meta: { total: 0, page, limit, totalPages: 0 } };
   },
 };

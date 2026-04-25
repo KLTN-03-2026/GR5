@@ -21,6 +21,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
 
+import Pagination from "@/components/ui/Pagination";
+
 // --- MAPPING STATUS ---
 const STATUS_MAP: Record<string, string> = {
   'Tất cả': 'Tất cả',
@@ -62,7 +64,8 @@ export default function OrdersManagementContent() {
   
   // --- STATES PHÂN TRANG ---
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; 
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 15; 
 
   // --- STATES MODAL CHUNG ---
   const [viewingOrder, setViewingOrder] = useState<any | null>(null);
@@ -116,10 +119,17 @@ export default function OrdersManagementContent() {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/admin/orders'); 
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        status: activeFilter !== 'Tất cả' ? activeFilter : '',
+        date: selectedDate
+      });
+      const res = await fetch(`/api/admin/orders?${params.toString()}`); 
       if (res.ok) {
         const data = await res.json();
-        setOrders(data);
+        setOrders(data.data || data); // handle both new and old API responses
+        setTotalPages(data.meta?.totalPages || 1);
       }
     } catch (error) {
       console.error("Lỗi tải đơn hàng:", error);
@@ -130,28 +140,11 @@ export default function OrdersManagementContent() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
-
-  // --- LOGIC LỌC DỮ LIỆU ---
-  const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
-      const matchStatus = activeFilter === 'Tất cả' || order.trang_thai === activeFilter;
-      const orderDateInput = formatDate(order.ngay_tao, 'input');
-      const matchDate = selectedDate === '' || orderDateInput === selectedDate;
-      return matchStatus && matchDate;
-    });
-  }, [orders, activeFilter, selectedDate]);
+  }, [currentPage, activeFilter, selectedDate]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [activeFilter, selectedDate]);
-
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  
-  const paginatedOrders = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredOrders.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredOrders, currentPage]);
 
   // --- HÀM CẬP NHẬT TRẠNG THÁI BÌNH THƯỜNG ---
   const handleUpdateStatus = async () => {
@@ -310,14 +303,14 @@ export default function OrdersManagementContent() {
                     <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#00873A] border-t-transparent mx-auto"></div>
                   </td>
                 </tr>
-              ) : paginatedOrders.length === 0 ? (
+              ) : orders.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-16 text-gray-400 font-medium">
                     Không tìm thấy đơn hàng nào.
                   </td>
                 </tr>
               ) : (
-                paginatedOrders.map((order) => (
+                orders.map((order) => (
                   <tr key={order.id} className="group hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-5 font-bold text-gray-900">#{order.id}</td>
                     <td className="px-6 py-5">
@@ -359,47 +352,11 @@ export default function OrdersManagementContent() {
         </div>
         
         {/* --- PAGINATION UI --- */}
-        <div className="px-8 py-6 flex items-center justify-between bg-gray-50/50 border-t border-gray-100">
-          <p className="text-xs font-medium text-gray-400">
-            Hiển thị {filteredOrders.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} 
-            {' '} - {' '}
-            {Math.min(currentPage * itemsPerPage, filteredOrders.length)} trên {filteredOrders.length}
-          </p>
-          
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 hover:bg-[#00873A] hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-gray-100 disabled:hover:text-gray-500"
-              >
-                <ChevronLeft size={18} />
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button 
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-xl text-xs font-bold transition-all ${
-                    currentPage === page 
-                    ? 'bg-[#00873A] text-white shadow-md shadow-[#00873A]/20' 
-                    : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button 
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 hover:bg-[#00873A] hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-gray-100 disabled:hover:text-gray-500"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          )}
-        </div>
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* ========================================================================================= */}

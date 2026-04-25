@@ -7,29 +7,68 @@ export const dynamic = 'force-dynamic';
 // ============================================================================
 // 🚀 [GET] LẤY DANH SÁCH ĐƠN HÀNG CHO ADMIN
 // ============================================================================
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const orders = await prisma.don_hang.findMany({
-      include: {
-        nguoi_dung: {
-          select: {
-            id: true,
-            email: true,
-            ho_so_nguoi_dung: true 
-          }
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "15");
+    const search = searchParams.get("search") || "";
+    const status = searchParams.get("status") || "";
+    const date = searchParams.get("date") || "";
+
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { id: isNaN(Number(search)) ? undefined : Number(search) },
+        { nguoi_dung: { email: { contains: search } } }
+      ];
+    }
+    
+    if (status && status !== 'Tất cả') {
+      where.trang_thai = status;
+    }
+    
+    if (date) {
+      const startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+      where.ngay_tao = {
+        gte: startDate,
+        lte: endDate
+      };
+    }
+
+    const [total, orders] = await Promise.all([
+      prisma.don_hang.count({ where }),
+      prisma.don_hang.findMany({
+        where,
+        include: {
+          nguoi_dung: {
+            select: {
+              id: true,
+              email: true,
+              ho_so_nguoi_dung: true 
+            }
+          },
+          chi_tiet_don_hang: true,
+          don_van_chuyen: true,
+          yeu_cau_doi_tra: true 
         },
-        chi_tiet_don_hang: true,
-        don_van_chuyen: true,
-        // MUST HAVE THIS LINE
-        yeu_cau_doi_tra: true 
-      },
-      orderBy: { 
-        ngay_tao: 'desc' 
-      }
+        orderBy: { 
+          ngay_tao: 'desc' 
+        },
+        skip,
+        take: limit,
+      })
+    ]);
+
+    return NextResponse.json({
+      data: orders,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
     });
-
-
-    return NextResponse.json(orders);
     
   } catch (error: any) {
     console.error("❌ Lỗi GET Admin Orders:", error.message);

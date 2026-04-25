@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Camera, Save, Bell, Loader2 } from "lucide-react";
+import { Camera, Save, Bell, Loader2, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { updateProfile } from "@/app/actions/profile";
 import toast from "react-hot-toast";
 
 export default function ProfileForm({ user }: { user: any }) {
   const [isPending, setIsPending] = useState(false);
+  const [gender, setGender] = useState<string>(user?.gioi_tinh || "");
 
   async function handleSubmit(formData: FormData) {
     setIsPending(true);
@@ -17,149 +18,219 @@ export default function ProfileForm({ user }: { user: any }) {
     setIsPending(false);
   }
 
+  const initials = user?.ho_ten
+    ? user.ho_ten.trim().split(" ").slice(-1)[0][0].toUpperCase()
+    : user?.email?.[0]?.toUpperCase() ?? "?";
+
+  const displayName = user?.ho_ten?.trim() || "Chưa cập nhật tên";
+
   return (
-    <div className="w-full font-be-vietnam animate-in fade-in duration-500">
-      {/* Tiêu đề trang */}
-      <header className="mb-8 flex justify-between items-end">
+    <div className="profile-page animate-fade-in-up">
+
+      {/* ── Header ── */}
+      <header className="profile-header">
         <div>
-          <h2 className="text-3xl font-black text-[#007A33] tracking-tighter uppercase italic">
-            Hồ sơ cá nhân
-          </h2>
-          <p className="text-slate-400 font-bold text-sm italic mt-1">
-            Cập nhật thông tin tài khoản để bảo mật và nhận ưu đãi
+          <h2 className="profile-header__title">Hồ sơ cá nhân</h2>
+          <p className="profile-header__sub">
+            Cập nhật thông tin để bảo mật tài khoản và nhận ưu đãi
           </p>
         </div>
-        <button className="bg-white p-2.5 rounded-xl text-[#007A33] shadow-sm border border-emerald-50 hover:bg-emerald-50 transition-all">
-          <Bell size={20} />
+        <button
+          className="profile-header__bell"
+          aria-label="Thông báo"
+          type="button"
+        >
+          <Bell size={18} />
         </button>
       </header>
 
-      {/* Card nội dung chính */}
+      {/* ── Identity Card: Avatar + Tên + Role ── */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-[2rem] p-8 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-emerald-50"
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        className="profile-identity"
       >
-        {/* Khu vực Avatar */}
-        <div className="flex flex-col md:flex-row items-center gap-8 mb-12 pb-10 border-b border-slate-50">
-          <div className="relative group">
-            <div className="w-24 h-24 rounded-[2rem] bg-[#007A33] flex items-center justify-center text-4xl text-white font-black shadow-lg shadow-emerald-900/20">
-              {user?.ho_ten?.[0] || user?.email?.[0].toUpperCase()}
-            </div>
-            <label className="absolute -bottom-1 -right-1 bg-white p-2 rounded-xl shadow-md border border-emerald-50 text-[#007A33] cursor-pointer hover:scale-110 transition-all">
-              <Camera size={16} />
-              <input type="file" className="hidden" />
-            </label>
-          </div>
-          <div className="text-center md:text-left space-y-3">
-            <h3 className="text-lg font-black text-slate-800">Ảnh đại diện</h3>
-            <div className="flex gap-3">
-              <button className="px-5 py-2.5 bg-[#007A33] text-white rounded-xl text-xs font-black shadow-md hover:bg-black transition-all">
-                Đổi ảnh mới
-              </button>
-              <button className="px-5 py-2.5 bg-slate-50 text-slate-400 rounded-xl text-xs font-black hover:bg-red-50 hover:text-red-500 transition-all">
-                Xóa ảnh
-              </button>
-            </div>
-            <p className="text-[10px] text-slate-400 font-bold italic uppercase tracking-widest">
-              JPG, PNG hoặc GIF. Tối đa 2MB.
-            </p>
+        {/* Avatar */}
+        <div className="profile-identity__avatar-wrap">
+          <div className="profile-identity__avatar">{initials}</div>
+          <label className="profile-identity__camera" aria-label="Đổi ảnh đại diện">
+            <Camera size={13} />
+            <input type="file" accept="image/*" className="hidden" style={{ display: "none" }} />
+          </label>
+        </div>
+
+        {/* Tên + Email + Badges */}
+        <div className="profile-identity__info">
+          <h3 className="profile-identity__name">{displayName}</h3>
+          <p className="profile-identity__email">{user?.email || ""}</p>
+          <div className="profile-identity__badges">
+            <span className="profile-identity__badge profile-identity__badge--role">
+              Khách hàng
+            </span>
+            <span className="profile-identity__badge profile-identity__badge--tier">
+              ✦ Thành viên Bạc
+            </span>
           </div>
         </div>
 
-        {/* Form nhập liệu */}
-        <form action={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+        {/* Quick actions */}
+        <div className="profile-identity__actions">
+          <button type="button" className="btn-photo btn-photo--primary">
+            Đổi ảnh mới
+          </button>
+          <button type="button" className="btn-photo btn-photo--ghost">
+            Xóa ảnh
+          </button>
+          <p style={{
+            fontSize: "0.625rem",
+            color: "var(--color-text-muted)",
+            textTransform: "uppercase",
+            letterSpacing: "0.07em",
+            fontWeight: 600,
+            textAlign: "right",
+            margin: 0,
+          }}>
+            JPG, PNG · Tối đa 2MB
+          </p>
+        </div>
+      </motion.div>
+
+      {/* ── Form Card ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.07, ease: [0.22, 1, 0.36, 1] }}
+        className="profile-form-card"
+      >
+        <form action={handleSubmit}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: "1rem 1.5rem",
+          }}>
+
             {/* Họ và tên */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+            <div>
+              <label className="profile-section-label" htmlFor="ho_ten">
                 Họ và tên
               </label>
               <input
+                id="ho_ten"
                 name="ho_ten"
                 defaultValue={user?.ho_ten || ""}
-                placeholder="Nhập họ tên của Phú..."
-                className="w-full bg-slate-50/50 border-2 border-transparent focus:border-[#007A33]/20 focus:bg-white rounded-2xl px-5 py-3.5 text-sm font-bold text-slate-700 outline-none transition-all"
+                placeholder="Nhập họ và tên đầy đủ"
+                className="profile-input"
               />
             </div>
 
-            {/* Email */}
-            <div className="space-y-2 opacity-60">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                Email (Cố định)
+            {/* Email (read-only) */}
+            <div>
+              <label className="profile-section-label" htmlFor="email">
+                Email (cố định)
               </label>
               <input
+                id="email"
                 value={user?.email || ""}
                 readOnly
-                className="w-full bg-slate-100 border-none rounded-2xl px-5 py-3.5 text-sm font-bold text-slate-400 cursor-not-allowed"
+                className="profile-input"
               />
             </div>
 
             {/* Số điện thoại */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+            <div>
+              <label className="profile-section-label" htmlFor="so_dien_thoai">
                 Số điện thoại
               </label>
               <input
+                id="so_dien_thoai"
                 name="so_dien_thoai"
                 defaultValue={user?.so_dien_thoai || ""}
                 placeholder="09xx xxx xxx"
-                className="w-full bg-slate-50/50 border-2 border-transparent focus:border-[#007A33]/20 focus:bg-white rounded-2xl px-5 py-3.5 text-sm font-bold text-slate-700 outline-none transition-all"
+                className="profile-input"
               />
             </div>
 
             {/* Ngày sinh */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+            <div>
+              <label className="profile-section-label" htmlFor="ngay_sinh">
                 Ngày sinh
               </label>
               <input
+                id="ngay_sinh"
                 type="date"
                 name="ngay_sinh"
-                className="w-full bg-slate-50/50 border-2 border-transparent focus:border-[#007A33]/20 focus:bg-white rounded-2xl px-5 py-3.5 text-sm font-bold text-slate-700 outline-none transition-all"
+                defaultValue={
+                  user?.ngay_sinh
+                    ? new Date(user.ngay_sinh).toISOString().split("T")[0]
+                    : ""
+                }
+                className="profile-input"
               />
             </div>
 
-            {/* Giới tính */}
-            <div className="md:col-span-2 space-y-4 pt-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                Giới tính
-              </span>
-              <div className="flex gap-10">
-                {["Nam", "Nữ", "Khác"].map((option) => (
-                  <label
-                    key={option}
-                    className="flex items-center gap-3 cursor-pointer group"
-                  >
-                    <input
-                      type="radio"
-                      name="gioi_tinh"
-                      value={option}
-                      className="peer hidden"
-                    />
-                    <div className="w-5 h-5 rounded-full border-2 border-slate-200 peer-checked:border-[#007A33] peer-checked:bg-[#007A33] flex items-center justify-center transition-all">
-                      <div className="w-1.5 h-1.5 rounded-full bg-white scale-0 peer-checked:scale-100 transition-all" />
-                    </div>
-                    <span className="text-sm font-bold text-slate-500 group-hover:text-[#007A33] transition-colors">
-                      {option}
-                    </span>
-                  </label>
-                ))}
+            {/* Giới tính — full width */}
+            <div style={{ gridColumn: "span 2" }}>
+              <span className="profile-section-label">Giới tính</span>
+              <div className="profile-radio-group" style={{ marginTop: "0.5rem" }}>
+                {(["Nam", "Nữ", "Khác"] as const).map((option) => {
+                  const isSelected = gender === option;
+                  return (
+                    <label
+                      key={option}
+                      className="profile-radio-label"
+                      onClick={() => setGender(option)}
+                    >
+                      <input
+                        type="radio"
+                        name="gioi_tinh"
+                        value={option}
+                        checked={isSelected}
+                        onChange={() => setGender(option)}
+                        style={{ display: "none" }}
+                      />
+                      <div
+                        className="profile-radio-indicator"
+                        style={{
+                          borderColor: isSelected ? "var(--color-brand)" : undefined,
+                          background: isSelected ? "var(--color-brand)" : undefined,
+                        }}
+                      >
+                        <div
+                          className="profile-radio-dot"
+                          style={{ transform: isSelected ? "scale(1)" : "scale(0)" }}
+                        />
+                      </div>
+                      <span
+                        className="profile-radio-text"
+                        style={{ color: isSelected ? "var(--color-brand)" : undefined, fontWeight: isSelected ? 700 : undefined }}
+                      >
+                        {option}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Nút lưu thay đổi */}
-          <div className="pt-8 flex justify-end">
+          {/* Save action */}
+          <div style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginTop: "1.75rem",
+            paddingTop: "1.25rem",
+            borderTop: "1px solid var(--color-border)",
+          }}>
             <button
-              disabled={isPending}
               type="submit"
-              className="px-12 py-4 bg-[#007A33] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-emerald-900/10 hover:bg-black active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 italic"
+              disabled={isPending}
+              className="profile-save-btn"
             >
               {isPending ? (
-                <Loader2 className="animate-spin" size={18} />
+                <Loader2 size={16} className="animate-spin" />
               ) : (
-                <Save size={18} />
+                <Save size={16} />
               )}
               Lưu thay đổi
             </button>

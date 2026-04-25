@@ -1,17 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Clock, ArrowDownToLine, ArrowUpFromLine, Package } from "lucide-react";
+import Pagination from "@/components/ui/Pagination";
 
 export default function IssueHistory({
   historyData,
   importHistoryData,
+  // Pagination and Tab Props (Optional)
+  currentPage,
+  totalPages,
+  onPageChange,
+  activeTab,
+  onTabChange,
 }: {
   historyData?: any[];
   importHistoryData?: any[];
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  activeTab?: "import" | "export";
+  onTabChange?: (tab: "import" | "export") => void;
 }) {
   // Tạo state để làm nút gạt chuyển đổi giữa 2 bảng
-  const [subTab, setSubTab] = useState<"import" | "export">("import");
+  const [subTab, setSubTab] = useState<"import" | "export">(activeTab || "import");
+
+  useEffect(() => {
+    if (activeTab) setSubTab(activeTab);
+  }, [activeTab]);
+
+  const handleTabChange = (tab: "import" | "export") => {
+    setSubTab(tab);
+    if (onTabChange) onTabChange(tab);
+  };
 
   const exportData = historyData || [];
   const importData = importHistoryData || [];
@@ -25,20 +46,20 @@ export default function IssueHistory({
             <Clock className="text-[#1D9E75]" /> Lịch sử Giao dịch
           </h2>
           <p className="text-sm text-[#888780] mt-1">
-            Lưu vết 50 hoạt động nhập/xuất kho gần nhất.
+            Lưu vết các hoạt động nhập/xuất kho.
           </p>
         </div>
 
         {/* Cụm nút gạt mượt mà */}
         <div className="flex bg-gray-100 p-1 rounded-lg">
           <button
-            onClick={() => setSubTab("import")}
+            onClick={() => handleTabChange("import")}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md transition-all ${subTab === "import" ? "bg-white text-[#1D9E75] shadow-sm" : "text-gray-500 hover:text-[#2C2C2A]"}`}
           >
             <ArrowDownToLine size={16} /> Nhập Kho
           </button>
           <button
-            onClick={() => setSubTab("export")}
+            onClick={() => handleTabChange("export")}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md transition-all ${subTab === "export" ? "bg-white text-[#378ADD] shadow-sm" : "text-gray-500 hover:text-[#2C2C2A]"}`}
           >
             <ArrowUpFromLine size={16} /> Xuất Kho
@@ -155,6 +176,15 @@ export default function IssueHistory({
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Pagination (nếu component cha truyền props) */}
+      {onPageChange && totalPages !== undefined && currentPage !== undefined && (
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+        />
       )}
     </div>
   );

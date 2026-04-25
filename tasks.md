@@ -157,3 +157,38 @@
 - Password hash bằng bcrypt (10 rounds)
 - Có đầy đủ hồ sơ trong bảng `ho_so_nguoi_dung`
 - Role gán trong bảng `vai_tro_nguoi_dung`
+
+---
+
+## Nhật ký hoàn thành — 21/04/2026
+
+### ✅ Tính năng mới — Quản lý Kho cho Nhân viên
+
+- **[Feature] Sơ Đồ Kho Hàng** (`/staff/warehouse` → Tab "Sơ Đồ Kho")
+  - Tích hợp component `WarehouseMapView` để nhân viên có thể xem trực quan sức chứa, danh sách lô hàng theo chi tiết Khu > Dãy > Kệ > Tầng giống hệt như chuẩn xem của Admin.
+  - Hiển thị trực quan cảnh báo phân vùng và sản phẩm sắp đến hoặc qua HSD.
+  
+- **[Feature] Luồng Xuất Kho (Dispatch/Export Flow)** (`/staff/warehouse` → Tab "Xuất Kho")
+  - **Lấy hàng thủ công**: Cho phép chọn sản phẩm, nhập số lượng, hệ thống gọi API `GET /api/admin/warehouse/issue/suggest` để tự động đề xuất danh sách lô cần lấy theo chuẩn FEFO (First-Expired-First-Out). Có cảnh báo và chặn nếu lấy vượt quá tồn.
+  - **Quét mã QR**: Giao diện quét QR code của lô/thùng hàng. Gọi `POST /api/admin/warehouse/issue` với `mode="qr"` để xử lý trừ tồn ngay lập tức.
+  - Hoạt động kết xuất đồng bộ trực tiếp tới cơ sở dữ liệu `phieu_xuat_kho` và thay đổi trạng thái tồn tại `kien_hang_chi_tiet` sang `DA_XUAT`.
+  
+- **[Feature] Lịch sử Giao Dịch (Admin & Staff)** (`/admin/warehouse/history` & `/staff/warehouse` → Tab "Lịch Sử")
+  - Tích hợp và tái sử dụng component `<IssueHistory />`.
+  - Hiển thị song song lịch sử **Nhập Kho** (50 phiếu gần nhất từ `phieu_nhap_kho`) và **Xuất Kho** (50 giao dịch xuất kiểm từ `kien_hang_da_xuat` qua mã QR và phiếu `phieu_xuat_kho`).
+  - Giao diện Admin đồng nhất với `<WarehouseLayoutTabs />`, Staff bổ sung tuỳ chọn trong thanh tab điều hướng chính. Cấp phát dữ liệu chung từ API `GET /api/admin/warehouse/history`.
+
+---
+
+## Nhật ký hoàn thành — 23/04/2026
+
+### ✅ Cải tiến hiệu suất — Server-side Pagination Toàn Cục
+
+- **[Refactor] Cập nhật API và UI Phân Trang (Pagination)**
+  - Tích hợp tham số `page` và `limit` vào toàn bộ các module cuối cùng trong hệ thống để đảm bảo hiệu suất mở rộng (Scalability).
+  - Tích hợp component tái sử dụng `<Pagination />` vào UI, loại bỏ hoàn toàn việc tải trước (pre-fetch) toàn bộ dữ liệu.
+  - Các module đã hoàn thiện trong đợt này:
+    - **Khuyến Mãi (`/admin/promotions`)**: Cập nhật logic tìm kiếm trang thái server-side, trả về chuẩn `{ data, meta }`.
+    - **Đánh Giá (`/admin/reviews`)**: Loại bỏ client-side filter. Chuyển sang tìm kiếm theo nội dung, tên khách hàng và sản phẩm từ DB.
+    - **Nhân Sự (`/admin/hr/employees`)**: Kết hợp logic tính toán `trạng thái điểm danh (real-time)` với cấu trúc phân trang.
+    - **Lịch sử Kho (`/admin/warehouse/history`)**: Cấu trúc lại dữ liệu trả về theo tab (Nhập kho / Xuất kho) để phân trang song song và độc lập.

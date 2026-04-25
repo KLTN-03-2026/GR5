@@ -105,7 +105,7 @@ export default function SupplierDetailShell({
     <SupplierDetailContext.Provider value={contextValue}>
       <div className="space-y-6">
         <Link
-          href="/admin/suppliers"
+          href={pathname.startsWith("/warehouse-manager") ? "/warehouse-manager/suppliers" : "/admin/suppliers"}
           className="inline-flex items-center gap-1 text-sm text-gray-500 transition hover:text-blue-600"
         >
           <ArrowLeft size={16} /> Quay lại danh sách NCC
@@ -173,10 +173,11 @@ export default function SupplierDetailShell({
               {TAB_ITEMS.map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.href;
+                const baseUrl = pathname.startsWith("/warehouse-manager") ? "/warehouse-manager/suppliers" : "/admin/suppliers";
                 return (
                   <Link
                     key={tab.href}
-                    href={`/admin/suppliers/${nccId}/${tab.href}`}
+                    href={`${baseUrl}/${nccId}/${tab.href}`}
                     className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${active ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"}`}
                   >
                     <Icon size={15} /> {tab.label}

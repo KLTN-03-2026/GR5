@@ -5,21 +5,29 @@ import {
   EmployeeTable,
   NhanVien,
 } from "@/components/admin/employees/EmployeeTable";
+import Pagination from "@/components/ui/Pagination";
 
 export default function EmployeeListPage() {
   const [employees, setEmployees] = useState<NhanVien[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  const fetchEmployees = async (searchQuery = "") => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const itemsPerPage = 15;
+
+  const fetchEmployees = async (searchQuery = "", page = 1) => {
     setLoading(true);
     try {
       const res = await fetch(
-        `/api/nhan-vien?search=${encodeURIComponent(searchQuery)}`,
+        `/api/nhan-vien?search=${encodeURIComponent(searchQuery)}&page=${page}&limit=${itemsPerPage}`,
       );
       const result = await res.json();
       if (result.success && Array.isArray(result.data)) {
         setEmployees(result.data);
+        setTotalPages(result.meta?.totalPages || 1);
+        setTotalEmployees(result.meta?.total || result.data.length);
       }
     } catch (error) {
       console.error("Lỗi khi tải danh sách nhân viên:", error);
@@ -29,17 +37,17 @@ export default function EmployeeListPage() {
   };
 
   useEffect(() => {
-    fetchEmployees();
-  }, []);
+    fetchEmployees(search, currentPage);
+  }, [currentPage]);
 
-  // Xử lý tìm kiếm debounce cơ bản (gọi API sau khi gõ)
+  // Xử lý tìm kiếm
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchEmployees(search);
+    setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+    fetchEmployees(search, 1);
   };
 
-  // Tính toán thống kê Header theo Spec
-  const totalEmployees = employees.length;
+  // Các thống kê hiển thị ở Header (đây là của trang hiện tại, có thể làm API phụ cho toàn bộ sau này nếu muốn chính xác tuyệt đối, nhưng hiện tại giữ logic cũ dựa trên list trả về hoặc query thêm)
   const workingToday = employees.filter(
     (e) => e.trang_thai === "DANG_LAM_VIEC",
   ).length;
@@ -108,7 +116,16 @@ export default function EmployeeListPage() {
           Đang tải danh sách...
         </div>
       ) : (
-        <EmployeeTable employees={employees} />
+        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+          <EmployeeTable employees={employees} />
+          <div className="p-4 border-t">
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

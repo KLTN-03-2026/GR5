@@ -19,7 +19,15 @@ import {
   RefreshCw,
   Send,
   ChevronDown,
+  ArrowUpFromLine,
+  Warehouse,
+  Clock,
+  ScanLine,
+  Inbox,
 } from "lucide-react";
+
+import WarehouseMapView from "@/components/admin/warehouse/WarehouseMapView";
+import IssueHistory from "@/components/admin/warehouse/IssueHistory";
 
 // ─── Types ──────────────────────────────────────────────────────────────
 type AlertItem = {
@@ -54,6 +62,7 @@ type PhieuNhap = {
 // ─── Status badge ────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
+    CHO_GIAO_HANG: { label: "Chờ Giao Hàng", cls: "bg-orange-100 text-orange-700" },
     CHO_DUYET: { label: "Chờ Duyệt", cls: "bg-amber-100 text-amber-700" },
     CHO_KIEM_TRA: { label: "Chờ Kiểm Tra", cls: "bg-blue-100 text-blue-700" },
     DA_DUYET: { label: "Đã Duyệt", cls: "bg-green-100 text-green-700" },
@@ -89,6 +98,14 @@ export default function StaffWarehousePage() {
   const [loadingPhieu, setLoadingPhieu] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  // --- Xuất Kho state ---
+  const [xuatMode, setXuatMode] = useState<"MANUAL" | "QR">("MANUAL");
+  const [xuatForm, setXuatForm] = useState({ ma_bien_the: "", so_luong: "" });
+  const [xuatSuggestions, setXuatSuggestions] = useState<any[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState("");
+
   // Form tạo phiếu
   const [nccList, setNccList] = useState<NCC[]>([]);
   const [bienTheList, setBienTheList] = useState<BienThe[]>([]);
@@ -104,6 +121,10 @@ export default function StaffWarehousePage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [createDone, setCreateDone] = useState<{ ma_phieu: string } | null>(null);
+
+  // --- Lịch sử state ---
+  const [historyData, setHistoryData] = useState<{ imports: any[], exports: any[] }>({ imports: [], exports: [] });
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // ─── Load data ─────────────────────────────────────────────────────────
   const loadAlerts = useCallback(() => {
@@ -145,8 +166,22 @@ export default function StaffWarehousePage() {
       .catch(() => {});
   }, []);
 
+  const loadHistory = useCallback(() => {
+    setLoadingHistory(true);
+    fetch("/api/admin/warehouse/history")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.error) setHistoryData(d);
+      })
+      .finally(() => setLoadingHistory(false));
+  }, []);
+
   useEffect(() => { loadAlerts(); }, [loadAlerts]);
-  useEffect(() => { if (activeTab === "NHAP_KHO") { loadPhieus(); loadNCC(); loadBienThe(); } }, [activeTab, loadPhieus, loadNCC, loadBienThe]);
+  useEffect(() => { 
+    if (activeTab === "NHAP_KHO") { loadPhieus(); } 
+    if (activeTab === "XUAT_KHO") { loadBienThe(); }
+    if (activeTab === "LICH_SU") { loadHistory(); }
+  }, [activeTab, loadPhieus, loadBienThe, loadHistory]);
 
   // ─── Alert propose logic ────────────────────────────────────────────────
   const openModal = (alertItem: AlertItem, actionType: "TIEU_HUY" | "XA_KHO", actionText: string) => {
@@ -203,19 +238,110 @@ export default function StaffWarehousePage() {
     }
   };
 
-  // ─── Create phiếu logic ─────────────────────────────────────────────────
-  const openCreateModal = () => {
-    setForm({ ma_ncc: "", ma_bien_the: "", so_luong_thung: "", han_su_dung: "", ngay_nhap_kho: new Date().toISOString().slice(0, 10), ngay_thu_hoach: "", ghi_chu: "" });
-    setCreateError(""); setCreateDone(null);
-    setShowCreateModal(true);
+  // ─── Staff Receive Goods Logic ─────────────────────────────────────────────────
+  const [receiveModal, setReceiveModal] = useState<any>(null);
+  const [receiveForm, setReceiveForm] = useState({ so_luong_thuc_nhan: "", ghi_chu: "" });
+  
+  const openReceiveModal = (phieu: any) => {
+    setImages([]); setPreviews([]);
+    setReceiveForm({ so_luong_thuc_nhan: phieu.tong_so_luong.toString(), ghi_chu: "" });
+    setReceiveModal(phieu);
   };
 
+  const handleReceive = async () => {
+    if (!receiveForm.so_luong_thuc_nhan) {
+      alert("Vui lòng nhập số lượng thực nhận");
+      return;
+    }
+    setSubmitting(true);
+    let finalGhiChu = receiveForm.ghi_chu;
+
+    try {
+      if (images.length > 0) {
+        const fd = new FormData();
+        images.forEach((f) => fd.append("files", f));
+        const upRes = await fetch("/api/staff/warehouse/upload", { method: "POST", body: fd });
+        if (upRes.ok) {
+          const { urls } = await upRes.json();
+          finalGhiChu += `\n[Hình ảnh đính kèm: ${urls.join(", ")}]`;
+        }
+      }
+
+      const res = await fetch(`/api/admin/warehouse/import/${receiveModal.id}/review`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          action: "receive", 
+          so_luong_thuc_nhan: Number(receiveForm.so_luong_thuc_nhan),
+          ghi_chu_kiem_tra: finalGhiChu
+        }),
+      });
+
+      if (!res.ok) throw new Error("Thất bại khi nhận hàng");
+      
+      setReceiveModal(null);
+      loadPhieus();
+    } catch (err: any) {
+      alert(err.message || "Có lỗi xảy ra");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ─── Xuất Kho Logic ──────────────────────────────────────────────────────
+  const handleSuggestFefo = async () => {
+    if (!xuatForm.ma_bien_the || !xuatForm.so_luong) return alert("Vui lòng chọn sản phẩm và nhập số lượng xuất.");
+    setIsSuggesting(true);
+    try {
+      const res = await fetch(`/api/admin/warehouse/issue/suggest?ma_bien_the=${xuatForm.ma_bien_the}&so_luong=${xuatForm.so_luong}`);
+      const json = await res.json();
+      setXuatSuggestions(json.lo_list || []);
+      if (json.thieu > 0) alert(`LƯU Ý: Kho không đủ hàng. Thiếu ${json.thieu} kiện.`);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
+  const handleExportSubmit = async () => {
+    if (xuatMode === "QR") {
+      if (!qrCodeData) return alert("Vui lòng nhập / quét mã QR");
+      setIsExporting(true);
+      try {
+        const res = await fetch("/api/admin/warehouse/issue", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "qr", qrCode: qrCodeData })
+        });
+        const json = await res.json();
+        if (res.ok) { alert("Xuất kho thành công!"); setQrCodeData(""); }
+        else alert(json.error || "Lỗi xuất kho");
+      } finally { setIsExporting(false); }
+    } else {
+      if (!xuatForm.ma_bien_the || !xuatForm.so_luong) return;
+      setIsExporting(true);
+      try {
+        const res = await fetch("/api/admin/warehouse/issue", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "manual", ma_bien_the: xuatForm.ma_bien_the, so_luong: xuatForm.so_luong, force_partial: true })
+        });
+        const json = await res.json();
+        if (res.ok) { alert(json.message || "Xuất kho thành công!"); setXuatForm({ ma_bien_the: "", so_luong: "" }); setXuatSuggestions([]); }
+        else alert(json.error || "Lỗi xuất kho");
+      } finally { setIsExporting(false); }
+    }
+  };
+
+  // ─── Tạo Phiếu Nhập Logic ─────────────────────────────────────────────────
   const handleCreate = async () => {
-    setCreateError("");
-    if (!form.ma_ncc || !form.ma_bien_the || !form.so_luong_thung || !form.han_su_dung) {
-      setCreateError("Vui lòng điền đầy đủ các trường bắt buộc (*)"); return;
+    if (!form.ma_ncc || !form.ma_bien_the || !form.so_luong_thung || !form.han_su_dung || !form.ngay_nhap_kho) {
+      setCreateError("Vui lòng điền đầy đủ các trường bắt buộc (*)");
+      return;
     }
     setCreating(true);
+    setCreateError("");
     try {
       const res = await fetch("/api/admin/warehouse/import", {
         method: "POST",
@@ -227,29 +353,18 @@ export default function StaffWarehousePage() {
           han_su_dung: form.han_su_dung,
           ngay_nhap_kho: form.ngay_nhap_kho,
           ngay_thu_hoach: form.ngay_thu_hoach || undefined,
+          ghi_chu: form.ghi_chu || undefined,
         }),
       });
       const json = await res.json();
-      if (!res.ok) { setCreateError(json.error || "Lỗi tạo phiếu"); setCreating(false); return; }
-      setCreateDone({ ma_phieu: json.ma_phieu });
+      if (!res.ok) throw new Error(json.error || "Tạo phiếu thất bại");
+      setCreateDone({ ma_phieu: json.ma_phieu || json.phieu?.ma_phieu || "N/A" });
       loadPhieus();
-    } catch (e: any) {
-      setCreateError(e.message || "Lỗi kết nối");
+    } catch (err: any) {
+      setCreateError(err.message || "Có lỗi xảy ra, vui lòng thử lại.");
     } finally {
       setCreating(false);
     }
-  };
-
-  // ─── Submit phiếu (CHO_DUYET → CHO_KIEM_TRA) ─────────────────────────
-  const handleSubmitPhieu = async (id: number) => {
-    if (!confirm("Xác nhận nộp phiếu này để Admin kiểm tra?")) return;
-    const res = await fetch(`/api/admin/warehouse/import/${id}/review`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "submit" }),
-    });
-    if (res.ok) { alert("Đã nộp phiếu thành công!"); loadPhieus(); }
-    else { const j = await res.json(); alert(j.error || "Lỗi nộp phiếu"); }
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────
@@ -259,14 +374,17 @@ export default function StaffWarehousePage() {
       <div className="flex space-x-2 bg-white p-2 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
         {[
           { key: "TON_KHO", label: "Tồn kho tổng", Icon: PackageOpen, activeColor: "bg-blue-600" },
-          { key: "NHAP_KHO", label: "Phiếu Nhập & In Mã", Icon: FileInput, activeColor: "bg-blue-600" },
+          { key: "NHAP_KHO", label: "Phiếu Nhập", Icon: FileInput, activeColor: "bg-blue-600" },
+          { key: "XUAT_KHO", label: "Xuất Kho", Icon: ArrowUpFromLine, activeColor: "bg-amber-600" },
           { key: "CANH_BAO", label: "Cảnh Báo HSD", Icon: AlertTriangle, activeColor: "bg-red-600" },
+          { key: "SO_DO_KHO", label: "Sơ Đồ Kho", Icon: Warehouse, activeColor: "bg-emerald-600" },
+          { key: "LICH_SU", label: "Lịch sử", Icon: Clock, activeColor: "bg-blue-600" },
         ].map(({ key, label, Icon, activeColor }) => {
           const isActive = activeTab === key;
           return (
             <button key={key} onClick={() => setActiveTab(key)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${isActive ? `${activeColor} text-white shadow-md` : "text-gray-600 hover:bg-gray-50"}`}>
-              <Icon size={18} className={isActive ? "text-white" : key === "CANH_BAO" ? "text-red-500" : key === "NHAP_KHO" ? "text-green-500" : "text-blue-500"} />
+              <Icon size={18} className={isActive ? "text-white" : key === "CANH_BAO" ? "text-red-500" : key === "NHAP_KHO" ? "text-green-500" : key === "XUAT_KHO" ? "text-amber-500" : key === "SO_DO_KHO" ? "text-emerald-500" : "text-blue-500"} />
               {label}
               {key === "CANH_BAO" && alertCount > 0 && (
                 <span className={`ml-1 text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-red-100 text-red-600"}`}>{alertCount}</span>
@@ -317,9 +435,6 @@ export default function StaffWarehousePage() {
                 <button onClick={loadPhieus} className="flex items-center gap-1.5 border border-gray-200 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
                   <RefreshCw size={15} /> Làm mới
                 </button>
-                <button onClick={openCreateModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm font-bold rounded-lg transition-colors shadow-sm">
-                  <Plus size={16} /> Tạo Phiếu Mới
-                </button>
               </div>
             </div>
 
@@ -331,7 +446,7 @@ export default function StaffWarehousePage() {
             ) : phieus.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                 <ClipboardList size={40} className="mb-3 opacity-40" />
-                <p className="text-sm">Chưa có phiếu nhập nào. Hãy tạo phiếu mới!</p>
+                <p className="text-sm">Chưa có đơn đặt hàng nào cần tiếp nhận.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -349,10 +464,10 @@ export default function StaffWarehousePage() {
                       </p>
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
-                      {p.trang_thai === "CHO_DUYET" && (
-                        <button onClick={() => handleSubmitPhieu(p.id)}
+                      {p.trang_thai === "CHO_GIAO_HANG" && (
+                        <button onClick={() => openReceiveModal(p)}
                           className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors">
-                          <Send size={13} /> Nộp phiếu
+                          <Inbox size={13} /> Nhận hàng
                         </button>
                       )}
                       {p.trang_thai === "DA_DUYET" && (
@@ -412,6 +527,124 @@ export default function StaffWarehousePage() {
                 })
               )}
             </div>
+          </div>
+        )}
+
+        {/* XUẤT KHO */}
+        {activeTab === "XUAT_KHO" && (
+          <div className="space-y-6">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b border-gray-100 pb-3">
+              <ArrowUpFromLine size={24} className="text-amber-600" />
+              Tiến Hành Xuất Kho
+            </h2>
+
+            {/* Mode selection toggle */}
+            <div className="flex gap-2">
+              <button onClick={() => setXuatMode("MANUAL")}
+                className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${xuatMode === "MANUAL" ? "bg-amber-600 text-white shadow-md" : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"}`}>
+                <PackageOpen size={18} /> Lấy hàng thủ công (FEFO)
+              </button>
+              <button onClick={() => setXuatMode("QR")}
+                className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${xuatMode === "QR" ? "bg-amber-600 text-white shadow-md" : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"}`}>
+                <QrCode size={18} /> Quét mã QR
+              </button>
+            </div>
+
+            <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-5">
+              {xuatMode === "MANUAL" ? (
+                <div className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Chọn Sản Phẩm <span className="text-red-500">*</span></label>
+                      <select value={xuatForm.ma_bien_the} onChange={(e) => setXuatForm({ ...xuatForm, ma_bien_the: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-white">
+                        <option value="">-- Chọn biến thể sản phẩm --</option>
+                        {bienTheList.map((bt) => <option key={bt.id} value={bt.id}>{bt.ten_bien_the} {bt.ma_sku ? `(${bt.ma_sku})` : ""}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Số Lượng Cần Xuất (kiện/thùng) <span className="text-red-500">*</span></label>
+                      <div className="flex gap-2">
+                        <input type="number" min={1} value={xuatForm.so_luong} onChange={(e) => setXuatForm({ ...xuatForm, so_luong: e.target.value })}
+                          placeholder="VD: 50"
+                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-white" />
+                        <button onClick={handleSuggestFefo} disabled={isSuggesting}
+                          className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 flex items-center justify-center gap-2 rounded-xl text-sm font-bold min-w-[120px] shadow-sm disabled:opacity-50">
+                          {isSuggesting ? <Loader2 size={16} className="animate-spin" /> : "Gợi ý kho"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {xuatSuggestions.length > 0 && (
+                     <div className="bg-white border border-emerald-100 rounded-xl p-4 shadow-sm">
+                       <h3 className="font-bold text-emerald-800 flex items-center gap-2 mb-3">
+                         <CheckCircle2 size={18} className="text-emerald-500" />
+                         Các lô hàng ưu tiên xuất (FEFO chuẩn)
+                       </h3>
+                       <div className="space-y-3">
+                         {xuatSuggestions.map((s, idx) => (
+                           <div key={idx} className={`p-3 rounded-lg border ${s.la_uu_tien ? "border-emerald-300 bg-emerald-50" : "border-gray-200 bg-gray-50"}`}>
+                             <div className="flex justify-between items-start">
+                               <div>
+                                 <div className="font-bold text-gray-800">{s.ma_lo_hang}</div>
+                                 <div className="text-xs text-gray-600 mt-1">HSD: <span className="font-medium text-red-600">{s.han_su_dung}</span> • Vị trí: <span className="font-mono">{s.vi_tri}</span></div>
+                               </div>
+                               <div className="text-right">
+                                 <div className="text-sm font-bold text-emerald-700">Lấy {s.so_luong_xuat_goi_y} kiện</div>
+                                 <div className="text-xs text-gray-400">Tồn ở vị trí: {s.so_luong_ton}</div>
+                               </div>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                       <button onClick={handleExportSubmit} disabled={isExporting}
+                         className="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md flex justify-center items-center gap-2 transition-colors disabled:opacity-50">
+                         {isExporting ? <Loader2 size={18} className="animate-spin" /> : <><ArrowUpFromLine size={18} /> Xác Nhận Xuất Kho Ngay</>}
+                       </button>
+                     </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4 max-w-md mx-auto py-4">
+                  <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl aspect-square flex flex-col items-center justify-center text-gray-400 hover:border-amber-400 hover:text-amber-500 transition-colors mx-8 cursor-pointer relative">
+                     <QrCode size={64} className="mb-4 opacity-50" />
+                     <p className="font-medium">Giả lập: Nhập dữ liệu mã vạch vào đây</p>
+                     <input type="text" value={qrCodeData} onChange={e => setQrCodeData(e.target.value)} placeholder="Nhập mã QR của thủ kho..."
+                        className="absolute bottom-6 w-3/4 px-4 py-2 border border-gray-300 rounded-lg text-sm text-center text-gray-800 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm" />
+                  </div>
+                  <button onClick={handleExportSubmit} disabled={isExporting}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl shadow-md flex justify-center items-center gap-2 transition-colors disabled:opacity-50">
+                    {isExporting ? <Loader2 size={18} className="animate-spin" /> : <><ScanLine size={18} /> Xử Lý Xuất Mã Này</>}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* SƠ ĐỒ KHO */}
+        {activeTab === "SO_DO_KHO" && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 pb-2">
+              <Warehouse size={22} className="text-emerald-600" /> Bản Đồ Kho Hàng
+            </h2>
+            <div className="rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50/50 p-2 lg:p-4">
+              <WarehouseMapView />
+            </div>
+          </div>
+        )}
+
+        {/* LỊCH SỬ */}
+        {activeTab === "LICH_SU" && (
+          <div className="space-y-4">
+            {loadingHistory ? (
+              <div className="flex justify-center py-10">
+                <Loader2 size={24} className="animate-spin text-blue-500" />
+              </div>
+            ) : (
+              <IssueHistory historyData={historyData.exports} importHistoryData={historyData.imports} />
+            )}
           </div>
         )}
       </div>

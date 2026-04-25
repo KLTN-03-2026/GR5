@@ -8,42 +8,52 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search')?.toLowerCase() || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '15');
+    const skip = (page - 1) * limit;
 
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-    // 1. Lấy danh sách nhân viên (kèm hồ sơ và lịch làm việc/chấm công hôm nay)
-    const danhSachNhanVien = await prisma.nguoi_dung.findMany({
-      where: {
-        trang_thai: 1, // Bỏ qua những người đã bị soft delete (nghỉ việc)
-        ho_so_nguoi_dung: search 
-          ? { 
-              is: { ho_ten: { contains: search } } 
-            } 
-          : { 
-              isNot: null 
-            }
-      },
-      include: {
-        ho_so_nguoi_dung: true,
-        lich_phan_cong_ca: {
-          where: { ngay_lam_viec: { gte: startOfDay, lte: endOfDay } },
-          include: { ca_lam_viec: true }
-        },
-        lich_su_cham_cong: {
-          where: { gio_vao: { gte: startOfDay, lte: endOfDay } }
-        },
-        don_xin_nghi_tao: {
-          where: {
-            ngay_bat_dau: { lte: endOfDay },
-            ngay_ket_thuc: { gte: startOfDay },
-            trang_thai: 'DA_DUYET'
+    const where: any = {
+      trang_thai: 1, // Bỏ qua những người đã bị soft delete (nghỉ việc)
+      ho_so_nguoi_dung: search 
+        ? { 
+            is: { ho_ten: { contains: search } } 
+          } 
+        : { 
+            isNot: null 
           }
-        }
-      },
-      orderBy: { id: 'desc' }
-    });
+    };
+
+    // 1. Lấy danh sách nhân viên (kèm hồ sơ và lịch làm việc/chấm công hôm nay)
+    const [total, danhSachNhanVien] = await Promise.all([
+      prisma.nguoi_dung.count({ where }),
+      prisma.nguoi_dung.findMany({
+        where,
+        include: {
+          ho_so_nguoi_dung: true,
+          lich_phan_cong_ca: {
+            where: { ngay_lam_viec: { gte: startOfDay, lte: endOfDay } },
+            include: { ca_lam_viec: true }
+          },
+          lich_su_cham_cong: {
+            where: { gio_vao: { gte: startOfDay, lte: endOfDay } }
+          },
+          don_xin_nghi_tao: {
+            where: {
+              ngay_bat_dau: { lte: endOfDay },
+              ngay_ket_thuc: { gte: startOfDay },
+              trang_thai: 'DA_DUYET'
+            }
+          }
+        },
+        orderBy: { id: 'desc' },
+        skip,
+        take: limit,
+      })
+    ]);
 
     // 2. Map dữ liệu và tính toán trạng thái Real-time
     const ketQua = danhSachNhanVien.map(nv => {
@@ -83,7 +93,16 @@ export async function GET(req: Request) {
       };
     });
 
-    return NextResponse.json({ success: true, data: ketQua }, { status: 200 });
+    return NextResponse.json({ 
+      success: true, 
+      data: ketQua,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    }, { status: 200 });
 
   } catch (error) {
     console.error('[API_GET_NHAN_VIEN] Error:', error);
