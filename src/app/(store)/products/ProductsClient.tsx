@@ -469,23 +469,34 @@ export default function ProductsClient({
             </div>
           </div>
 
+          {/* GIAO DIỆN NÂNG CẤP: KHÔNG TÌM THẤY SẢN PHẨM */}
           {products.length === 0 ? (
-            <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200">
-              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-gray-300" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-3xl border border-gray-100 shadow-sm w-full">
+              <div className="text-6xl mb-6 opacity-80">🛒</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
                 Không tìm thấy sản phẩm!
               </h3>
-              <p className="text-gray-500 font-medium mb-6">
-                Không có nông sản nào khớp với yêu cầu của bạn.
+              <p className="text-gray-500 max-w-md mx-auto leading-relaxed mb-6">
+                {currentSearch ? (
+                  <>
+                    Rất tiếc, chúng tôi không tìm thấy kết quả nào phù hợp với
+                    từ khóa{" "}
+                    <span className="font-bold text-emerald-600">
+                      "{currentSearch}"
+                    </span>
+                    .
+                  </>
+                ) : (
+                  "Không có nông sản nào khớp với bộ lọc hiện tại của bạn."
+                )}
+                <br /> Vui lòng thử một từ khóa khác hoặc xóa bớt bộ lọc nhé.
               </p>
               <button
                 onClick={() => {
                   setSearchValue("");
                   router.push(pathname, { scroll: false });
                 }}
-                className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:bg-emerald-700"
+                className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-all hover:-translate-y-1"
               >
                 Xóa tất cả bộ lọc
               </button>
