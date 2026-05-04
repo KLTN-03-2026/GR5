@@ -1,28 +1,57 @@
 "use client";
 
 import React, { useState } from "react";
-import { Mail, ArrowLeft } from "lucide-react";
+import { Mail, ArrowLeft, Loader2 } from "lucide-react"; // Thêm Loader2 cho xịn
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false); // Thêm state loading để chặn bấm nhiều lần
   const router = useRouter();
-  // 3. Hàm xử lý khi bấm nút
-  const handleSubmit = (e: React.FormEvent) => {
+
+  // --- HÀM XỬ LÝ ĐÃ ĐƯỢC "THÔNG NÒNG" ---
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Chốt chặn: đang gửi thì không cho bấm tiếp
 
-    console.log("Đang gửi yêu cầu cho:", email);
+    setLoading(true);
+    console.log("🚀 Đang gửi yêu cầu cho:", email);
 
-    router.push("/verify-otp");
+    try {
+      // 1. Gọi API gửi mail thực tế
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // 2. Chuyển sang trang nhập OTP và PHẢI KÈM EMAIL TRÊN URL
+        // encodeURIComponent để xử lý các ký tự đặc biệt như @ trong email
+        router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+      } else {
+        // Hiện lỗi nếu email không tồn tại hoặc lỗi server
+        alert(data.message || "Có lỗi xảy ra rồi Phú ơi!");
+      }
+    } catch (error) {
+      console.error("Lỗi fetch:", error);
+      alert("Không kết nối được với Server, check lại mạng nha!");
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-[440px] bg-white rounded-3xl p-10 md:p-14 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-emerald-50/50"
     >
-      {/* 1. Nút Quay Lại nhỏ xinh ở trên */}
+      {/* ... Phần Nút Quay Lại giữ nguyên ... */}
       <Link
         href="/login"
         className="inline-flex items-center gap-2 text-[#008A3D] font-bold text-[11px] uppercase tracking-[0.2em] mb-10 hover:opacity-70 transition-opacity"
@@ -30,7 +59,6 @@ export default function ForgotPasswordPage() {
         <ArrowLeft size={14} strokeWidth={3} /> Quay lại
       </Link>
 
-      {/* 2. Tiêu đề & Mô tả */}
       <header className="mb-10">
         <h1 className="text-[32px] font-black text-[#1A1A1A] tracking-tight leading-none mb-4">
           Quên mật khẩu?
@@ -41,7 +69,6 @@ export default function ForgotPasswordPage() {
         </p>
       </header>
 
-      {/* 3. Form nhập liệu */}
       <form className="space-y-8" onSubmit={handleSubmit}>
         <div className="space-y-3">
           <label className="text-[11px] font-bold text-slate-400 ml-1">
@@ -60,16 +87,24 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
 
-        {/* Nút gửi yêu cầu màu xanh đặc trưng */}
+        {/* Nút gửi yêu cầu đã được nâng cấp Loading */}
         <button
           type="submit"
-          className="w-full bg-[#008A3D] text-white py-4 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-900/10 hover:bg-[#007031] active:scale-[0.98] transition-all"
+          disabled={loading} // Khóa nút khi đang gửi
+          className="w-full bg-[#008A3D] text-white py-4 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-900/10 hover:bg-[#007031] active:scale-[0.98] transition-all flex justify-center items-center gap-2"
         >
-          Gửi yêu cầu khôi phục
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin" size={18} />
+              Đang gửi...
+            </>
+          ) : (
+            "Gửi yêu cầu khôi phục"
+          )}
         </button>
       </form>
 
-      {/* 4. Link quay lại đăng nhập ở dưới cùng */}
+      {/* ... Phần Footer giữ nguyên ... */}
       <div className="mt-12 pt-8 border-t border-slate-50 text-center">
         <Link
           href="/login"

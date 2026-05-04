@@ -1,19 +1,29 @@
 import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import ProfileForm from "@/components/store/account/ProfileForm";
 
 export default async function ProfilePage() {
   const session = await auth();
 
-  // Lấy dữ liệu Phú từ Database
+  if (!session?.user?.email) {
+    redirect("/login");
+  }
+
   const user = await prisma.nguoi_dung.findUnique({
-    where: { email: session?.user?.email as string },
+    where: { email: session.user.email },
+    select: {
+      id: true,
+      email: true,
+      ho_so_nguoi_dung: {
+        select: {
+          ho_ten: true,
+          so_dien_thoai: true,
+          anh_dai_dien: true,
+        },
+      },
+    },
   });
 
-  return (
-    <div className="py-6">
-      {/* Gọi Form ra đây để nó hết trắng màn hình */}
-      <ProfileForm user={user} />
-    </div>
-  );
+  return <ProfileForm user={user} />;
 }

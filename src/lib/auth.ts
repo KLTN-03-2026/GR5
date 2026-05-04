@@ -74,6 +74,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Tìm hoặc tạo user trong DB
           const existingUser = await prisma.nguoi_dung.findUnique({
             where: { email: user.email },
+            include: { ho_so_nguoi_dung: true },
           });
 
           if (!existingUser) {
