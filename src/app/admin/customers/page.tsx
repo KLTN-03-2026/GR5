@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   UserPlus,
@@ -79,8 +80,8 @@ export default function CustomersPage() {
             <KPICard
               icon={<Users className="text-[#006b2c]" size={20} />}
               label="Tổng khách hàng"
-              value="1.248"
-              trend="+12%"
+              value={isLoading ? "..." : customers.length}
+              trend="Hiện tại"
               color="bg-green-50"
             />
             <KPICard
@@ -107,6 +108,9 @@ export default function CustomersPage() {
                 size={18}
               />
               <input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleFilterClick()}
                 className="w-full bg-white border-none rounded-xl py-2.5 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-[#006b2c]/20"
                 placeholder="Tìm theo tên, email, sđt..."
                 value={searchQuery}
@@ -140,10 +144,10 @@ export default function CustomersPage() {
                   <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest text-center">
                     Tổng đơn
                   </th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest">
+                  <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest text-right">
                     Tổng chi tiêu
                   </th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest text-right">
+                  <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest text-center">
                     Hành động
                   </th>
                 </tr>
@@ -217,8 +221,9 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      {/* Right Detail Panel - Dùng AnimatePresence để trượt ra trượt vào */}
+      {/* Right Detail Panel */}
       <AnimatePresence>
+        {isPanelOpen && selectedCustomer && (
         {isPanelOpen && selectedCustomer && (
           <motion.aside
             initial={{ x: 380 }}
@@ -226,11 +231,13 @@ export default function CustomersPage() {
             exit={{ x: 380 }}
             className="w-[380px] h-screen fixed right-0 top-0 bg-white border-l border-slate-100 flex flex-col shadow-2xl z-[60]"
           >
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h4 className="font-bold text-lg">Chi tiết khách hàng</h4>
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-[#eff6ea]/30">
+              <h4 className="font-bold text-lg text-[#171d16]">
+                Chi tiết khách hàng
+              </h4>
               <button
                 onClick={() => setIsPanelOpen(false)}
-                className="text-slate-400 hover:text-red-500"
+                className="text-slate-400 hover:text-red-500 bg-white p-1 rounded-full shadow-sm"
               >
                 <X size={20} />
               </button>
@@ -240,26 +247,23 @@ export default function CustomersPage() {
                 <div className="w-24 h-24 rounded-3xl bg-green-50 mx-auto flex items-center justify-center text-3xl font-black text-green-600 overflow-hidden">
                   <img src={selectedCustomer.avatar} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
-                <h5 className="text-xl font-black">{selectedCustomer.name}</h5>
-                <span className="bg-[#006b2c] text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase">
-                  {selectedCustomer.segment} Member
-                </span>
+                <h5 className="text-xl font-black text-[#171d16]">
+                  {selectedCustomer.ten}
+                </h5>
+                <p className="text-sm text-gray-500">
+                  {selectedCustomer.email}
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <StatBox
-                  label="Tích lũy"
-                  value={selectedCustomer.spent}
+                  label="Tổng chi tiêu"
+                  value={formatCurrency(selectedCustomer.tongChiTieu)}
                   color="text-[#006b2c]"
                 />
-                <StatBox label="Điểm" value={selectedCustomer.points} />
-              </div>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">
-                  Ghi chú
-                </p>
-                <p className="text-xs leading-relaxed">
-                  {selectedCustomer.notes}
-                </p>
+                <StatBox
+                  label="Số đơn hàng"
+                  value={`${selectedCustomer.tongDon} đơn`}
+                />
               </div>
             </div>
           </motion.aside>
@@ -269,7 +273,7 @@ export default function CustomersPage() {
   );
 }
 
-// Sub-components phục vụ riêng cho trang này
+// Sub-components
 function KPICard({ icon, label, value, trend, color }: any) {
   return (
     <div className="bg-white p-6 rounded-xl border border-[#bdcaba]/10 hover:shadow-md transition-all">
@@ -280,7 +284,7 @@ function KPICard({ icon, label, value, trend, color }: any) {
         </span>
       </div>
       <p className="text-[10px] font-bold text-[#6e7b6c] uppercase">{label}</p>
-      <h3 className="text-3xl font-bold mt-1">{value}</h3>
+      <h3 className="text-3xl font-bold mt-1 text-[#171d16]">{value}</h3>
     </div>
   );
 }

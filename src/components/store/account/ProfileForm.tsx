@@ -12,9 +12,26 @@ export default function ProfileForm({ user }: { user: any }) {
 
   async function handleSubmit(formData: FormData) {
     setIsPending(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    formData.set("gioi_tinh", gioiTinh);
+    if (avatarFile) formData.set("avatar", avatarFile);
+
     const res = await updateProfile(formData);
-    if (res?.success) toast.success(res.success);
-    else if (res?.error) toast.error(res.error);
+    if ("success" in res) {
+      toast.success(res.success);
+      if (res.anh_dai_dien) {
+        window.dispatchEvent(
+          new CustomEvent("update-avatar", { detail: res.anh_dai_dien }),
+        );
+      }
+      window.dispatchEvent(
+        new CustomEvent("update-name", { detail: formData.get("ho_ten") }),
+      );
+    } else {
+      toast.error(res.error);
+    }
     setIsPending(false);
   }
 

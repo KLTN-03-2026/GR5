@@ -1,86 +1,91 @@
 import { NextResponse } from "next/server";
+// Hãy chắc chắn đường dẫn tới prisma client của em là đúng
 import prisma from "@/lib/prisma";
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "15");
-    const search = searchParams.get("search") || "";
+    const { searchParams } = new URL(request.url);
+    const keyword = searchParams.get("q") || "";
 
-    const skip = (page - 1) * limit;
-
-    const where: any = {
-      vai_tro_nguoi_dung: {
-        some: {
-          vai_tro: {
-            ten_vai_tro: "KHACH_HANG"
-          }
-        }
-      }
-    };
-
-    if (search) {
-      where.OR = [
-        { email: { contains: search } },
-        { ho_so_nguoi_dung: { ho_ten: { contains: search } } },
-        { ho_so_nguoi_dung: { so_dien_thoai: { contains: search } } },
-      ];
-    }
-
-    const [total, users] = await Promise.all([
-      prisma.nguoi_dung.count({ where }),
-      prisma.nguoi_dung.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { ngay_tao: "desc" },
-        include: {
-          ho_so_nguoi_dung: true,
-          _count: {
-            select: { don_hang: true }
+    // Thực hiện truy vấn với Prisma
+    const rawCustomers = await prisma.nguoi_dung.findMany({
+      where: {
+        // 1. Lọc theo role (Giả sử id 2 là CUSTOMER).
+        // LƯU Ý: Em phải check lại model vai_tro_nguoi_dung xem cột ID vai trò tên là gì nhé.
+        // Ở đây anh giả định là ma_vai_tro
+        vai_tro_nguoi_dung: {
+          some: {
+            // THAY 'ma_vai_tro' BẰNG TÊN CỘT THỰC TẾ TRONG MODEL vai_tro_nguoi_dung CỦA EM
+            ma_vai_tro: 2,
           },
-          don_hang: {
-            where: { trang_thai: "DA_GIAO" },
-            select: { tong_tien: true }
-          }
-        }
-      })
-    ]);
+        },
+        // 2. Tìm kiếm theo keyword
+        OR: [
+          { email: { contains: keyword } },
+          {
+            ho_so_nguoi_dung: {
+              ho_ten: { contains: keyword },
+            },
+          },
+          {
+            ho_so_nguoi_dung: {
+              so_dien_thoai: { contains: keyword },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        email: true,
+        ho_so_nguoi_dung: {
+          select: { ho_ten: true, so_dien_thoai: true, anh_dai_dien: true },
+        },
 
-    const data = users.map(user => {
-      const totalSpent = user.don_hang.reduce((sum, order) => sum + Number(order.tong_tien || 0), 0);
-      
+        _count: {
+          select: {
+            don_hang: {
+              // THAY 'trang_thai' VÀ 'HOAN_THANH' BẰNG CỘT VÀ GIÁ TRỊ THỰC TẾ TRONG BẢNG don_hang
+              where: { trang_thai: "HOAN_THANH" },
+            },
+          },
+        },
+        // 4. Kéo các đơn hàng hoàn thành ra để lấy tổng tiền
+        don_hang: {
+          // THAY 'trang_thai' BẰNG CỘT THỰC TẾ
+          where: { trang_thai: "HOAN_THANH" },
+          // THAY 'tong_tien' BẰNG TÊN CỘT CHỨA GIÁ TRỊ ĐƠN HÀNG TRONG BẢNG don_hang
+          select: { tong_tien: true },
+        },
+      },
+      orderBy: { id: "desc" },
+    });
+
+    // Xử lý dữ liệu sau khi query
+    const formattedCustomers = rawCustomers.map((user: any) => {
+      // Tính tổng chi tiêu
+      const tongChiTieu = user.don_hang.reduce((sum: number, don: any) => {
+        // Ép kiểu về số vì đôi khi Prisma lấy Decimal từ DB lên dưới dạng object
+        const tien = Number(don.tong_tien) || 0;
+        return sum + tien;
+      }, 0);
+
       return {
-        id: `KH${user.id.toString().padStart(4, '0')}`,
-        rawId: user.id,
-        name: user.ho_so_nguoi_dung?.ho_ten || "Khách hàng",
+        id: user.id,
+        ten: user.ho_so_nguoi_dung?.ho_ten || "Chưa cập nhật",
         email: user.email,
-        phone: user.ho_so_nguoi_dung?.so_dien_thoai || "Chưa cập nhật",
-        orders: user._count.don_hang,
-        spent: totalSpent.toLocaleString('vi-VN') + 'đ',
-        rawSpent: totalSpent,
-        joined: user.ngay_tao ? new Date(user.ngay_tao).getFullYear().toString() : "N/A",
-        segment: totalSpent > 10000000 ? "VIP" : totalSpent > 2000000 ? "Loyal" : "Mới",
-        points: Math.floor(totalSpent / 10000).toLocaleString('en-US'),
-        refundRate: "0%",
-        notes: "Khách hàng từ hệ thống",
-        avatar: user.ho_so_nguoi_dung?.anh_dai_dien || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.ho_so_nguoi_dung?.ho_ten || user.email)}&background=random`
+        sdt: user.ho_so_nguoi_dung?.so_dien_thoai || "Chưa cập nhật",
+        avatar: user.ho_so_nguoi_dung?.anh_dai_dien || null,
+        tongDon: user._count.don_hang,
+        tongChiTieu: tongChiTieu,
       };
     });
 
-    return NextResponse.json({
-      data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
-      }
-    });
-
+    return NextResponse.json({ data: formattedCustomers });
   } catch (error) {
-    console.error("Lỗi lấy danh sách khách hàng:", error);
-    return NextResponse.json({ error: "Lỗi Server" }, { status: 500 });
+    console.error("Lỗi lấy dữ liệu khách hàng:", error);
+    return NextResponse.json(
+      { error: "Lỗi server khi fetch danh sách khách hàng" },
+      { status: 500 },
+    );
   }
 }
