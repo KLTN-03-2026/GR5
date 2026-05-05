@@ -8,8 +8,22 @@ import {
 } from "lucide-react";
 import Pagination from "@/components/ui/Pagination";
 
+// ─── Utility: strip WARNING/SAFE from batch codes ──────────────────
+function stripBatchCode(code: string): string {
+  if (!code) return code;
+  return code.replace(/-(WARNING|SAFE)-/g, "-");
+}
+
 // ─── Types ─────────────────────────────────────────────────────────
-interface Suggestion { type: string; label: string; khu: string; day: string; ke: string; tang: string; vi_tri_id?: number; note: string }
+interface Suggestion {
+  type: string; label: string; khu: string; day: string; ke: string; tang: string;
+  vi_tri_id?: number; note: string;
+  warehouseType?: string;
+  // group1 extras
+  hsd?: string; daysUntilExpiry?: number; availableCapacity?: number;
+  // group2 extras
+  availablePct?: number;
+}
 interface Phieu { id: number; ma_phieu: string; trang_thai: string; nha_cung_cap?: { ten_ncc: string }; chi_tiet?: any[] }
 
 // ─── STATUS BADGE ──────────────────────────────────────────────────
@@ -216,7 +230,8 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
   const [step, setStep] = useState<"form" | "success">("form");
   const [formData, setFormData] = useState({
     ma_ncc: "", ma_bien_the: "", so_luong_thung: "",
-    ngay_thu_hoach: "", ngay_nhap_kho: new Date().toISOString().split("T")[0],
+    don_gia_tam_tinh: "",
+    ngay_nhap_kho: new Date().toISOString().split("T")[0],
     han_su_dung: "", ma_lo_hang_tuy_chinh: "",
     vi_tri: { khu: "", day: "", ke: "", tang: "" },
   });
@@ -458,25 +473,33 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
                       placeholder="VD: 50" required className={inputCls} />
                   </div>
                 </div>
+                {/* Đơn giá tạm tính */}
+                <div className="mt-4">
+                  <label className="text-xs font-semibold text-gray-600 block mb-1.5 flex items-center gap-1.5">
+                    Đơn giá tạm tính (VNĐ)
+                    <span className="text-gray-400 text-[10px] font-normal">(tùy chọn)</span>
+                    <span title="Dùng để ước tính công nợ NCC trước khi hàng về" className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 cursor-help text-[10px] font-bold">?</span>
+                  </label>
+                  <input type="number" min={0} name="don_gia_tam_tinh" value={formData.don_gia_tam_tinh} onChange={handleInput}
+                    placeholder="Kế toán sẽ chốt giá chính thức khi duyệt phiếu nhập"
+                    className={inputCls} />
+                </div>
               </section>
 
-              {/* Block 3: Ngày */}
+              {/* Block 3: Thời gian — Ngày thu hoạch đã bị xóa (sẽ điền ở Phiếu Nhập Kho) */}
               <section>
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
                   <Calendar size={12} /> Thời gian
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    { name: "ngay_thu_hoach", label: "Ngày thu hoạch" },
-                    { name: "ngay_nhap_kho",  label: "Ngày nhập kho" },
-                    { name: "han_su_dung",    label: "Hạn sử dụng *", required: true },
-                  ].map(({ name, label, required }) => (
-                    <div key={name}>
-                      <label className="text-xs font-semibold text-gray-600 block mb-1.5">{label}</label>
-                      <input type="date" name={name} value={(formData as any)[name]} onChange={handleInput}
-                        required={required} className={inputCls} />
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 block mb-1.5">Ngày nhập kho dự kiến</label>
+                    <input type="date" name="ngay_nhap_kho" value={formData.ngay_nhap_kho} onChange={handleInput} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 block mb-1.5">Hạn sử dụng <span className="text-red-500">*</span></label>
+                    <input type="date" name="han_su_dung" value={formData.han_su_dung} onChange={handleInput} required className={inputCls} />
+                  </div>
                 </div>
               </section>
 
@@ -486,25 +509,69 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
                   <MapPin size={12} /> Vị trí cất trữ dự kiến
                 </h3>
 
-                {/* Suggestions */}
-                {suggestions.length > 0 && (
-                  <div className="mb-3 space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-xs text-[#1D9E75] font-semibold">
-                      <Lightbulb size={12} /> Gợi ý vị trí thông minh
-                    </div>
-                    {suggestions.map((s, i) => (
-                      <button key={i} onClick={() => applySuggestion(s)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs text-left transition-all hover:shadow-sm ${s.type === "same_product" ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:bg-blue-100"}`}>
+                {/* Suggestions — grouped */}
+                {suggLoading && <div className="text-xs text-gray-400 flex items-center gap-1.5 mb-3"><div className="w-3 h-3 border border-gray-300 border-t-[#1D9E75] rounded-full animate-spin" /> Đang tìm gợi ý...</div>}
+                {(() => {
+                  const group1 = suggestions.filter((s) => s.type === "same_product");
+                  const group2 = suggestions.filter((s) => s.type === "available");
+                  const warehouseBadge = (wt: string | undefined) => {
+                    if (!wt || wt === "Kho thường") return <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{background:"#f8fafc",color:"#64748b",border:"1px solid #e2e8f0"}}>Kho thường</span>;
+                    if (wt.includes("mát") || wt.includes("10") || wt.includes("15")) return <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{background:"#eff6ff",color:"#1d4ed8",border:"1px solid #bfdbfe"}}>{wt}</span>;
+                    if (wt.includes("lạnh") || wt.includes("5") || wt.includes("<")) return <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{background:"#f0f9ff",color:"#0369a1",border:"1px solid #bae6fd"}}>{wt}</span>;
+                    return <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{background:"#f8fafc",color:"#64748b",border:"1px solid #e2e8f0"}}>{wt}</span>;
+                  };
+                  if (group1.length === 0 && group2.length === 0) return null;
+                  return (
+                    <div className="mb-3 space-y-3">
+                      <div className="flex items-center gap-1.5 text-xs text-[#1D9E75] font-semibold">
+                        <Lightbulb size={12} /> Gợi ý vị trí thông minh
+                      </div>
+                      {/* Group 1 */}
+                      {group1.length > 0 && (
                         <div>
-                          <div className={`font-semibold ${s.type === "same_product" ? "text-green-700" : "text-blue-700"}`}>{s.label}</div>
-                          <div className="text-gray-500">{s.note}</div>
+                          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Cùng sản phẩm (ưu tiên FEFO)</div>
+                          <div className="space-y-1.5">
+                            {group1.map((s, i) => (
+                              <button key={i} onClick={() => applySuggestion(s)}
+                                className="w-full flex items-center justify-between px-3 py-2 rounded-xl border bg-green-50 border-green-200 hover:bg-green-100 text-xs text-left transition-all hover:shadow-sm">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-semibold text-green-700 flex items-center gap-1.5 flex-wrap">
+                                    {s.label}
+                                    <span style={{fontSize:"10px",background:"#f0fdf4",color:"#065f46",border:"1px solid #059669",padding:"1px 5px",borderRadius:"4px",fontWeight:700}}>FEFO</span>
+                                    {warehouseBadge(s.warehouseType)}
+                                  </div>
+                                  <div className="text-gray-500 mt-0.5 truncate">{stripBatchCode(s.note)}</div>
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-400 shrink-0 ml-2">Dùng →</span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                        <span className="text-[10px] font-bold text-gray-400 shrink-0 ml-2">Dùng →</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {suggLoading && <div className="text-xs text-gray-400 flex items-center gap-1.5 mb-2"><div className="w-3 h-3 border border-gray-300 border-t-[#1D9E75] rounded-full animate-spin" /> Đang tìm gợi ý...</div>}
+                      )}
+                      {/* Group 2 */}
+                      {group2.length > 0 && (
+                        <div>
+                          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Vị trí trống</div>
+                          <div className="space-y-1.5">
+                            {group2.map((s, i) => (
+                              <button key={i} onClick={() => applySuggestion(s)}
+                                className="w-full flex items-center justify-between px-3 py-2 rounded-xl border bg-blue-50 border-blue-200 hover:bg-blue-100 text-xs text-left transition-all hover:shadow-sm">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-semibold text-blue-700 flex items-center gap-1.5 flex-wrap">
+                                    {s.label}
+                                    {warehouseBadge(s.warehouseType)}
+                                  </div>
+                                  <div className="text-gray-500 mt-0.5">{s.note}</div>
+                                </div>
+                                <span className="text-[10px] font-bold text-gray-400 shrink-0 ml-2">Dùng →</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
