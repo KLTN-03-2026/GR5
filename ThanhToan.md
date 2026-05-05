@@ -190,3 +190,21 @@ Khách chọn Bank Transfer → Hiển thị QR VietQR ngay trong trang
 3. Trong Dashboard MoMo: thêm domain production vào whitelist
 4. Với VNPay: đổi URL từ `sandbox.vnpayment.vn` → `pay.vnpay.vn`
 5. Test kỹ trước khi go-live với số tiền nhỏ thật
+✅ MoMo đã được tích hợp đầy đủ
+Trạng thái theo tài liệu (dòng 12):
+Phương thức	Trạng thái	Môi trường
+Ví MoMo	✅ Hoàn chỉnh	Sandbox/Test
+Các file MoMo đã có:
+File	Mô tả
+src/app/(store)/payment/page.tsx	UI chọn phương thức thanh toán (có MoMo)
+src/app/api/store/payment/route.ts	API tạo link thanh toán MoMo
+src/app/api/store/payment/momo-ipn/route.ts	✅ [MỚI] Webhook IPN nhận callback từ MoMo, verify chữ ký, cập nhật DB
+Luồng MoMo (dòng 148–153):
+Khách chọn MoMo → Tạo đơn → Gọi API MoMo sandbox → Redirect sang app MoMo
+→ [Thanh toán thành công] → MoMo redirect về /payment/check?resultCode=0&orderId=...
+→ MoMo gọi IPN tới /api/store/payment/momo-ipn → Server verify chữ ký → Cập nhật trang_thai: DA_THANH_TOAN
+⚠️ Lưu ý quan trọng:
+Hiện đang dùng môi trường Sandbox/Test với test keys có sẵn (dòng 61–65)
+Để lên Production cần đăng ký tài khoản merchant tại business.momo.vn và thay thế 3 biến env: MOMO_PARTNER_CODE, MOMO_ACCESS_KEY, MOMO_SECRET_KEY
+Tài khoản test MoMo: SĐT 0000000001, OTP 000000
+Tóm lại: MoMo đã được add vào hệ thống thanh toán từ conversation trước (23/04/2026), hoàn chỉnh cả frontend lẫn backend IPN webhook. 🎉

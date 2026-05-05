@@ -44,7 +44,7 @@ export default function CustomersPage() {
       }
     } catch (error) {
       console.error("Lỗi fetch khách hàng:", error);
-    } finally {
+    } finally { 
       setIsLoading(false);
     }
   };

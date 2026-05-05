@@ -107,7 +107,7 @@ export default function Sidebar({ user }: { user: any }) {
           <span>Cài đặt</span>
         </Link>
         <button
-          onClick={() => signOut()}
+          onClick={() => signOut({ callbackUrl: "/" })}
           className="account-sidebar__footer-item account-sidebar__footer-item--danger"
         >
           <LogOut size={17} />

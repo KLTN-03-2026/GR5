@@ -114,7 +114,7 @@ export default function WarehouseAlertsClient() {
       await refresh();
       setSelectedAlert(null);
     } catch (error: any) {
-      alert(error?.message || "Không thể duyệt tiêu hủy");
+      window.alert(error?.message || "Không thể duyệt tiêu hủy");
     } finally {
       setActionLoading(false);
     }
@@ -141,7 +141,7 @@ export default function WarehouseAlertsClient() {
       await refresh();
       router.push(`/admin/promotions?highlight=${json.promoId}`);
     } catch (error: any) {
-      alert(error?.message || "Không thể duyệt xả kho");
+      window.alert(error?.message || "Không thể duyệt xả kho");
     } finally {
       setActionLoading(false);
     }

@@ -557,37 +557,60 @@ export const WarehouseAdminService = {
   async approveDestroy(alertId: number) {
     const alert = await prisma.canh_bao_lo_hang.findUnique({
       where: { id: alertId },
-      include: { lo_hang: true },
+      include: { lo_hang: { include: { bien_the_san_pham: true, ton_kho_tong: { where: { so_luong: { gt: 0 } } } } } },
     });
 
     if (!alert?.lo_hang) {
       throw new Error("Không tìm thấy cảnh báo");
     }
 
+    const totalStock = alert.lo_hang.ton_kho_tong?.reduce((s, t) => s + (t.so_luong ?? 0), 0) ?? 0;
+
     const updated = await prisma.$transaction(async (tx) => {
-      await tx.lo_hang.update({
-        where: { id: alert.lo_hang.id },
-        data: { trang_thai: "CHO_TIEU_HUY" },
+      // 1. Tạo phiếu xuất kho nội bộ để tiêu hủy
+      const phieuXuat = await tx.phieu_xuat_kho.create({
+        data: {
+          ly_do_xuat: `TIEU_HUY: Tiêu hủy do cảnh báo — ${alert.loai_canh_bao}`,
+          trang_thai: "HOAN_THANH",
+          ngay_tao: new Date(),
+        },
       });
 
+      // 2. Xóa toàn bộ tồn kho của lô này
+      await tx.ton_kho_tong.updateMany({
+        where: { ma_lo_hang: alert.lo_hang.id },
+        data: { so_luong: 0 },
+      });
+
+      // 3. Cập nhật trạng thái lô
+      await tx.lo_hang.update({
+        where: { id: alert.lo_hang.id },
+        data: { trang_thai: "DA_TIEU_HUY" },
+      });
+
+      // 4. Cập nhật trạng thái cảnh báo
       return tx.canh_bao_lo_hang.update({
         where: { id: alertId },
         data: {
           da_xu_ly: true,
           ngay_xu_ly: new Date(),
-          phuong_thuc_xu_ly: "CHO_TIEU_HUY",
-          ghi_chu_xu_ly: buildReasonTrail(alert.ghi_chu_xu_ly, buildHistoryLine("Duyệt tiêu hủy", alert.lo_hang.ma_lo_hang)),
+          phuong_thuc_xu_ly: "TIEU_HUY",
+          ma_phieu_xu_ly: phieuXuat.id,
+          ghi_chu_xu_ly: buildReasonTrail(alert.ghi_chu_xu_ly, buildHistoryLine("Tiêu hủy trực tiếp", alert.lo_hang.ma_lo_hang)),
         },
       });
     });
+
+    const giaNhap = alert.lo_hang.bien_the_san_pham?.gia_goc;
+    const thietHai = giaNhap ? Number(giaNhap) * totalStock : null;
 
     await prisma.thong_bao.createMany({
       data: [
         {
           ma_nguoi_dung: null,
-          tieu_de: "Duyệt tiêu hủy lô hàng",
-          noi_dung: `Lô ${alert.lo_hang.ma_lo_hang} đã được duyệt tiêu hủy. Nhân viên kho vui lòng thực hiện bước xác nhận cuối cùng trên màn hình staff.`,
-          loai_thong_bao: "TIEU_HUY_CAN_THUC_HIEN",
+          tieu_de: "Đã tiêu hủy lô hàng",
+          noi_dung: `Lô ${alert.lo_hang.ma_lo_hang} đã được tiêu hủy trực tiếp bởi thủ kho. Số lượng: ${totalStock}. ${thietHai ? `Thiệt hại: ${thietHai.toLocaleString("vi-VN")}đ` : ""}`,
+          loai_thong_bao: "BAO_CAO_TIEU_HUY",
         },
       ],
     });
@@ -629,14 +652,14 @@ export const WarehouseAdminService = {
       data: {
         da_xu_ly: true,
         ngay_xu_ly: new Date(),
-        phuong_thuc_xu_ly: "CHO_XA_KHO",
+        phuong_thuc_xu_ly: "DANG_XA_KHO",
         ghi_chu_xu_ly: buildReasonTrail(alert.ghi_chu_xu_ly, buildHistoryLine("Duyệt xả kho", `${discountPercent}% -> ${promo.ma_code}`)),
       },
     });
 
     await prisma.lo_hang.update({
       where: { id: alert.lo_hang.id },
-      data: { trang_thai: "CHO_XA_KHO" },
+      data: { trang_thai: "DANG_XA_KHO" },
     });
 
     await prisma.thong_bao.createMany({

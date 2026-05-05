@@ -210,7 +210,7 @@ export default function Header({ session }: { session: any }) {
                     </Link>
                     <div className="border-t border-gray-50 my-1"></div>
                     <button
-                      onClick={() => signOut()}
+                      onClick={() => signOut({ callbackUrl: "/" })}
                       className="w-full flex items-center gap-3 p-3 hover:bg-red-50 rounded-xl text-xs font-black text-red-500 transition-colors uppercase italic"
                     >
                       <LogOut size={16} /> Đăng xuất

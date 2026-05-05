@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   Gift,
   LayoutDashboard,
@@ -24,28 +25,28 @@ import {
 import { FaPeopleCarry } from "react-icons/fa";
 
 const menuItems = [
-  { name: "Tổng quan", path: "/admin/overview", icon: LayoutDashboard },
-  { name: "Thống kê", path: "/admin/analytics", icon: BarChart2 },
-  { name: "Sản phẩm", path: "/admin/products", icon: Package },
-  { name: "Kho Hàng", path: "/admin/warehouse", icon: Warehouse },
-  { name: "Nhà cung cấp", path: "/admin/suppliers", icon: Truck },
-  { name: "Đơn hàng", path: "/admin/orders", icon: ShoppingCart },
-  { name: "Khách hàng", path: "/admin/customers", icon: Users },
-  { name: "Danh mục", path: "/admin/categories", icon: Layers },
-  { name: "Thanh toán", path: "/admin/payments", icon: CreditCard },
-  { name: "Nội dung", path: "/admin/content", icon: FileText },
-  { name: "Khuyến mãi", path: "/admin/promotions", icon: Gift },
-  { name: "Bình luận", path: "/admin/reviews", icon: MessageCircleMore },
-  { name: "Cài đặt", path: "/admin/settings", icon: Settings },
+  { name: "Tổng quan", path: "/admin/overview", icon: LayoutDashboard, description: "Báo cáo tổng hợp" },
+  { name: "Sản phẩm", path: "/admin/products", icon: Package, description: "Quản lý hàng hóa" },
+  { name: "Kho Hàng", path: "/admin/warehouse", icon: Warehouse, description: "Quản lý tồn kho" },
+  { name: "Nhà cung cấp", path: "/admin/suppliers", icon: Truck, description: "Đối tác kinh doanh" },
+  { name: "Đơn hàng", path: "/admin/orders", icon: ShoppingCart, description: "Quản lý đơn bán" },
+  { name: "Khách hàng", path: "/admin/customers", icon: Users, description: "Dữ liệu người mua" },
+  { name: "Danh mục", path: "/admin/categories", icon: Layers, description: "Phân loại sản phẩm" },
+  { name: "Thanh toán", path: "/admin/payments", icon: CreditCard, description: "Giao dịch tài chính" },
+  { name: "Nội dung", path: "/admin/content", icon: FileText, description: "Quản lý bài viết" },
+  { name: "Khuyến mãi", path: "/admin/promotions", icon: Gift, description: "Chương trình ưu đãi" },
+  { name: "Bình luận", path: "/admin/reviews", icon: MessageCircleMore, description: "Đánh giá từ khách" },
+  { name: "Cài đặt", path: "/admin/settings", icon: Settings, description: "Cấu hình hệ thống" },
   {
     name: "Nhân sự",
     path: "/admin/hr",
     icon: FaPeopleCarry,
+    description: "Nhân viên & phân ca",
     subItems: [
       { name: "Danh sách nhân viên", path: "/admin/hr/employees" },
-      { name: "Phân ca làm việc", path: "/admin/hr/shifts" }, // <-- Thêm dòng này
+      { name: "Phân ca làm việc", path: "/admin/hr/shifts" },
       { name: "Chấm công hôm nay", path: "/admin/hr/attendance" },
-      { name: "Bảng lương", path: "/admin/hr/payroll" }, // <-- Thêm dòng này
+      { name: "Bảng lương", path: "/admin/hr/payroll" },
       { name: "Quản lý nghỉ phép", path: "/admin/hr/leave" },
     ],
   },
@@ -76,7 +77,7 @@ export default function AdminSidebar() {
       {/* Header Sidebar */}
       <div className="h-16 flex items-center px-6 mb-4 mt-2">
         <div className="flex items-center gap-3">
-          <div className="bg-green-600 p-2 rounded-lg">
+          <div className="bg-emerald-600 p-2 rounded-lg">
             <Layers className="text-white w-5 h-5" />
           </div>
           <div>
@@ -88,8 +89,13 @@ export default function AdminSidebar() {
         </div>
       </div>
 
+      {/* Role Badge */}
+      <div className="mx-5 mb-2 mt-4">
+        <p className="text-[10px] text-[#94a3b8] uppercase tracking-widest">Quyền truy cập</p>
+      </div>
+
       {/* Navigation Links */}
-      <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto custom-scrollbar">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -98,43 +104,45 @@ export default function AdminSidebar() {
           return (
             <div key={item.path}>
               {hasSubItems ? (
-                // RENDER MENU CÓ DROPDOWN (CÓ SUB-ITEMS)
-                <div className="flex flex-col gap-1">
+                // RENDER MENU CÓ DROPDOWN
+                <div className="flex flex-col">
                   <button
                     onClick={() => toggleMenu(item.name)}
-                    className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center justify-between w-full pl-5 pr-4 py-2.5 text-sm font-medium transition-all border-l-[3px] ${
                       isParentActive
-                        ? "bg-white/10 text-white" // Đang ở trong menu con thì highlight nhẹ menu cha
-                        : "hover:bg-white/10 hover:text-white"
+                        ? "bg-[#f0fdf4] text-[#065f46] border-[#059669]"
+                        : "text-gray-300 hover:bg-white/10 hover:text-white border-transparent"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon
-                        size={18}
-                        className={isParentActive ? "text-green-500" : ""}
-                      />
-                      {item.name}
+                      <Icon size={17} className="flex-shrink-0" />
+                      <div className="flex flex-col min-w-0 text-left">
+                        <span className="truncate">{item.name}</span>
+                        <span className={`text-[11px] font-normal truncate ${isParentActive ? "text-[#065f46]/70" : "text-[#94a3b8]"}`}>
+                          {item.description}
+                        </span>
+                      </div>
                     </div>
                     {openMenus[item.name] ? (
-                      <ChevronDown size={16} className="text-gray-400" />
+                      <ChevronDown size={14} className={isParentActive ? "text-[#065f46]" : "text-gray-500"} />
                     ) : (
-                      <ChevronRight size={16} className="text-gray-400" />
+                      <ChevronRight size={14} className={isParentActive ? "text-[#065f46]" : "text-gray-500"} />
                     )}
                   </button>
 
-                  {/* Vùng Dropdown Items */}
+                  {/* Sub-items dropdown */}
                   {openMenus[item.name] && (
-                    <div className="flex flex-col gap-1 mt-1 pl-10 pr-2">
+                    <div className="flex flex-col gap-0.5 py-1 pl-[52px] pr-3">
                       {item.subItems!.map((sub) => {
                         const isSubActive = pathname === sub.path;
                         return (
                           <Link
                             key={sub.path}
                             href={sub.path}
-                            className={`block px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                            className={`block px-3 py-1.5 rounded-md text-[13px] font-medium transition-all ${
                               isSubActive
-                                ? "bg-green-600 text-white shadow-md"
-                                : "text-gray-400 hover:text-white hover:bg-white/10"
+                                ? "text-[#059669] bg-white/10"
+                                : "text-gray-400 hover:text-white hover:bg-white/5"
                             }`}
                           >
                             {sub.name}
@@ -145,17 +153,22 @@ export default function AdminSidebar() {
                   )}
                 </div>
               ) : (
-                // RENDER MENU BÌNH THƯỜNG (KHÔNG CÓ SUB-ITEMS)
+                // RENDER MENU BÌNH THƯỜNG
                 <Link
                   href={item.path}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-3 pl-5 pr-4 py-2.5 text-sm font-medium transition-all border-l-[3px] ${
                     isParentActive
-                      ? "bg-green-600 text-white shadow-md"
-                      : "hover:bg-white/10 hover:text-white"
+                      ? "bg-[#f0fdf4] text-[#065f46] border-[#059669]"
+                      : "text-gray-300 hover:bg-white/10 hover:text-white border-transparent"
                   }`}
                 >
-                  <Icon size={18} />
-                  {item.name}
+                  <Icon size={17} className="flex-shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate">{item.name}</span>
+                    <span className={`text-[11px] font-normal truncate ${isParentActive ? "text-[#065f46]/70" : "text-[#94a3b8]"}`}>
+                      {item.description}
+                    </span>
+                  </div>
                 </Link>
               )}
             </div>
@@ -175,7 +188,10 @@ export default function AdminSidebar() {
               <p className="text-xs text-gray-400">Quản trị viên</p>
             </div>
           </div>
-          <button className="text-gray-400 hover:text-white transition-colors">
+          <button
+            className="text-gray-400 hover:text-white transition-colors"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+          >
             <LogOut size={18} />
           </button>
         </div>

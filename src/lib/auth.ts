@@ -130,8 +130,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (dbUser) token.id = dbUser.id.toString();
       }
 
-      // Load roles: chạy khi lần đầu login (account != null) hoặc khi trigger update
-      if (account || trigger === "update" || !token.roles) {
+      // Load roles từ DB:
+      // - Khi lần đầu login (account != null): luôn load để lấy roles mới nhất
+      // - Khi trigger = "update": để force refresh roles
+      // - Khi token chưa có roles (!token.roles): đảm bảo không để rỗng
+      // Không load lại mỗi request để tránh query DB liên tục (JWT session strategy)
+      if (account != null || trigger === "update" || !token.roles) {
         const numericId = Number(token.id);
         if (numericId && !isNaN(numericId)) {
           const userRoles = await prisma.vai_tro_nguoi_dung.findMany({
@@ -139,6 +143,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             include: { vai_tro: { select: { ten_vai_tro: true } } },
           });
           token.roles = userRoles.map((r) => r.vai_tro.ten_vai_tro);
+        } else {
+          // Nếu không có ID hợp lệ thì xóa roles để tránh roles của user cũ
+          token.roles = [];
         }
       }
 
@@ -157,7 +164,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 30 * 60 }, // 30 phút
   secret: process.env.AUTH_SECRET,
   trustHost: true,
   pages: {

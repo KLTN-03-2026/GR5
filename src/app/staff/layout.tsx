@@ -24,7 +24,7 @@ export default async function StaffLayout({
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
       {/* Sidebar cố định bên trái */}
-      <StaffSidebar />
+      <StaffSidebar userEmail={session.user.email} />
 
       {/* Cột phải chứa Topbar và Nội dung */}
       <div className="flex-1 flex flex-col min-w-0">

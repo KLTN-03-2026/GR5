@@ -15,8 +15,6 @@ export default function WarehouseLayout({
         </p>
       </div>
 
-      <WarehouseLayoutTabs />
-
       <div>{children}</div>
     </div>
   );

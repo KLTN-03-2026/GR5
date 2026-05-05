@@ -181,36 +181,40 @@ export default function WarehouseReceivingClient() {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-4">
         <InfoCard
-          icon={<ClipboardList className="h-5 w-5" />}
+          icon={<ClipboardList size={14} />}
           label="Danh sách đang xem"
           value={filteredLabel}
+          accentColor="#64748b"
         />
         <InfoCard
-          icon={<Truck className="h-5 w-5" />}
+          icon={<Truck size={14} />}
           label="Tổng phiếu"
           value={receipts.length}
+          accentColor="#059669"
         />
         <InfoCard
-          icon={<BadgeCheck className="h-5 w-5" />}
+          icon={<BadgeCheck size={14} />}
           label="Phiếu có chênh lệch"
           value={receipts.filter((item) => item.co_chenh_lech).length}
+          accentColor="#f59e0b"
         />
         <InfoCard
-          icon={<ShieldAlert className="h-5 w-5" />}
+          icon={<ShieldAlert size={14} />}
           label="Phiếu cần xử lý"
           value={
             receipts.filter((item) => item.trang_thai === "CHO_KIEM_TRA").length
           }
+          accentColor="#ef4444"
         />
       </div>
 
       <div className="rounded-3xl border border-white/70 bg-white/95 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">
+            <h2 className="text-[15px] font-medium text-slate-900">
               Nhập kho master-detail
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-[13px] text-[#64748b]">
               Bảng trái là danh sách phiếu, bảng phải là chi tiết và nút
               duyệt/từ chối.
             </p>
@@ -231,7 +235,11 @@ export default function WarehouseReceivingClient() {
               key={tab.value}
               type="button"
               onClick={() => setStatus(tab.value)}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition ${status === tab.value ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
+              className={`h-[32px] rounded-[6px] border-[0.5px] px-3 text-[13px] font-medium transition-colors ${
+                status === tab.value 
+                  ? "border-[#059669] bg-[#f0fdf4] text-[#065f46]" 
+                  : "border-[#e2e8f0] bg-transparent text-[#64748b] hover:bg-[#f8fafc]"
+              }`}
             >
               {tab.label}
             </button>
@@ -253,8 +261,10 @@ export default function WarehouseReceivingClient() {
                   Đang tải danh sách...
                 </div>
               ) : receipts.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-500">
-                  Không có phiếu phù hợp với bộ lọc hiện tại.
+                <div className="flex flex-col items-center justify-center py-10 rounded-2xl border border-dashed border-slate-200 bg-white text-center">
+                  <ClipboardList size={24} className="text-[#e2e8f0] mb-2" />
+                  <p className="text-[13px] text-[#94a3b8] font-medium">Không có phiếu phù hợp</p>
+                  <p className="text-[11px] text-[#cbd5e1] mt-1">Thử chọn bộ lọc khác</p>
                 </div>
               ) : (
                 receipts.map((receipt) => {
@@ -264,7 +274,7 @@ export default function WarehouseReceivingClient() {
                       key={receipt.id}
                       type="button"
                       onClick={() => onSelectReceipt(receipt.id)}
-                      className={`w-full rounded-2xl border p-4 text-left transition ${active ? "border-slate-950 bg-slate-950 text-white shadow-lg" : "border-slate-200 bg-white hover:border-slate-300"}`}
+                      className={`w-full rounded-2xl border p-4 text-left transition ${active ? "border-emerald-600 bg-emerald-50 shadow-sm" : "border-slate-200 bg-white hover:border-slate-300"}`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -272,7 +282,7 @@ export default function WarehouseReceivingClient() {
                             {receipt.ma_phieu}
                           </div>
                           <div
-                            className={`mt-1 text-sm ${active ? "text-slate-300" : "text-slate-500"}`}
+                            className={`mt-1 text-sm ${active ? "text-emerald-800" : "text-slate-500"}`}
                           >
                             {receipt.ncc_ten}
                           </div>
@@ -284,7 +294,7 @@ export default function WarehouseReceivingClient() {
                         </span>
                       </div>
                       <div
-                        className={`mt-3 grid grid-cols-2 gap-2 text-sm ${active ? "text-slate-300" : "text-slate-500"}`}
+                        className={`mt-3 grid grid-cols-2 gap-2 text-sm ${active ? "text-emerald-700" : "text-slate-500"}`}
                       >
                         <div>{receipt.tong_san_pham} dòng hàng</div>
                         <div>{receipt.tong_so_luong} đơn vị</div>
@@ -304,27 +314,29 @@ export default function WarehouseReceivingClient() {
                 Đang tải chi tiết phiếu...
               </div>
             ) : !detail ? (
-              <div className="grid min-h-[420px] place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-slate-500">
-                Chọn một phiếu để xem master-detail.
+              <div className="flex flex-col items-center justify-center min-h-[420px] rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-center p-6">
+                <ClipboardList size={32} className="text-[#e2e8f0] mb-3" />
+                <p className="text-[13px] text-[#94a3b8] font-medium">Chọn một phiếu để xem chi tiết</p>
+                <p className="text-[11px] text-[#cbd5e1] mt-1 max-w-[250px]">Chi tiết phiếu, danh sách sản phẩm và nút duyệt sẽ hiển thị tại đây</p>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-3xl bg-slate-950 p-4 text-white">
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <div className="text-xs uppercase tracking-[0.24em] text-slate-300">
+                      <div className="text-xs uppercase tracking-[0.1em] text-emerald-700 font-bold">
                         Phiếu nhập
                       </div>
-                      <div className="mt-2 text-2xl font-semibold">
+                      <div className="mt-2 text-2xl font-bold text-slate-900">
                         {detail.phieu.ma_phieu}
                       </div>
-                      <div className="mt-1 text-sm text-slate-300">
+                      <div className="mt-1 text-sm text-slate-600">
                         {detail.phieu.ncc} · {detail.phieu.nguoi_tao}
                       </div>
                     </div>
-                    <div className="rounded-2xl bg-white/10 px-4 py-3 text-right">
-                      <div className="text-xs text-slate-300">Trạng thái</div>
-                      <div className="mt-1 text-sm font-semibold">
+                    <div className="rounded-xl bg-white border border-emerald-100 px-4 py-3 text-right">
+                      <div className="text-xs text-slate-500">Trạng thái</div>
+                      <div className="mt-1 text-sm font-bold text-emerald-700">
                         {detail.phieu.trang_thai}
                       </div>
                     </div>
@@ -497,7 +509,7 @@ export default function WarehouseReceivingClient() {
               <button
                 type="button"
                 onClick={() => setSummary(null)}
-                className="rounded-full bg-slate-950 px-4 py-2 font-medium text-white"
+                className="rounded-full bg-slate-800 px-4 py-2 font-medium text-white hover:bg-slate-700 transition"
               >
                 Đóng
               </button>
@@ -513,19 +525,20 @@ function InfoCard({
   icon,
   label,
   value,
+  accentColor,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number | string;
+  accentColor: string;
 }) {
   return (
-    <div className="rounded-3xl border border-white/70 bg-white/95 p-4 shadow-[0_16px_50px_rgba(15,23,42,0.06)] backdrop-blur">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-sm text-slate-500">{label}</div>
-          <div className="mt-2 text-2xl font-bold text-slate-950">{value}</div>
+    <div className="h-[64px] rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm flex items-center justify-between" style={{ borderLeft: `3px solid ${accentColor}` }}>
+      <div>
+        <div className="flex items-center gap-1.5 text-[12px] font-medium text-slate-500">
+          {icon} {label}
         </div>
-        <div className="rounded-2xl bg-slate-950 p-3 text-white">{icon}</div>
+        <div className="mt-0.5 text-lg font-bold text-slate-900">{value}</div>
       </div>
     </div>
   );

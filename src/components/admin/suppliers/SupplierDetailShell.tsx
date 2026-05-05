@@ -17,6 +17,7 @@ import {
   Info,
   LayoutGrid,
   RefreshCw,
+  RotateCcw,
   ShieldCheck,
 } from "lucide-react";
 
@@ -38,15 +39,16 @@ const TAB_ITEMS = [
   { href: "history", label: "Lịch sử nhập", icon: History },
   { href: "debt", label: "Công nợ", icon: CreditCard },
   { href: "quality", label: "Chất lượng", icon: ShieldCheck },
+  { href: "returns", label: "Trả hàng", icon: RotateCcw },
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   DANG_HOP_TAC: {
     label: "Đang hợp tác",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "border-emerald-600 bg-[#f0fdf4] text-[#065f46]",
   },
-  TAM_DUNG: { label: "Tạm dừng", className: "bg-amber-100 text-amber-700" },
-  NGUNG: { label: "Đã ngừng", className: "bg-rose-100 text-rose-700" },
+  TAM_DUNG: { label: "Tạm dừng", className: "border-amber-400 bg-amber-50 text-amber-900" },
+  NGUNG: { label: "Đã ngừng", className: "border-rose-400 bg-rose-50 text-rose-800" },
 };
 
 export function useSupplierDetail() {
@@ -111,26 +113,29 @@ export default function SupplierDetailShell({
           <ArrowLeft size={16} /> Quay lại danh sách NCC
         </Link>
 
-        <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur">
-          <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 p-6 text-white">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b-[0.5px] border-slate-200 bg-white px-6 py-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl font-bold text-white">
+                <div className="flex h-[44px] w-[44px] flex-shrink-0 items-center justify-center rounded-full bg-[#f0fdf4] text-lg font-bold text-[#059669]">
                   {(ncc?.ten_ncc?.[0] ?? "N").toUpperCase()}
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-2xl font-semibold">
+                    <h1 className="text-[18px] font-medium text-slate-900">
                       {ncc?.ten_ncc ?? "Đang tải nhà cung cấp"}
                     </h1>
+                    <span className="text-[11px] text-slate-400">
+                      #{ncc?.ma_ncc ?? nccId}
+                    </span>
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}
+                      className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${status.className}`}
                     >
                       {status.label}
                     </span>
                     {diemUyTin < 6 && (
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${diemUyTin < 4 ? "bg-rose-500/20 text-rose-100" : "bg-amber-400/20 text-amber-100"}`}
+                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${diemUyTin < 4 ? "border-rose-500 bg-rose-50 text-rose-700" : "border-[#fbbf24] bg-[#fef9c3] text-[#92400e]"}`}
                       >
                         <AlertTriangle size={11} />{" "}
                         {diemUyTin < 4
@@ -139,37 +144,39 @@ export default function SupplierDetailShell({
                       </span>
                     )}
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-300">
-                    <span className="font-mono text-xs text-slate-400">
-                      {ncc?.ma_ncc ?? `#${nccId}`}
-                    </span>
-                    {ncc?.tinh_thanh && <span>{ncc.tinh_thanh}</span>}
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-[13px] text-slate-500">
                     {ncc?.so_dien_thoai && <span>{ncc.so_dien_thoai}</span>}
+                    {ncc?.tinh_thanh && <span>• {ncc.tinh_thanh}</span>}
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <MetricCard
-                  label="Điểm uy tín"
-                  value={diemUyTin.toFixed(1)}
-                  hint="/5"
-                />
-                <MetricCard
-                  label="Công nợ"
-                  value={
-                    congNo > 0
+              <div className="flex items-center gap-6">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-500">
+                    Điểm uy tín
+                  </div>
+                  <div className="mt-0.5 text-[20px] font-medium text-slate-900">
+                    {diemUyTin.toFixed(1)}<span className="text-sm text-slate-400">/5</span>
+                  </div>
+                </div>
+                <div className="h-8 w-[1px] bg-[#e2e8f0]"></div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-500">
+                    Công nợ
+                  </div>
+                  <div className={`mt-0.5 text-[14px] font-medium ${congNo > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                    {congNo > 0
                       ? `${congNo.toLocaleString("vi-VN")}đ`
-                      : "Sạch nợ"
-                  }
-                  hint={congNo > 0 ? "Đang nợ NCC" : "Đã thanh toán"}
-                />
+                      : "Sạch nợ"}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="border-b border-slate-200 bg-white px-6 py-4">
-            <div className="flex flex-wrap items-center gap-2 overflow-x-auto">
+          <div className="border-b border-slate-200 bg-white px-6 pt-2">
+            <div className="flex items-center gap-6 overflow-x-auto">
               {TAB_ITEMS.map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.href;
@@ -178,7 +185,7 @@ export default function SupplierDetailShell({
                   <Link
                     key={tab.href}
                     href={`${baseUrl}/${nccId}/${tab.href}`}
-                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${active ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"}`}
+                    className={`inline-flex items-center gap-2 border-b-2 py-3 text-sm transition ${active ? "border-[#059669] font-medium text-[#059669]" : "border-transparent text-slate-500 hover:text-slate-700"}`}
                   >
                     <Icon size={15} /> {tab.label}
                   </Link>
@@ -187,9 +194,9 @@ export default function SupplierDetailShell({
               <button
                 type="button"
                 onClick={refresh}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                className="ml-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
               >
-                <RefreshCw size={15} /> Tải lại
+                <RefreshCw size={14} /> Tải lại
               </button>
             </div>
           </div>
@@ -207,22 +214,3 @@ export default function SupplierDetailShell({
   );
 }
 
-function MetricCard({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-}) {
-  return (
-    <div className="min-w-[160px] rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-right backdrop-blur">
-      <div className="text-xs uppercase tracking-[0.18em] text-slate-300">
-        {label}
-      </div>
-      <div className="mt-1 text-2xl font-semibold text-white">{value}</div>
-      <div className="text-xs text-slate-300">{hint}</div>
-    </div>
-  );
-}
