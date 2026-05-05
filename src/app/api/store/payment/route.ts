@@ -37,7 +37,7 @@
       const tmnCode = "N2FLX63Y";
       const secretKey = "GM2XYUP38PA43ASTS8YU4MD2AT22JL8N";
       const vnpUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-      const returnUrl = "http://localhost:3000/payment/check";
+      const returnUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/store/payment/vnpay-return`;
 
       const createDate = format(new Date(), "yyyyMMddHHmmss");
       const txnRef = `${order.id}_${Date.now()}`;
@@ -107,8 +107,9 @@
         const secretKey = process.env.MOMO_SECRET_KEY || "at67qH6mk8w5Y1nAwMovdPTlcjTA21kH";
         
         const momoApiUrl = "https://test-payment.momo.vn/v2/gateway/api/create";
-        const redirectUrl = "http://localhost:3000/payment/check";
-        const ipnUrl = "http://localhost:3000/api/store/payment/momo-ipn";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        const redirectUrl = `${baseUrl}/payment/check`;
+        const ipnUrl = `${baseUrl}/api/store/payment/momo-ipn`;
 
         const momoOrderId = orderId.toString() + "_" + Date.now();
         const requestId = momoOrderId; 

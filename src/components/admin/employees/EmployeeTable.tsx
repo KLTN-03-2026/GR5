@@ -15,9 +15,10 @@ export type NhanVien = {
 
 interface EmployeeTableProps {
   employees: NhanVien[];
+  onRefresh?: () => void;
 }
 
-export function EmployeeTable({ employees }: EmployeeTableProps) {
+export function EmployeeTable({ employees, onRefresh }: EmployeeTableProps) {
   // Hàm map màu Badge theo Spec
   const renderTrangThai = (trangThai: string) => {
     switch (trangThai) {

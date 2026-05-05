@@ -14,11 +14,20 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import Pagination from "@/components/ui/Pagination";
 
 export default function ReviewsManagementPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 15;
+
+  // Stats
+  const [totalReviews, setTotalReviews] = useState(0);
 
   // States cho Modals
   const [viewModal, setViewModal] = useState({
@@ -33,8 +42,23 @@ export default function ReviewsManagementPage() {
   const fetchReviews = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/admin/reviews?t=${Date.now()}`);
-      if (res.ok) setReviews(await res.json());
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: searchTerm,
+        t: Date.now().toString()
+      });
+      const res = await fetch(`/api/admin/reviews?${params.toString()}`);
+      if (res.ok) {
+        const result = await res.json();
+        setReviews(result.data || result);
+        setTotalPages(result.meta?.totalPages || 1);
+        if (result.meta?.total) {
+          setTotalReviews(result.meta.total);
+        } else if (Array.isArray(result)) {
+          setTotalReviews(result.length);
+        }
+      }
     } catch (error) {
       toast.error("Lỗi tải dữ liệu đánh giá!");
     } finally {
@@ -43,26 +67,18 @@ export default function ReviewsManagementPage() {
   };
 
   useEffect(() => {
-    fetchReviews();
-  }, []);
+    const delayDebounce = setTimeout(() => {
+      fetchReviews();
+    }, 300);
+    return () => clearTimeout(delayDebounce);
+  }, [currentPage, searchTerm]);
 
-  // Lọc đánh giá theo thanh tìm kiếm
-  const filteredReviews = reviews.filter(
-    (r) =>
-      r.noi_dung?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.san_pham?.ten_san_pham
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      r.nguoi_dung?.ho_ten?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
-  // Tính toán thống kê
-  const totalReviews = reviews.length;
+  // Tính toán thống kê từ danh sách hiện tại (Có thể thay đổi bằng API thống kê riêng)
   const hiddenReviews = reviews.filter((r) => r.trang_thai === "DA_AN").length;
   const averageRating =
-    totalReviews > 0
+    reviews.length > 0
       ? (
-          reviews.reduce((sum, r) => sum + (r.so_sao || 0), 0) / totalReviews
+          reviews.reduce((sum, r) => sum + (r.so_sao || 0), 0) / reviews.length
         ).toFixed(1)
       : "0.0";
 
@@ -197,7 +213,7 @@ export default function ReviewsManagementPage() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
                   </td>
                 </tr>
-              ) : filteredReviews.length === 0 ? (
+              ) : reviews.length === 0 ? (
                 <tr>
                   <td
                     colSpan={5}
@@ -207,7 +223,7 @@ export default function ReviewsManagementPage() {
                   </td>
                 </tr>
               ) : (
-                filteredReviews.map((r) => {
+                reviews.map((r) => {
                   const isHidden = r.trang_thai === "DA_AN";
                   return (
                     <tr
@@ -306,6 +322,12 @@ export default function ReviewsManagementPage() {
               )}
             </tbody>
           </table>
+          
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 

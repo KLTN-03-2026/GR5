@@ -133,7 +133,7 @@ export default function FaceIDLoginPage() {
     
     setTimeout(() => {
       let redirectUrl = "/";
-      if (roles?.includes("ADMIN")) redirectUrl = "/admin";
+      if (roles?.includes("ADMIN")) redirectUrl = "/admin/overview";
       else if (roles?.includes("STAFF")) redirectUrl = "/staff";
       router.push(redirectUrl);
     }, 1500);

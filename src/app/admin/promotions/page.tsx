@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
+import Pagination from "@/components/ui/Pagination";
 
 const formatDateForInput = (dateString: string) => {
   if (!dateString) return "";
@@ -27,6 +28,10 @@ export default function PromotionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
   const highlightId = searchParams.get("highlight");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 15;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -49,8 +54,12 @@ export default function PromotionsPage() {
   const fetchPromotions = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/admin/promotions?t=${Date.now()}`);
-      if (res.ok) setPromotions(await res.json());
+      const res = await fetch(`/api/admin/promotions?page=${currentPage}&limit=${itemsPerPage}&t=${Date.now()}`);
+      if (res.ok) {
+        const result = await res.json();
+        setPromotions(result.data || result); // handle both old and new API formats
+        setTotalPages(result.meta?.totalPages || 1);
+      }
     } catch (error) {
       toast.error("Lỗi tải dữ liệu");
     } finally {
@@ -60,7 +69,7 @@ export default function PromotionsPage() {
 
   useEffect(() => {
     fetchPromotions();
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     if (!highlightId) return;
@@ -343,6 +352,13 @@ export default function PromotionsPage() {
           })
         )}
       </div>
+
+      {/* Pagination Component */}
+      <Pagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {isModalOpen && (
         <div

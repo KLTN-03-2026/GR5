@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
-// Dùng @/app/ để tự động trỏ từ thư mục gốc, không bao giờ lỗi đường dẫn
+import { Be_Vietnam_Pro } from "next/font/google";
 import "@/app/globals.css";
 import { CartProvider } from "@/lib/CartContext";
+
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+  variable: "--font-be-vietnam",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "NôngSản Dashboard",
@@ -14,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi">
-      <body>
+    <html lang="vi" className={beVietnamPro.variable}>
+      <body style={{ fontFamily: "var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif" }}>
         <CartProvider>{children}</CartProvider>
       </body>
     </html>

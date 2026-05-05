@@ -1,65 +1,16 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Camera, Save, Loader2, X } from "lucide-react";
+import React, { useState } from "react";
+import { Camera, Save, Bell, Loader2, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { updateProfile } from "@/app/actions/profile";
 import toast from "react-hot-toast";
 
 export default function ProfileForm({ user }: { user: any }) {
   const [isPending, setIsPending] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    user?.ho_so_nguoi_dung?.anh_dai_dien || null,
-  );
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [gioiTinh, setGioiTinh] = useState(
-    user?.ho_so_nguoi_dung?.gioi_tinh || "Nam",
-  );
-  const [hoTenError, setHoTenError] = useState("");
-  const [sdtError, setSdtError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [gender, setGender] = useState<string>(user?.gioi_tinh || "");
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Ảnh quá lớn! Tối đa 2MB.");
-      return;
-    }
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
-
-  const handleRemoveAvatar = () => {
-    setAvatarFile(null);
-    setAvatarPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleHoTenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    if (/\d/.test(val)) {
-      setHoTenError("Họ tên không được chứa số!");
-    } else {
-      setHoTenError("");
-    }
-  };
-
-  const handleSdtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    if (/[^0-9]/.test(val)) {
-      setSdtError("Số điện thoại chỉ được nhập số!");
-      e.target.value = val.replace(/[^0-9]/g, "");
-    } else {
-      setSdtError("");
-    }
-  };
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (hoTenError || sdtError) {
-      toast.error("Vui lòng kiểm tra lại thông tin!");
-      return;
-    }
+  async function handleSubmit(formData: FormData) {
     setIsPending(true);
 
     const form = e.currentTarget;
@@ -84,157 +35,225 @@ export default function ProfileForm({ user }: { user: any }) {
     setIsPending(false);
   }
 
-  const initials =
-    user?.ho_so_nguoi_dung?.ho_ten?.[0]?.toUpperCase() ||
-    user?.email?.[0]?.toUpperCase() ||
-    "?";
+  const initials = user?.ho_ten
+    ? user.ho_ten.trim().split(" ").slice(-1)[0][0].toUpperCase()
+    : user?.email?.[0]?.toUpperCase() ?? "?";
+
+  const displayName = user?.ho_ten?.trim() || "Chưa cập nhật tên";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-12">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/gif"
-        className="hidden"
-        onChange={handleAvatarChange}
-      />
+    <div className="profile-page animate-fade-in-up">
 
-      {/* Avatar */}
-      <div className="flex items-center gap-10 mb-12">
-        <div className="relative">
-          <div className="w-28 h-28 rounded-2xl overflow-hidden bg-[#008A3D] flex items-center justify-center text-5xl text-white font-bold shadow-lg">
-            {avatarPreview ? (
-              <img
-                src={avatarPreview}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              initials
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute -bottom-2 -right-2 bg-white p-2 rounded-full shadow-md border border-slate-100 text-[#008A3D] hover:bg-emerald-50 transition-colors"
-          >
-            <Camera size={16} />
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          <h3 className="text-xl font-bold text-slate-800">Ảnh đại diện</h3>
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-3 bg-[#008A3D] text-white rounded-xl text-sm font-bold hover:bg-[#007031] transition-all"
-            >
-              Thay đổi ảnh đại diện
-            </button>
-            {avatarPreview && (
-              <button
-                type="button"
-                onClick={handleRemoveAvatar}
-                className="px-6 py-3 bg-[#E2E8E2] text-slate-600 rounded-xl text-sm font-bold hover:bg-red-50 hover:text-red-500 transition-all flex items-center gap-2"
-              >
-                <X size={14} /> Xóa ảnh
-              </button>
-            )}
-          </div>
-          <p className="text-xs text-slate-400 font-medium">
-            Tối đa 2MB. Định dạng: JPG, PNG, GIF
+      {/* ── Header ── */}
+      <header className="profile-header">
+        <div>
+          <h2 className="profile-header__title">Hồ sơ cá nhân</h2>
+          <p className="profile-header__sub">
+            Cập nhật thông tin để bảo mật tài khoản và nhận ưu đãi
           </p>
         </div>
-      </div>
+        <button
+          className="profile-header__bell"
+          aria-label="Thông báo"
+          type="button"
+        >
+          <Bell size={18} />
+        </button>
+      </header>
 
-      {/* Form fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-        {/* Họ và tên */}
-        <div className="space-y-3">
-          <label className="text-sm font-bold text-slate-700 ml-1">
-            Họ và tên
+      {/* ── Identity Card: Avatar + Tên + Role ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        className="profile-identity"
+      >
+        {/* Avatar */}
+        <div className="profile-identity__avatar-wrap">
+          <div className="profile-identity__avatar">{initials}</div>
+          <label className="profile-identity__camera" aria-label="Đổi ảnh đại diện">
+            <Camera size={13} />
+            <input type="file" accept="image/*" className="hidden" style={{ display: "none" }} />
           </label>
-          <input
-            name="ho_ten"
-            defaultValue={user?.ho_so_nguoi_dung?.ho_ten || ""}
-            placeholder="Họ tên"
-            onChange={handleHoTenChange}
-            className={`w-full bg-[#E9F0E9] border-none rounded-xl px-6 py-4 text-base font-bold text-slate-700 outline-none focus:ring-2 transition-all ${hoTenError ? "ring-2 ring-red-400" : "ring-[#008A3D]/20"}`}
-          />
-          {hoTenError && (
-            <p className="text-xs text-red-500 ml-1">{hoTenError}</p>
-          )}
         </div>
 
-        {/* Email */}
-        <div className="space-y-3">
-          <label className="text-sm font-bold text-slate-700 ml-1">Email</label>
-          <input
-            value={user?.email || ""}
-            readOnly
-            className="w-full bg-[#E9F0E9] border-none rounded-xl px-6 py-4 text-base font-bold text-slate-500 cursor-not-allowed"
-          />
-        </div>
-
-        {/* Số điện thoại */}
-        <div className="space-y-3">
-          <label className="text-sm font-bold text-slate-700 ml-1">
-            Số điện thoại
-          </label>
-          <input
-            name="so_dien_thoai"
-            defaultValue={user?.ho_so_nguoi_dung?.so_dien_thoai || ""}
-            placeholder="09xx xxx xxx"
-            onChange={handleSdtChange}
-            inputMode="numeric"
-            className={`w-full bg-[#E9F0E9] border-none rounded-xl px-6 py-4 text-base font-bold text-slate-700 outline-none focus:ring-2 transition-all ${sdtError ? "ring-2 ring-red-400" : "ring-[#008A3D]/20"}`}
-          />
-          {sdtError && <p className="text-xs text-red-500 ml-1">{sdtError}</p>}
-        </div>
-
-        {/* Giới tính */}
-        <div className="md:col-span-2 space-y-5">
-          <label className="text-sm font-bold text-slate-700 ml-1">
-            Giới tính
-          </label>
-          <div className="flex gap-12">
-            {["Nam", "Nữ", "Khác"].map((option) => (
-              <label
-                key={option}
-                className="flex items-center gap-3 cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name="gioi_tinh"
-                  value={option}
-                  checked={gioiTinh === option}
-                  onChange={() => setGioiTinh(option)}
-                  className="w-5 h-5 accent-[#008A3D] cursor-pointer"
-                />
-                <span className="text-base font-bold text-slate-600 hover:text-[#008A3D] transition-colors">
-                  {option}
-                </span>
-              </label>
-            ))}
+        {/* Tên + Email + Badges */}
+        <div className="profile-identity__info">
+          <h3 className="profile-identity__name">{displayName}</h3>
+          <p className="profile-identity__email">{user?.email || ""}</p>
+          <div className="profile-identity__badges">
+            <span className="profile-identity__badge profile-identity__badge--role">
+              Khách hàng
+            </span>
+            <span className="profile-identity__badge profile-identity__badge--tier">
+              ✦ Thành viên Bạc
+            </span>
           </div>
         </div>
-      </div>
 
-      <div className="pt-12 flex justify-end">
-        <button
-          disabled={isPending}
-          type="submit"
-          className="px-12 py-5 bg-[#1EA34D] text-white rounded-2xl font-bold text-lg shadow-xl hover:bg-[#168a3f] active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
-        >
-          {isPending ? (
-            <Loader2 className="animate-spin" size={24} />
-          ) : (
-            <Save size={24} />
-          )}
-          Lưu thay đổi
-        </button>
-      </div>
-    </form>
+        {/* Quick actions */}
+        <div className="profile-identity__actions">
+          <button type="button" className="btn-photo btn-photo--primary">
+            Đổi ảnh mới
+          </button>
+          <button type="button" className="btn-photo btn-photo--ghost">
+            Xóa ảnh
+          </button>
+          <p style={{
+            fontSize: "0.625rem",
+            color: "var(--color-text-muted)",
+            textTransform: "uppercase",
+            letterSpacing: "0.07em",
+            fontWeight: 600,
+            textAlign: "right",
+            margin: 0,
+          }}>
+            JPG, PNG · Tối đa 2MB
+          </p>
+        </div>
+      </motion.div>
+
+      {/* ── Form Card ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.07, ease: [0.22, 1, 0.36, 1] }}
+        className="profile-form-card"
+      >
+        <form action={handleSubmit}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: "1rem 1.5rem",
+          }}>
+
+            {/* Họ và tên */}
+            <div>
+              <label className="profile-section-label" htmlFor="ho_ten">
+                Họ và tên
+              </label>
+              <input
+                id="ho_ten"
+                name="ho_ten"
+                defaultValue={user?.ho_ten || ""}
+                placeholder="Nhập họ và tên đầy đủ"
+                className="profile-input"
+              />
+            </div>
+
+            {/* Email (read-only) */}
+            <div>
+              <label className="profile-section-label" htmlFor="email">
+                Email (cố định)
+              </label>
+              <input
+                id="email"
+                value={user?.email || ""}
+                readOnly
+                className="profile-input"
+              />
+            </div>
+
+            {/* Số điện thoại */}
+            <div>
+              <label className="profile-section-label" htmlFor="so_dien_thoai">
+                Số điện thoại
+              </label>
+              <input
+                id="so_dien_thoai"
+                name="so_dien_thoai"
+                defaultValue={user?.so_dien_thoai || ""}
+                placeholder="09xx xxx xxx"
+                className="profile-input"
+              />
+            </div>
+
+            {/* Ngày sinh */}
+            <div>
+              <label className="profile-section-label" htmlFor="ngay_sinh">
+                Ngày sinh
+              </label>
+              <input
+                id="ngay_sinh"
+                type="date"
+                name="ngay_sinh"
+                defaultValue={
+                  user?.ngay_sinh
+                    ? new Date(user.ngay_sinh).toISOString().split("T")[0]
+                    : ""
+                }
+                className="profile-input"
+              />
+            </div>
+
+            {/* Giới tính — full width */}
+            <div style={{ gridColumn: "span 2" }}>
+              <span className="profile-section-label">Giới tính</span>
+              <div className="profile-radio-group" style={{ marginTop: "0.5rem" }}>
+                {(["Nam", "Nữ", "Khác"] as const).map((option) => {
+                  const isSelected = gender === option;
+                  return (
+                    <label
+                      key={option}
+                      className="profile-radio-label"
+                      onClick={() => setGender(option)}
+                    >
+                      <input
+                        type="radio"
+                        name="gioi_tinh"
+                        value={option}
+                        checked={isSelected}
+                        onChange={() => setGender(option)}
+                        style={{ display: "none" }}
+                      />
+                      <div
+                        className="profile-radio-indicator"
+                        style={{
+                          borderColor: isSelected ? "var(--color-brand)" : undefined,
+                          background: isSelected ? "var(--color-brand)" : undefined,
+                        }}
+                      >
+                        <div
+                          className="profile-radio-dot"
+                          style={{ transform: isSelected ? "scale(1)" : "scale(0)" }}
+                        />
+                      </div>
+                      <span
+                        className="profile-radio-text"
+                        style={{ color: isSelected ? "var(--color-brand)" : undefined, fontWeight: isSelected ? 700 : undefined }}
+                      >
+                        {option}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Save action */}
+          <div style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginTop: "1.75rem",
+            paddingTop: "1.25rem",
+            borderTop: "1px solid var(--color-border)",
+          }}>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="profile-save-btn"
+            >
+              {isPending ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Save size={16} />
+              )}
+              Lưu thay đổi
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
   );
 }

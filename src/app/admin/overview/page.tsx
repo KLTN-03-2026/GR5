@@ -1,14 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  PackageOpen,
-  ShoppingCart,
-  AlertTriangle,
-  TrendingUp,
-  MapPin,
-} from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -20,9 +12,10 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend,
 } from "recharts";
 
-// --- MOCK DATA (Sau này lấy từ Database) ---
+// ─── Mock Data ──────────────────────────────────────────────
 const orderData = [
   { name: "T2", processed: 40, pending: 24 },
   { name: "T3", processed: 30, pending: 13 },
@@ -39,37 +32,88 @@ const regionData = [
   { name: "Đà Nẵng", value: 300 },
   { name: "Các tỉnh khác", value: 200 },
 ];
-const COLORS = ["#006b2c", "#10b981", "#34d399", "#a7f3d0"];
+const REGION_TOTAL = regionData.reduce((s, d) => s + d.value, 0);
+const PIE_COLORS = ["#059669", "#34d399", "#a7f3d0", "#d1fae5"];
 
-// ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT MÀ NEXT.JS CẦN TÌM
-export default function AnalyticsPage() {
+// ─── KPI Card definition ────────────────────────────────────
+const KPI_CARDS = [
+  {
+    label: "Lô sắp hết hạn",
+    value: "12",
+    unit: "lô hàng",
+    chip: "Cần xử lý",
+    chipCls: "bg-red-50 text-red-600",
+    accent: "#ef4444",
+  },
+  {
+    label: "Đơn chờ xử lý",
+    value: "45",
+    unit: "đơn hàng",
+    chip: "Chờ xử lý",
+    chipCls: "bg-amber-50 text-amber-600",
+    accent: "#f59e0b",
+  },
+  {
+    label: "Đã giao thành công",
+    value: "128",
+    unit: "đơn hàng",
+    chip: "Tuần này",
+    chipCls: "bg-emerald-50 text-emerald-600",
+    accent: "#059669",
+  },
+  {
+    label: "Doanh thu",
+    value: "24.5M",
+    unit: "VNĐ",
+    chip: "+18.5%",
+    chipCls: "bg-blue-50 text-blue-600",
+    accent: "#3b82f6",
+  },
+];
+
+// ─── Custom Tooltip for Bar Chart ───────────────────────────
+function BarTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-xl border border-slate-100 bg-white px-3 py-2.5 shadow-lg text-xs">
+      <p className="font-semibold text-slate-700 mb-1.5">{label}</p>
+      {payload.map((p: any) => (
+        <div key={p.dataKey} className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full" style={{ background: p.fill }} />
+          <span className="text-slate-500">{p.dataKey === "processed" ? "Đã xử lý" : "Chờ xử lý"}:</span>
+          <span className="font-medium text-slate-800">{p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Page ──────────────────────────────────────────────
+export default function AdminOverviewPage() {
   const [timeRange, setTimeRange] = useState("Tuần này");
 
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto font-sans">
-      {/* HEADER & BỘ LỌC */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
-          <h2 className="text-3xl font-black text-[#171d16] tracking-tight uppercase italic">
-            Thống kê tổng quan
-          </h2>
-          <p className="text-emerald-900/60 mt-1 font-medium">
-            Theo dõi hiệu suất kinh doanh và tình trạng kho hàng nông sản.
-          </p>
-        </motion.div>
+    <div className="space-y-6 max-w-[1400px] mx-auto">
 
-        <div className="flex items-center bg-white rounded-xl shadow-sm border border-emerald-100 p-1">
+      {/* ── PAGE HEADER ── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-[20px] font-medium text-slate-900">Tổng quan</h1>
+          <p className="text-[13px] text-slate-500 mt-0.5">
+            Theo dõi hiệu suất kinh doanh và tình trạng kho hàng nông sản
+          </p>
+        </div>
+
+        {/* Time filter */}
+        <div className="flex items-center gap-1 rounded-lg border border-[#e2e8f0] bg-white p-0.5">
           {["Hôm nay", "Tuần này", "Tháng này"].map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`h-8 px-3 rounded-[5px] text-[13px] font-medium transition-all ${
                 timeRange === range
-                  ? "bg-[#006b2c] text-white shadow-md"
-                  : "text-gray-500 hover:bg-emerald-50"
+                  ? "bg-[#f0fdf4] border border-[#059669] text-[#065f46]"
+                  : "text-[#64748b] hover:bg-slate-50"
               }`}
             >
               {range}
@@ -78,262 +122,157 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* KPI CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Card 1: Hàng sắp hết hạn */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white p-6 rounded-3xl border border-rose-100 shadow-sm relative overflow-hidden"
-        >
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full opacity-50"></div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="p-3 bg-rose-100 text-rose-600 rounded-2xl">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-md">
-              Cần Action
-            </span>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Lô hàng sắp hết hạn
-            </p>
-            <h3 className="text-3xl font-black text-gray-900">
-              12{" "}
-              <span className="text-base font-medium text-gray-500 normal-case">
-                sản phẩm
-              </span>
-            </h3>
-          </div>
-        </motion.div>
-
-        {/* Card 2: Đơn chưa xử lý */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white p-6 rounded-3xl border border-amber-100 shadow-sm relative overflow-hidden"
-        >
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full opacity-50"></div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="p-3 bg-amber-100 text-amber-600 rounded-2xl">
-              <PackageOpen className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">
-              Chờ đóng gói
-            </span>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Đơn chờ xử lý
-            </p>
-            <h3 className="text-3xl font-black text-gray-900">
-              45{" "}
-              <span className="text-base font-medium text-gray-500 normal-case">
-                đơn hàng
-              </span>
-            </h3>
-          </div>
-        </motion.div>
-
-        {/* Card 3: Đơn đã hoàn thành */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white p-6 rounded-3xl border border-emerald-100 shadow-sm relative overflow-hidden"
-        >
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50"></div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="p-3 bg-emerald-100 text-[#006b2c] rounded-2xl">
-              <ShoppingCart className="w-6 h-6" />
+      {/* ── KPI CARDS ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {KPI_CARDS.map((card) => (
+          <div
+            key={card.label}
+            className="relative bg-white rounded-lg overflow-hidden"
+            style={{
+              height: 80,
+              border: "0.5px solid #e2e8f0",
+              borderLeft: `3px solid ${card.accent}`,
+            }}
+          >
+            <div className="flex flex-col justify-between h-full px-4 py-3">
+              {/* Top row */}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                  {card.label}
+                </span>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] ${card.chipCls}`}>
+                  {card.chip}
+                </span>
+              </div>
+              {/* Bottom row */}
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[22px] font-medium text-slate-900 tabular-nums leading-none">
+                  {card.value}
+                </span>
+                <span className="text-[12px] text-slate-400">{card.unit}</span>
+              </div>
             </div>
           </div>
-          <div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Đã giao thành công
-            </p>
-            <h3 className="text-3xl font-black text-gray-900">
-              128{" "}
-              <span className="text-base font-medium text-gray-500 normal-case">
-                đơn hàng
-              </span>
-            </h3>
-          </div>
-        </motion.div>
-
-        {/* Card 4: Doanh thu */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-[#006b2c] p-6 rounded-3xl shadow-lg shadow-emerald-900/20 text-white relative overflow-hidden"
-        >
-          <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full"></div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-bold bg-white/20 px-2 py-1 rounded-md backdrop-blur-sm">
-              +18.5%
-            </span>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-emerald-100 uppercase tracking-wider mb-1">
-              Doanh thu {timeRange.toLowerCase()}
-            </p>
-            <h3 className="text-3xl font-black">
-              24.5M{" "}
-              <span className="text-base font-medium text-emerald-200 normal-case">
-                VNĐ
-              </span>
-            </h3>
-          </div>
-        </motion.div>
+        ))}
       </div>
 
-      {/* CHARTS SECTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Biểu đồ Đơn hàng (Cột) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="lg:col-span-2 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm"
-        >
-          <div className="flex justify-between items-center mb-6">
+      {/* ── CHARTS ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        {/* Bar Chart — 2/3 width */}
+        <div className="lg:col-span-2 bg-white rounded-xl border border-[#e2e8f0] p-5">
+          {/* Chart header */}
+          <div className="flex items-start justify-between mb-5">
             <div>
-              <h3 className="font-black text-lg text-[#171d16] uppercase italic">
+              <h3 className="text-[14px] font-medium text-slate-700">
                 Tốc độ xử lý đơn hàng
               </h3>
-              <p className="text-sm text-gray-500">
-                So sánh đơn đã giao và đơn đang chờ
+              <p className="text-[12px] text-slate-400 mt-0.5">
+                So sánh đơn đã giao và đơn đang chờ theo ngày
               </p>
             </div>
-            <div className="flex items-center gap-4 text-sm font-bold">
+            <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-[#006b2c]"></span> Đã
-                xử lý
+                <span className="w-2 h-2 rounded-full bg-[#059669]" />
+                <span className="text-[12px] text-slate-500">Đã xử lý</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-amber-400"></span> Chờ
-                xử lý
+                <span className="w-2 h-2 rounded-full bg-[#e2e8f0]" />
+                <span className="text-[12px] text-slate-500">Chờ xử lý</span>
               </div>
             </div>
           </div>
-          <div className="h-[300px] w-full">
+
+          <div className="h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={orderData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              >
+              <BarChart data={orderData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }} barGap={3}>
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray=""
                   vertical={false}
-                  stroke="#E5E7EB"
+                  stroke="#f1f5f9"
+                  strokeWidth={0.5}
                 />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#6B7280", fontSize: 12, fontWeight: 600 }}
-                  dy={10}
+                  tick={{ fill: "#94a3b8", fontSize: 11 }}
+                  dy={6}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#6B7280", fontSize: 12, fontWeight: 600 }}
+                  tick={{ fill: "#94a3b8", fontSize: 11 }}
                 />
-                <Tooltip
-                  cursor={{ fill: "#F3F4F6" }}
-                  contentStyle={{
-                    borderRadius: "16px",
-                    border: "none",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                />
-                <Bar
-                  dataKey="processed"
-                  fill="#006b2c"
-                  radius={[4, 4, 0, 0]}
-                  stackId="a"
-                  maxBarSize={40}
-                />
-                <Bar
-                  dataKey="pending"
-                  fill="#FBBF24"
-                  radius={[4, 4, 0, 0]}
-                  stackId="a"
-                  maxBarSize={40}
-                />
+                <Tooltip content={<BarTooltip />} cursor={{ fill: "#f8fafc" }} />
+                <Bar dataKey="processed" fill="#059669" radius={[3, 3, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="pending" fill="#e2e8f0" radius={[3, 3, 0, 0]} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Biểu đồ Khu vực (Tròn) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col"
-        >
-          <div className="mb-2">
-            <h3 className="font-black text-lg text-[#171d16] uppercase italic flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-emerald-600" /> Tỷ trọng khu vực
-            </h3>
-            <p className="text-sm text-gray-500">Phân bổ khách hàng</p>
+        {/* Donut Chart — 1/3 width */}
+        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 flex flex-col">
+          <div className="mb-4">
+            <h3 className="text-[14px] font-medium text-slate-700">Tỷ trọng khu vực</h3>
+            <p className="text-[12px] text-slate-400 mt-0.5">Phân bổ khách hàng theo vùng</p>
           </div>
 
-          <div className="flex-1 min-h-[250px]">
+          <div className="flex-1 min-h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={regionData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={5}
+                  innerRadius={58}
+                  outerRadius={85}
+                  paddingAngle={3}
                   dataKey="value"
+                  strokeWidth={0}
                 >
-                  {regionData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
+                  {regionData.map((_, index) => (
+                    <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    borderRadius: "12px",
-                    border: "none",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    borderRadius: 10,
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                    fontSize: 12,
                   }}
+                  formatter={(value: any, name: any) => [
+                    `${value} (${Math.round((value / REGION_TOTAL) * 100)}%)`,
+                    name,
+                  ]}
                 />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            {regionData.map((entry, index) => (
-              <div key={entry.name} className="flex items-center gap-2 text-sm">
-                <span
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                ></span>
-                <span
-                  className="font-bold text-gray-700 truncate"
-                  title={entry.name}
-                >
-                  {entry.name}
-                </span>
-              </div>
-            ))}
+          {/* Legend */}
+          <div className="mt-4 space-y-2">
+            {regionData.map((entry, index) => {
+              const pct = Math.round((entry.value / REGION_TOTAL) * 100);
+              return (
+                <div key={entry.name} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }}
+                    />
+                    <span className="text-[12px] text-slate-600 truncate max-w-[130px]" title={entry.name}>
+                      {entry.name}
+                    </span>
+                  </div>
+                  <span className="text-[12px] font-medium text-slate-500">{pct}%</span>
+                </div>
+              );
+            })}
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

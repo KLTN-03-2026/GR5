@@ -18,18 +18,18 @@ export default function SupplierHistoryPage() {
   }
 
   return (
-    <div className="space-y-6 rounded-3xl border border-white/70 bg-white/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur">
-      <div className="flex items-center gap-3">
-        <div className="rounded-2xl bg-slate-950 p-3 text-white">
-          <ClipboardList className="h-5 w-5" />
-        </div>
+    <div className="space-y-6 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">
+          <h2 className="text-base font-bold text-slate-800">
             Lịch sử nhập hàng
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 mt-1">
             Danh sách phiếu nhập gần nhất của nhà cung cấp này.
           </p>
+        </div>
+        <div className="rounded-full bg-slate-50 border border-slate-100 p-2.5 text-slate-500">
+          <ClipboardList size={20} />
         </div>
       </div>
 
@@ -38,9 +38,9 @@ export default function SupplierHistoryPage() {
           Chưa có phiếu nhập nào.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200">
+        <div className="overflow-hidden rounded-xl border border-slate-200">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-500">
+            <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Mã phiếu</th>
                 <th className="px-4 py-3 text-left font-medium">Ngày tạo</th>
@@ -72,9 +72,9 @@ export default function SupplierHistoryPage() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-        <div className="flex items-center gap-2 font-semibold text-slate-900">
-          <PackageSearch className="h-4 w-4" /> Ghi chú nghiệp vụ
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+        <div className="flex items-center gap-2 font-semibold text-blue-800">
+          <PackageSearch size={16} /> Ghi chú nghiệp vụ
         </div>
         <p className="mt-2">
           Tab này hiển thị lịch sử nhập kho từ API NCC hiện có, đủ để đối chiếu

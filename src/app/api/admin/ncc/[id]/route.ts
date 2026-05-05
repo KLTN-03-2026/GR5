@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+// ✅ Helper: Tính công nợ bằng SUM (chuẩn kế toán)
+async function calcCongNo(ma_ncc: number): Promise<number> {
+  const [phatSinh, thanhToan, traHang] = await Promise.all([
+    prisma.cong_no_ncc.aggregate({
+      _sum: { so_tien: true },
+      where: { ma_ncc, loai_giao_dich: "PHAT_SINH_NO" },
+    }),
+    prisma.cong_no_ncc.aggregate({
+      _sum: { so_tien: true },
+      where: { ma_ncc, loai_giao_dich: "THANH_TOAN" },
+    }),
+    prisma.cong_no_ncc.aggregate({
+      _sum: { so_tien: true },
+      where: { ma_ncc, loai_giao_dich: "TRA_HANG_HOAN_TIEN" },
+    }),
+  ]);
+  return (
+    Number(phatSinh._sum.so_tien ?? 0) -
+    Number(thanhToan._sum.so_tien ?? 0) -
+    Number(traHang._sum.so_tien ?? 0)
+  );
+}
+
 // GET /api/admin/ncc/[id]
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,14 +52,18 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
   if (!ncc) return NextResponse.json({ error: "Không tìm thấy NCC" }, { status: 404 });
 
-  // Tính chỉ số
+  // Tính chỉ số chất lượng
   const danhGias = ncc.danh_gia_giao_hang_ncc;
   const tongGiao = danhGias.length;
   const dungHan = danhGias.filter((d) => (d.diem_dung_han ?? 0) >= 4).length;
   const dungSoLuong = danhGias.filter((d) => (d.diem_dung_so_luong ?? 0) >= 4).length;
   const coVanDe = danhGias.filter((d) => d.co_van_de).length;
   const diemTb3Thang = danhGias
-    .filter((d) => d.ngay_danh_gia && d.ngay_danh_gia > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000))
+    .filter(
+      (d) =>
+        d.ngay_danh_gia &&
+        d.ngay_danh_gia > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    )
     .reduce((acc, d, _, arr) => acc + Number(d.diem_trung_binh ?? 0) / arr.length, 0);
 
   const chiSo = {
@@ -47,17 +74,13 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
     so_lan_van_de: coVanDe,
   };
 
-  // Công nợ hiện tại
-  const lastDebt = await prisma.cong_no_ncc.findFirst({
-    where: { ma_ncc: Number(id) },
-    orderBy: { ngay_giao_dich: "desc" },
-    select: { so_du_sau: true },
-  });
+  // ✅ FIX ĐIỂM 4: Tính công nợ bằng SUM
+  const congNoHienTai = await calcCongNo(Number(id));
 
   return NextResponse.json({
     ...ncc,
     chi_so: chiSo,
-    cong_no_hien_tai: lastDebt?.so_du_sau ?? 0,
+    cong_no_hien_tai: congNoHienTai,
   });
 }
 
@@ -84,7 +107,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       ten_ngan_hang: body.ten_ngan_hang,
       chu_ky_thanh_toan: body.chu_ky_thanh_toan,
       ghi_chu_noi_bo: body.ghi_chu_noi_bo,
-      ngay_bat_dau_hop_tac: body.ngay_bat_dau_hop_tac ? new Date(body.ngay_bat_dau_hop_tac) : undefined,
+      ngay_bat_dau_hop_tac: body.ngay_bat_dau_hop_tac
+        ? new Date(body.ngay_bat_dau_hop_tac)
+        : undefined,
     },
   });
   return NextResponse.json(updated);

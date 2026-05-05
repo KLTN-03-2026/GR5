@@ -12,7 +12,10 @@ import {
   Filter,
   ChevronRight,
   Star,
+  RefreshCw,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import Pagination from "@/components/ui/Pagination";
 
 interface NCC {
   id: number;
@@ -82,118 +85,105 @@ export default function AdminSuppliersPage() {
   const [filterLoai, setFilterLoai] = useState("");
   const [filterTrangThai, setFilterTrangThai] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pathname = usePathname();
+  const baseUrl = pathname?.startsWith("/warehouse-manager") ? "/warehouse-manager/suppliers" : "/admin/suppliers";
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (page = 1, currentSearch = "") => {
     setLoading(true);
     const params = new URLSearchParams();
     if (filterLoai) params.set("loai_ncc", filterLoai);
     if (filterTrangThai) params.set("trang_thai", filterTrangThai);
+    params.set("page", page.toString());
+    params.set("limit", "15");
+    if (currentSearch) params.set("search", currentSearch);
+
     const res = await fetch(`/api/admin/ncc?${params.toString()}`);
     const json = await res.json();
     setData(json.data ?? []);
+    setTotalPages(json.meta?.totalPages || 1);
     setKpi(json.kpi ?? null);
     setLoading(false);
   }, [filterLoai, filterTrangThai]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const timer = setTimeout(() => {
+      fetchData(currentPage, search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fetchData, currentPage, search]);
 
-  const filtered = data.filter(
-    (ncc) =>
-      ncc.ten_ncc.toLowerCase().includes(search.toLowerCase()) ||
-      ncc.ma_ncc?.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = data; // Already filtered by backend
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-slate-900">
             Quản lý Nhà Cung Cấp
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-slate-500 text-[13px] mt-1">
             Theo dõi chất lượng, hợp đồng và công nợ từng NCC
           </p>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors"
-        >
-          <Plus size={18} /> Thêm NCC mới
-        </button>
+        {!pathname?.startsWith("/warehouse-manager") && (
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-[13px] font-medium shadow-sm transition-colors"
+          >
+            <Plus size={16} /> Thêm NCC mới
+          </button>
+        )}
       </div>
 
       {/* KPI Cards */}
       {kpi && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Store size={20} className="text-blue-600" />
+          <div className="bg-white rounded-[10px] p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-2">
+              <Store size={14} /> Đang hợp tác
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Đang hợp tác</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {kpi.tong_dang_hop_tac}
-              </p>
-            </div>
+            <p className="text-2xl font-bold text-slate-900">{kpi.tong_dang_hop_tac}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <TrendingDown size={20} className="text-red-500" />
+          <div className="bg-white rounded-[10px] p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-2">
+              <TrendingDown size={14} /> Tổng công nợ
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Tổng công nợ</p>
-              <p className="text-xl font-bold text-red-600">
-                {Number(kpi.tong_cong_no).toLocaleString("vi-VN")}đ
-              </p>
-            </div>
+            <p className="text-xl font-bold text-red-600">{Number(kpi.tong_cong_no).toLocaleString("vi-VN")}đ</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <AlertTriangle size={20} className="text-amber-500" />
+          <div className="bg-white rounded-[10px] p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-2">
+              <AlertTriangle size={14} /> Uy tín thấp (&lt;6)
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Điểm uy tín thấp (&lt;6)</p>
-              <p className="text-2xl font-bold text-amber-600">
-                {kpi.ncc_diem_thap}
-              </p>
-            </div>
+            <p className="text-2xl font-bold text-amber-600">{kpi.ncc_diem_thap}</p>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <FileWarning size={20} className="text-orange-500" />
+          <div className="bg-white rounded-[10px] p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-2">
+              <FileWarning size={14} /> HĐ sắp hết hạn
             </div>
-            <div>
-              <p className="text-xs text-gray-500">HĐ sắp hết hạn (30 ngày)</p>
-              <p className="text-2xl font-bold text-orange-600">
-                {kpi.hop_dong_sap_het_han}
-              </p>
-            </div>
+            <p className="text-2xl font-bold text-orange-600">{kpi.hop_dong_sap_het_han}</p>
           </div>
         </div>
       )}
 
       {/* Bộ lọc & Search */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+      <div className="bg-white rounded-[10px] border border-slate-200 shadow-sm p-4">
         <div className="flex flex-wrap gap-3 items-center">
-          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 min-w-[200px]">
-            <Search size={16} className="text-gray-400" />
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 flex-1 min-w-[200px]">
+            <Search size={14} className="text-slate-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm kiếm tên NCC, mã NCC..."
-              className="bg-transparent outline-none text-sm w-full text-gray-700 placeholder:text-gray-400"
+              className="bg-transparent outline-none text-[13px] w-full text-slate-700 placeholder:text-slate-400"
             />
-          </div>
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <Filter size={14} />
           </div>
           <select
             value={filterLoai}
             onChange={(e) => setFilterLoai(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700 outline-none"
+            className="border border-slate-200 rounded-lg px-3 py-2 text-[13px] bg-white text-slate-700 outline-none hover:bg-slate-50 cursor-pointer"
           >
             <option value="">Tất cả loại</option>
             <option value="NONG_DAN">Nông dân</option>
@@ -204,7 +194,7 @@ export default function AdminSuppliersPage() {
           <select
             value={filterTrangThai}
             onChange={(e) => setFilterTrangThai(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-700 outline-none"
+            className="border border-slate-200 rounded-lg px-3 py-2 text-[13px] bg-white text-slate-700 outline-none hover:bg-slate-50 cursor-pointer"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="DANG_HOP_TAC">Đang hợp tác</option>
@@ -215,53 +205,36 @@ export default function AdminSuppliersPage() {
       </div>
 
       {/* Bảng danh sách */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[10px] border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+          <table className="w-full text-[13px]">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">
-                  Mã
-                </th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">
-                  Tên NCC
-                </th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">
-                  Tỉnh thành
-                </th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">
-                  Sản phẩm
-                </th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">
-                  Điểm uy tín
-                </th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">
-                  Công nợ
-                </th>
-                <th className="text-left px-4 py-3 text-gray-500 font-medium">
-                  Trạng thái
-                </th>
-                <th className="px-4 py-3"></th>
+                {["Mã", "Tên NCC", "Tỉnh thành", "Sản phẩm", "Điểm uy tín", "Công nợ", "Trạng thái", ""].map((h, i) => (
+                  <th key={i} className="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-gray-400">
+                  <td colSpan={8} className="text-center py-12 text-slate-400 text-[13px]">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <RefreshCw size={20} className="animate-spin text-slate-300" />
                       Đang tải dữ liệu...
                     </div>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-gray-400">
-                    <Store size={40} className="mx-auto mb-2 opacity-30" />
+                  <td colSpan={8} className="text-center py-12 text-slate-400 text-[13px]">
+                    <Store size={32} className="mx-auto mb-2 opacity-30" />
                     <p>Chưa có nhà cung cấp nào</p>
                     <button
                       onClick={() => setShowCreate(true)}
-                      className="mt-2 text-blue-600 hover:underline text-sm"
+                      className="mt-2 text-emerald-600 hover:underline font-medium"
                     >
                       Thêm NCC đầu tiên
                     </button>
@@ -269,80 +242,65 @@ export default function AdminSuppliersPage() {
                 </tr>
               ) : (
                 filtered.map((ncc) => {
-                  const status =
-                    STATUS_CONFIG[ncc.trang_thai ?? "DANG_HOP_TAC"];
+                  const status = STATUS_CONFIG[ncc.trang_thai ?? "DANG_HOP_TAC"];
                   const sanPhams = ncc.ncc_san_pham?.slice(0, 3) ?? [];
                   return (
-                    <tr
-                      key={ncc.id}
-                      className="hover:bg-gray-50/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-mono text-gray-500 text-xs">
+                    <tr key={ncc.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-4 py-3 font-mono text-slate-500 text-[12px]">
                         {ncc.ma_ncc ?? `#${ncc.id}`}
                       </td>
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-gray-900">
-                          {ncc.ten_ncc}
-                        </p>
+                        <p className="font-medium text-slate-900">{ncc.ten_ncc}</p>
                         {ncc.loai_ncc && (
-                          <span className="text-[11px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-medium">
+                          <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-medium mt-1 inline-block border border-emerald-200">
                             {LOAI_NCC_LABELS[ncc.loai_ncc] ?? ncc.loai_ncc}
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {ncc.tinh_thanh ?? "—"}
-                      </td>
+                      <td className="px-4 py-3 text-slate-600">{ncc.tinh_thanh ?? "—"}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           {sanPhams.map((sp, idx) => (
-                            <span
-                              key={idx}
-                              className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
-                            >
+                            <span key={idx} className="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-md whitespace-nowrap">
                               {sp.san_pham.ten_san_pham}
                             </span>
                           ))}
                           {ncc.ncc_san_pham?.length > 3 && (
-                            <span className="text-[11px] text-gray-400">
-                              +{ncc.ncc_san_pham.length - 3}
-                            </span>
+                            <span className="text-[10px] text-slate-400">+{ncc.ncc_san_pham.length - 3}</span>
                           )}
-                          {sanPhams.length === 0 && (
-                            <span className="text-gray-300 text-xs">
-                              Chưa có
-                            </span>
-                          )}
+                          {sanPhams.length === 0 && <span className="text-slate-300 text-xs italic">Chưa có</span>}
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <DiemUyTin diem={Number(ncc.diem_uy_tin ?? 5)} />
-                      </td>
+                      <td className="px-4 py-3"><DiemUyTin diem={Number(ncc.diem_uy_tin ?? 5)} /></td>
                       <td className="px-4 py-3">
                         {Number(ncc.cong_no_hien_tai) > 0 ? (
-                          <span className="font-bold text-red-600">
-                            {Number(ncc.cong_no_hien_tai).toLocaleString(
-                              "vi-VN",
-                            )}
-                            đ
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-red-600 font-mono text-[12px]">
+                              {Number(ncc.cong_no_hien_tai).toLocaleString("vi-VN")}đ
+                            </span>
+                            <Link href={`${baseUrl}/${ncc.id}/debt`} title="Thanh toán" className="text-[10px] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-1.5 py-0.5 rounded whitespace-nowrap transition-colors">
+                              Trả nợ
+                            </Link>
+                          </div>
                         ) : (
-                          <span className="text-green-600 text-xs font-medium">
+                          <span className="text-emerald-600 text-[11px] font-medium border border-emerald-200 bg-emerald-50 px-2 py-0.5 rounded-full">
                             Đã thanh toán
                           </span>
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`text-xs font-bold px-2.5 py-1 rounded-full ${status?.className}`}
-                        >
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-md border ${
+                          ncc.trang_thai === 'TAM_DUNG' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                          ncc.trang_thai === 'NGUNG' ? 'bg-red-50 text-red-700 border-red-200' :
+                          'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}>
                           {status?.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-right">
                         <Link
-                          href={`/admin/suppliers/${ncc.id}/info`}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-medium"
+                          href={`${baseUrl}/${ncc.id}/info`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 transition-colors text-[12px] font-medium"
                         >
                           Chi tiết <ChevronRight size={14} />
                         </Link>
@@ -354,6 +312,14 @@ export default function AdminSuppliersPage() {
             </tbody>
           </table>
         </div>
+        
+        {totalPages > 1 && (
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
 
       {/* Modal Thêm NCC mới */}

@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
+import Pagination from "@/components/ui/Pagination";
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -23,7 +25,7 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const limit = 5;
+  const limit = 15;
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -201,32 +203,6 @@ export default function ProductsPage() {
     }
   };
 
-  // HÀM TẠO PHÂN TRANG (MỚI THÊM VÀO ĐÂY SẾP NHÉ)
-  const generatePagination = () => {
-    if (totalPages <= 5)
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    if (currentPage <= 3) return [1, 2, 3, 4, "...", totalPages];
-    if (currentPage >= totalPages - 2)
-      return [
-        1,
-        "...",
-        totalPages - 3,
-        totalPages - 2,
-        totalPages - 1,
-        totalPages,
-      ];
-    return [
-      1,
-      "...",
-      currentPage - 1,
-      currentPage,
-      currentPage + 1,
-      "...",
-      totalPages,
-    ];
-  };
-  const paginationItems = generatePagination();
-
   return (
     <div className="space-y-8 max-w-[1200px] mx-auto pb-10">
       <Toaster />
@@ -363,52 +339,11 @@ export default function ProductsPage() {
             </div>
 
             {/* ĐÃ CẬP NHẬT PHÂN TRANG THEO YÊU CẦU CỦA SẾP */}
-            {totalPages > 1 && (
-              <div className="mt-auto px-8 py-4 bg-gray-50/50 border-t flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-500">
-                  Trang {currentPage} / {totalPages}
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    className="w-8 h-8 flex items-center justify-center bg-white border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-
-                  {/* Hiển thị số trang */}
-                  {paginationItems.map((item, index) =>
-                    item === "..." ? (
-                      <span
-                        key={`ellipsis-${index}`}
-                        className="w-8 h-8 flex items-center justify-center text-gray-400 font-bold"
-                      >
-                        ...
-                      </span>
-                    ) : (
-                      <button
-                        key={`page-${item}`}
-                        onClick={() => setCurrentPage(Number(item))}
-                        className={`w-8 h-8 flex items-center justify-center rounded font-bold transition-all ${currentPage === item ? "bg-[#006b2c] text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-[#006b2c]"}`}
-                      >
-                        {item}
-                      </button>
-                    ),
-                  )}
-
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(p + 1, totalPages))
-                    }
-                    className="w-8 h-8 flex items-center justify-center bg-white border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </>
         )}
       </div>

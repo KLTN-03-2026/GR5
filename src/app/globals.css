@@ -1,67 +1,618 @@
 @import "tailwindcss";
 
+
 /* =========================================
-   1. CẤU HÌNH GỐC (BASE)
+   1. DESIGN TOKENS
+   ========================================= */
+:root {
+  /* Brand Green — Nông sản Việt */
+  --color-brand:        #007A33;
+  --color-brand-dark:   #005A25;
+  --color-brand-light:  #e6f5ec;
+  --color-brand-muted:  rgba(0, 122, 51, 0.08);
+
+  /* Surfaces */
+  --color-bg:           #F4FCF0;
+  --color-surface:      #ffffff;
+  --color-surface-2:    #f7faf8;
+  --color-sidebar:      #eef7f1;
+  --color-border:       #e2ede7;
+
+  /* Text */
+  --color-text:         #1a3328;
+  --color-text-2:       #4a6659;
+  --color-text-muted:   #8aaa98;
+
+  /* Semantic */
+  --color-error:        #c0392b;
+  --color-success:      #007A33;
+  --color-warning:      #d97706;
+
+  /* Radius */
+  --radius-sm:    0.5rem;
+  --radius-md:    0.875rem;
+  --radius-lg:    1.25rem;
+  --radius-xl:    1.75rem;
+  --radius-2xl:   2rem;
+
+  /* Shadows */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 16px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-lg:   0 12px 40px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
+
+  /* Typography */
+  --font-sans: var(--font-be-vietnam), "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+
+}
+
+/* =========================================
+   2. BASE
    ========================================= */
 @layer base {
-  body {
-
-    /* Màu xanh lá cực nhạt, tạo cảm giác sạch sẽ */
-    background-color: #F4FCF0; 
-    color: #064e3b;
+  *, *::before, *::after {
+    box-sizing: border-box;
   }
 
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
 
-
-/* Thêm vào cuối file globals.css */
-
-
-@layer base {
   body {
-    
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+  }
 
-    background-color: #F4FCF0; 
-    color: #064e3b;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    line-height: 1.25;
+    color: var(--color-text);
   }
 }
 
 /* =========================================
-   2. GỌT THANH CUỘN (SCROLLBAR) TOÀN TRANG
+   3. SCROLLBAR
    ========================================= */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
-
-
 
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1; /* Màu xám nhạt thanh lịch cho toàn trang */
+  background-color: var(--color-border);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8; /* Đậm hơn xíu khi di chuột vào */
+  background-color: var(--color-text-muted);
 }
 
-/* Tùy chỉnh thanh cuộn riêng cho Sidebar (nền tối) của sếp */
-.custom-scrollbar::-webkit-scrollbar { 
-  width: 4px; 
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb { 
-  background-color: #374151; 
-  border-radius: 4px; 
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #374151;
+  border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #475569;
 }
 
 /* =========================================
-   3. ANIMATIONS & CUSTOM UTILITIES
+   4. PROFILE PAGE — COMPONENT STYLES
+   ========================================= */
+
+/* Sidebar */
+.account-sidebar {
+  font-family: var(--font-sans);
+  background: var(--color-sidebar);
+  border-right: 1px solid var(--color-border);
+  width: 256px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 0;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.account-sidebar__brand {
+  padding: 0 1.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.account-sidebar__brand h1 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-brand);
+  letter-spacing: -0.02em;
+}
+
+.account-sidebar__user {
+  margin: 0 1rem 1.5rem;
+  padding: 0.875rem 1rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.account-sidebar__avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--color-brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,122,51,0.25);
+}
+
+.account-sidebar__user-name {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.account-sidebar__user-role {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-brand);
+  background: var(--color-brand-muted);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  display: inline-block;
+  margin-top: 0.2rem;
+  letter-spacing: 0.01em;
+}
+
+.account-sidebar__nav {
+  flex: 1;
+  padding: 0 0.75rem;
+}
+
+.account-sidebar__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.7rem 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-2);
+  transition: background 150ms ease, color 150ms ease;
+  text-decoration: none;
+  margin-bottom: 2px;
+}
+
+.account-sidebar__nav-item:hover {
+  background: rgba(0,122,51,0.06);
+  color: var(--color-brand);
+}
+
+.account-sidebar__nav-item--active {
+  background: var(--color-surface);
+  color: var(--color-brand);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+}
+
+.account-sidebar__nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.account-sidebar__upgrade {
+  margin: 0.75rem 1rem;
+  padding: 0.625rem 1rem;
+  background: var(--color-brand-muted);
+  color: var(--color-brand);
+  border-radius: var(--radius-md);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  width: calc(100% - 2rem);
+  transition: background 150ms ease;
+  font-family: var(--font-sans);
+}
+
+.account-sidebar__upgrade:hover {
+  background: rgba(0,122,51,0.14);
+}
+
+.account-sidebar__footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  padding: 1rem 0.75rem 0;
+}
+
+.account-sidebar__footer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.7rem 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-2);
+  transition: background 150ms ease, color 150ms ease;
+  text-decoration: none;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  margin-bottom: 2px;
+}
+
+.account-sidebar__footer-item:hover {
+  background: rgba(0,122,51,0.06);
+  color: var(--color-brand);
+}
+
+.account-sidebar__footer-item--danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* Profile Form */
+.profile-page {
+  font-family: var(--font-sans);
+  width: 100%;
+  max-width: 760px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.profile-header__title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-brand);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.profile-header__sub {
+  font-size: 0.825rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  margin-top: 0.3rem;
+}
+
+.profile-header__bell {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+  flex-shrink: 0;
+}
+
+.profile-header__bell:hover {
+  background: var(--color-brand-light);
+  color: var(--color-brand);
+}
+
+/* Identity card — avatar + name + role */
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.75rem 2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-identity__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-identity__avatar {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1.25rem;
+  background: var(--color-brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 900;
+  box-shadow: 0 4px 16px rgba(0,122,51,0.22);
+  letter-spacing: -0.02em;
+}
+
+.profile-identity__camera {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-brand);
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-identity__camera:hover {
+  transform: scale(1.1);
+  background: var(--color-brand-light);
+}
+
+.profile-identity__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-identity__name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 0.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-identity__email {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  margin: 0 0 0.6rem;
+}
+
+.profile-identity__badges {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.profile-identity__badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+}
+
+.profile-identity__badge--role {
+  background: var(--color-brand-muted);
+  color: var(--color-brand);
+}
+
+.profile-identity__badge--tier {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.profile-identity__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.btn-photo {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-sans);
+  transition: background 150ms ease, color 150ms ease;
+  white-space: nowrap;
+}
+
+.btn-photo--primary {
+  background: var(--color-brand);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,122,51,0.2);
+}
+
+.btn-photo--primary:hover {
+  background: var(--color-brand-dark);
+}
+
+.btn-photo--ghost {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+.btn-photo--ghost:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Form card */
+.profile-form-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-section-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.profile-input {
+  width: 100%;
+  background: var(--color-surface-2);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+  -webkit-appearance: none;
+}
+
+.profile-input:focus {
+  border-color: rgba(0,122,51,0.3);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 3px rgba(0,122,51,0.08);
+}
+
+.profile-input:read-only {
+  background: #f1f5f2;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.profile-radio-group {
+  display: flex;
+  gap: 2rem;
+}
+
+.profile-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.profile-radio-label input[type="radio"] {
+  display: none;
+}
+
+.profile-radio-indicator {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 150ms ease;
+  flex-shrink: 0;
+}
+
+.profile-radio-label input[type="radio"]:checked + .profile-radio-indicator {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+}
+
+.profile-radio-dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: #fff;
+  transform: scale(0);
+  transition: transform 150ms ease;
+}
+
+.profile-radio-label input[type="radio"]:checked + .profile-radio-indicator .profile-radio-dot {
+  transform: scale(1);
+}
+
+.profile-radio-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+  transition: color 150ms ease;
+}
+
+.profile-radio-label:hover .profile-radio-text {
+  color: var(--color-brand);
+}
+
+.profile-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2.5rem;
+  background: var(--color-brand);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-family: var(--font-sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 150ms ease, transform 100ms ease, box-shadow 150ms ease;
+  box-shadow: 0 2px 12px rgba(0,122,51,0.25);
+}
+
+.profile-save-btn:hover:not(:disabled) {
+  background: var(--color-brand-dark);
+  box-shadow: 0 4px 16px rgba(0,122,51,0.3);
+}
+
+.profile-save-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.profile-save-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   5. ANIMATIONS
    ========================================= */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -74,4 +625,11 @@
   animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
 }
 
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }

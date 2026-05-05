@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   UserPlus,
@@ -11,51 +12,47 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Pagination from "@/components/ui/Pagination";
 
 export default function CustomersPage() {
-  // 1. Quản lý State cho API và Dữ liệu
   const [customers, setCustomers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchInput, setSearchInput] = useState("");
-  const [filterKeyword, setFilterKeyword] = useState("");
-
-  // 2. Quản lý State cho UI Panel
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Pagination & Filtering
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const itemsPerPage = 15;
 
-  // 3. Gọi API mỗi khi filterKeyword thay đổi (Hook Side Effect)
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/admin/customers?q=${filterKeyword}`);
-        const result = await response.json();
-
-        if (result.data) {
-          setCustomers(result.data);
+  const fetchCustomers = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: searchQuery
+      });
+      const res = await fetch(`/api/admin/customers?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data.data || []);
+        setTotalPages(data.meta?.totalPages || 1);
+        if (!selectedCustomer && data.data?.length > 0) {
+          setSelectedCustomer(data.data[0]);
         }
-      } catch (error) {
-        console.error("Lỗi khi kéo dữ liệu khách hàng:", error);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Lỗi fetch khách hàng:", error);
+    } finally { 
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchCustomers();
-  }, [filterKeyword]);
-
-  // Hàm xử lý khi bấm nút Lọc
-  const handleFilterClick = () => {
-    setFilterKeyword(searchInput);
-  };
-
-  // Hàm format tiền tệ VNĐ chuẩn xác
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
-  };
+  }, [currentPage, searchQuery]);
 
   return (
     <div className="relative">
@@ -116,19 +113,20 @@ export default function CustomersPage() {
                 onKeyDown={(e) => e.key === "Enter" && handleFilterClick()}
                 className="w-full bg-white border-none rounded-xl py-2.5 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-[#006b2c]/20"
                 placeholder="Tìm theo tên, email, sđt..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
             </div>
             <div className="flex gap-3">
               <select className="bg-white rounded-xl px-4 py-2.5 text-sm font-medium outline-none">
-                <option value="ALL">Tất cả</option>
+                <option value="">Tất cả phân khúc</option>
                 <option value="VIP">VIP</option>
+                <option value="Loyal">Loyal</option>
+                <option value="Mới">Mới</option>
               </select>
-              <button
-                onClick={handleFilterClick}
-                className="bg-[#171d16] text-white py-2.5 px-6 rounded-xl font-bold text-sm hover:opacity-90"
-              >
-                Lọc
-              </button>
             </div>
           </div>
 
@@ -157,21 +155,14 @@ export default function CustomersPage() {
               <tbody className="divide-y divide-[#bdcaba]/10">
                 {isLoading ? (
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="text-center py-8 text-gray-500 font-medium"
-                    >
-                      <RefreshCw
-                        className="animate-spin inline-block mr-2"
-                        size={18}
-                      />{" "}
-                      Đang tải dữ liệu...
+                    <td colSpan={5} className="text-center py-20">
+                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#006b2c] border-t-transparent mx-auto"></div>
                     </td>
                   </tr>
                 ) : customers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-gray-500">
-                      Không tìm thấy dữ liệu khách hàng nào.
+                    <td colSpan={5} className="text-center py-16 text-gray-400 font-medium">
+                      Không tìm thấy khách hàng nào.
                     </td>
                   </tr>
                 ) : (
@@ -182,25 +173,15 @@ export default function CustomersPage() {
                         setSelectedCustomer(customer);
                         setIsPanelOpen(true);
                       }}
-                      className="hover:bg-[#eff6ea]/30 cursor-pointer transition-colors"
+                      className="hover:bg-[#eff6ea]/30 cursor-pointer"
                     >
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700 uppercase overflow-hidden shrink-0">
-                            {customer.avatar ? (
-                              <img
-                                src={customer.avatar}
-                                alt={customer.ten}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : customer.ten ? (
-                              customer.ten.charAt(0)
-                            ) : (
-                              "?"
-                            )}
+                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700 overflow-hidden">
+                            <img src={customer.avatar} alt="Avatar" className="w-full h-full object-cover" />
                           </div>
                           <div>
-                            <p className="font-bold text-sm">{customer.ten}</p>
+                            <p className="font-bold text-sm">{customer.name}</p>
                             <p className="text-[10px] text-[#6e7b6c]">
                               ID: #{customer.id}
                             </p>
@@ -208,19 +189,19 @@ export default function CustomersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-5">
-                        <p className="text-xs font-medium">{customer.sdt}</p>
+                        <p className="text-xs font-medium">{customer.phone}</p>
                         <p className="text-[11px] text-[#6e7b6c]">
                           {customer.email}
                         </p>
                       </td>
                       <td className="px-6 py-5 text-center font-bold text-sm">
-                        {customer.tongDon}
+                        {customer.orders}
                       </td>
-                      <td className="px-6 py-5 font-bold text-sm text-[#006b2c] text-right">
-                        {formatCurrency(customer.tongChiTieu)}
+                      <td className="px-6 py-5 font-bold text-sm text-[#006b2c]">
+                        {customer.spent}
                       </td>
-                      <td className="px-6 py-5 text-center">
-                        <button className="p-2 hover:bg-green-50 rounded-lg text-green-600 transition-colors">
+                      <td className="px-6 py-5 text-right">
+                        <button className="p-2 hover:bg-green-50 rounded-lg text-green-600">
                           <Eye size={16} />
                         </button>
                       </td>
@@ -229,12 +210,20 @@ export default function CustomersPage() {
                 )}
               </tbody>
             </table>
+            
+            {/* Pagination Component */}
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
       </div>
 
       {/* Right Detail Panel */}
       <AnimatePresence>
+        {isPanelOpen && selectedCustomer && (
         {isPanelOpen && selectedCustomer && (
           <motion.aside
             initial={{ x: 380 }}
@@ -255,19 +244,8 @@ export default function CustomersPage() {
             </div>
             <div className="p-6 space-y-6 overflow-y-auto">
               <div className="text-center space-y-2">
-                {/* ĐÃ FIX HIỂN THỊ AVATAR TRONG PANEL BÊN PHẢI */}
-                <div className="w-24 h-24 rounded-3xl bg-green-50 mx-auto flex items-center justify-center text-3xl font-black text-green-600 uppercase overflow-hidden shadow-inner shrink-0">
-                  {selectedCustomer.avatar ? (
-                    <img
-                      src={selectedCustomer.avatar}
-                      alt={selectedCustomer.ten}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : selectedCustomer.ten ? (
-                    selectedCustomer.ten.charAt(0)
-                  ) : (
-                    "?"
-                  )}
+                <div className="w-24 h-24 rounded-3xl bg-green-50 mx-auto flex items-center justify-center text-3xl font-black text-green-600 overflow-hidden">
+                  <img src={selectedCustomer.avatar} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
                 <h5 className="text-xl font-black text-[#171d16]">
                   {selectedCustomer.ten}

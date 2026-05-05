@@ -24,6 +24,8 @@ export async function handleLogin(formData: FormData) {
         redirectTo = "/admin/overview";
       } else if (roles.includes("STAFF")) {
         redirectTo = "/staff";
+      } else if (roles.includes("THU_KHO")) {
+        redirectTo = "/warehouse-manager";
       }
     }
 
