@@ -1,514 +1,667 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus,
-  Edit,
-  Trash2,
-  X,
-  Image as ImageIcon,
-  Eye,
-  EyeOff,
-  AlertTriangle,
-  GripVertical,
-  CheckCircle2,
-  Link as LinkIcon,
-  Filter,
-  ChevronRight,
+  Plus, Edit, Trash2, X, Image as ImageIcon, Eye, EyeOff,
+  AlertTriangle, GripVertical, Link as LinkIcon, ExternalLink,
+  Calendar, Tag, ToggleLeft, ToggleRight, Search, Filter,
+  CheckCircle2, Clock, XCircle, LayoutTemplate, Rows3,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
+const BANNER_TYPES: { value: string; label: string; color: string; bg: string }[] = [
+  { value: "hero",       label: "Hero / Slider",     color: "#6366f1", bg: "#eef2ff" },
+  { value: "popup",      label: "Popup",             color: "#f59e0b", bg: "#fef9c3" },
+  { value: "sidebar",    label: "Sidebar",           color: "#06b6d4", bg: "#ecfeff" },
+  { value: "inline",     label: "Inline / Giữa trang", color: "#8b5cf6", bg: "#f5f3ff" },
+  { value: "khuyen_mai", label: "Khuyến mãi",        color: "#ef4444", bg: "#fef2f2" },
+];
+
+function typeMeta(val: string) {
+  return BANNER_TYPES.find(t => t.value === val) ?? BANNER_TYPES[0];
+}
+
+function statusOf(item: any): "active" | "scheduled" | "expired" | "off" {
+  if (!item.dang_hoat_dong) return "off";
+  const now = new Date();
+  if (item.ngay_bat_dau && new Date(item.ngay_bat_dau) > now) return "scheduled";
+  if (item.ngay_ket_thuc && new Date(item.ngay_ket_thuc) < now) return "expired";
+  return "active";
+}
+
+const STATUS_META = {
+  active:    { label: "Đang hiển thị", color: "#16a34a", bg: "#dcfce7", Icon: CheckCircle2 },
+  scheduled: { label: "Chờ kích hoạt", color: "#f59e0b", bg: "#fef9c3", Icon: Clock },
+  expired:   { label: "Hết hạn",       color: "#9ca3af", bg: "#f3f4f6", Icon: XCircle },
+  off:       { label: "Đã tắt",        color: "#ef4444", bg: "#fef2f2", Icon: EyeOff },
+};
+
+const EMPTY_FORM = {
+  tieu_de: "", mo_ta: "", duong_dan_anh: "", lien_ket: "",
+  loai_banner: "hero", thu_tu_sap_xep: "1",
+  dang_hoat_dong: true, ngay_bat_dau: "", ngay_ket_thuc: "",
+};
+
 export default function ContentPage() {
-  const [contents, setContents] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [banners, setBanners]       = useState<any[]>([]);
+  const [isLoading, setIsLoading]   = useState(true);
+  const [viewMode, setViewMode]     = useState<"list" | "grid">("list");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
-    tieu_de: "",
-    duong_dan_anh: "",
-    thu_tu_sap_xep: "0",
-    dang_hoat_dong: true,
-  });
+  const [editingId, setEditingId]     = useState<number | null>(null);
+  const [formData, setFormData]       = useState({ ...EMPTY_FORM });
+  const [imgUploading, setImgUploading] = useState(false);
 
   const [deleteModal, setDeleteModal] = useState({
-    isOpen: false,
-    id: null as number | null,
-    name: "",
+    isOpen: false, id: null as number | null, name: "",
   });
 
-  const fetchContents = async () => {
+  const fetchBanners = async () => {
     setIsLoading(true);
     try {
-      // ĐÃ SỬA THÀNH CONTENT
       const res = await fetch(`/api/admin/content?t=${Date.now()}`);
-      if (res.ok) setContents(await res.json());
-    } catch (error) {
-      toast.error("Lỗi lấy dữ liệu!");
-    } finally {
-      setIsLoading(false);
-    }
+      if (res.ok) setBanners(await res.json());
+    } catch { toast.error("Lỗi lấy dữ liệu!"); }
+    finally   { setIsLoading(false); }
   };
 
-  useEffect(() => {
-    fetchContents();
-  }, []);
+  useEffect(() => { fetchBanners(); }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
-  };
+  const filtered = useMemo(() => banners.filter(b => {
+    if (searchTerm && !b.tieu_de?.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (typeFilter !== "ALL" && b.loai_banner !== typeFilter) return false;
+    if (statusFilter !== "ALL" && statusOf(b) !== statusFilter) return false;
+    return true;
+  }), [banners, searchTerm, typeFilter, statusFilter]);
 
-  const openAddModal = () => {
+  const stats = useMemo(() => ({
+    total:     banners.length,
+    active:    banners.filter(b => statusOf(b) === "active").length,
+    scheduled: banners.filter(b => statusOf(b) === "scheduled").length,
+    expired:   banners.filter(b => statusOf(b) === "expired").length,
+    off:       banners.filter(b => statusOf(b) === "off").length,
+  }), [banners]);
+
+  const openAdd = () => {
     setEditingId(null);
-    setFormData({
-      tieu_de: "",
-      duong_dan_anh: "",
-      thu_tu_sap_xep: "0",
-      dang_hoat_dong: true,
-    });
+    setFormData({ ...EMPTY_FORM, thu_tu_sap_xep: String(banners.length + 1) });
     setIsModalOpen(true);
   };
 
-  const openEditModal = (item: any) => {
+  const openEdit = (item: any) => {
     setEditingId(item.id);
     setFormData({
       tieu_de: item.tieu_de || "",
+      mo_ta: item.mo_ta || "",
       duong_dan_anh: item.duong_dan_anh || "",
+      lien_ket: item.lien_ket || "",
+      loai_banner: item.loai_banner || "hero",
       thu_tu_sap_xep: item.thu_tu_sap_xep?.toString() || "0",
-      dang_hoat_dong: item.dang_hoat_dong,
+      dang_hoat_dong: !!item.dang_hoat_dong,
+      ngay_bat_dau: item.ngay_bat_dau ? item.ngay_bat_dau.slice(0, 16) : "",
+      ngay_ket_thuc: item.ngay_ket_thuc ? item.ngay_ket_thuc.slice(0, 16) : "",
     });
     setIsModalOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.duong_dan_anh.trim()) {
-      toast.error("Vui lòng tải lên hoặc nhập link hình ảnh!");
-      return;
-    }
-
-    const payload = {
-      tieu_de: formData.tieu_de,
-      duong_dan_anh: formData.duong_dan_anh,
-      thu_tu_sap_xep: parseInt(formData.thu_tu_sap_xep?.toString()) || 0,
-      dang_hoat_dong: Boolean(formData.dang_hoat_dong),
-    };
-
-    // ĐÃ SỬA THÀNH CONTENT
-    const url = editingId
-      ? `/api/admin/content/${editingId}`
-      : "/api/admin/content";
+    if (!formData.tieu_de.trim()) { toast.error("Vui lòng nhập tiêu đề banner!"); return; }
+    if (!formData.duong_dan_anh.trim()) { toast.error("Vui lòng chọn hoặc nhập link hình ảnh!"); return; }
+    const url    = editingId ? `/api/admin/content/${editingId}` : "/api/admin/content";
     const method = editingId ? "PUT" : "POST";
-
     try {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...formData,
+          thu_tu_sap_xep: parseInt(formData.thu_tu_sap_xep) || 0,
+          ngay_bat_dau: formData.ngay_bat_dau || null,
+          ngay_ket_thuc: formData.ngay_ket_thuc || null,
+        }),
       });
-
       if (res.ok) {
-        toast.success(
-          editingId ? "Cập nhật thành công!" : "Thêm mới thành công!",
-        );
+        toast.success(editingId ? "Cập nhật thành công!" : "Thêm banner thành công!");
         setIsModalOpen(false);
-        fetchContents();
+        fetchBanners();
       } else {
-        const errorData = await res.json();
-        toast.error(errorData.error || "Lỗi lưu Database!");
+        const err = await res.json();
+        toast.error(err.error || "Lỗi lưu dữ liệu!");
       }
-    } catch (error) {
-      toast.error("Lỗi hệ thống!");
-    }
+    } catch { toast.error("Lỗi hệ thống!"); }
+  };
+
+  const toggleStatus = async (id: number, current: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/content/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dang_hoat_dong: !current }),
+      });
+      if (res.ok) {
+        fetchBanners();
+        toast.success(!current ? "Đã bật hiển thị" : "Đã tắt hiển thị");
+      }
+    } catch { toast.error("Lỗi hệ thống!"); }
   };
 
   const executeDelete = async () => {
     if (!deleteModal.id) return;
     try {
-      // ĐÃ SỬA THÀNH CONTENT
-      const res = await fetch(`/api/admin/content/${deleteModal.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/admin/content/${deleteModal.id}`, { method: "DELETE" });
       if (res.ok) {
-        toast.success("Đã xóa nội dung!");
+        toast.success("Đã xóa banner!");
         setDeleteModal({ isOpen: false, id: null, name: "" });
-        fetchContents();
+        fetchBanners();
       } else toast.error("Không thể xóa!");
-    } catch (error) {
-      toast.error("Lỗi kết nối!");
-    }
+    } catch { toast.error("Lỗi kết nối!"); }
   };
 
-  const toggleStatus = async (id: number, currentStatus: boolean) => {
+  const handleUpload = async (file: File) => {
+    setImgUploading(true);
+    const toastId = toast.loading("Đang tải ảnh...");
+    const fd = new FormData();
+    fd.append("file", file);
     try {
-      // ĐÃ SỬA THÀNH CONTENT
-      const res = await fetch(`/api/admin/content/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dang_hoat_dong: !currentStatus }),
-      });
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
       if (res.ok) {
-        fetchContents();
-        toast.success(!currentStatus ? "Đã BẬT hiển thị" : "Đã TẮT hiển thị");
-      }
-    } catch (error) {
-      toast.error("Lỗi hệ thống!");
-    }
+        const { url } = await res.json();
+        setFormData(prev => ({ ...prev, duong_dan_anh: url }));
+        toast.success("Tải ảnh thành công!", { id: toastId });
+      } else throw new Error();
+    } catch { toast.error("Lỗi tải ảnh!", { id: toastId }); }
+    finally { setImgUploading(false); }
   };
 
-  const activeCount = contents.filter((c) => c.dang_hoat_dong).length;
+  const fmtDate = (d: string | null) => {
+    if (!d) return null;
+    return new Date(d).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+  };
 
   return (
-    <div className="space-y-8 max-w-[1200px] mx-auto font-sans pb-10">
+    <div style={{ background: "#f7f8f6", minHeight: "100vh", padding: "24px 28px", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}>
       <Toaster />
-      <div className="flex justify-between items-end mb-8">
-        <div>
-          <div className="flex items-center text-sm font-bold text-gray-500 mb-2 gap-2">
-            <span>Trang chủ</span> <ChevronRight className="w-4 h-4" />{" "}
-            <span className="text-[#006b2c]">Cấu hình Banner</span>
+
+      {/* Page header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 600, color: "#111827", margin: 0 }}>Quản lý Banner</h1>
+        <p style={{ fontSize: 12, color: "#9ca3af", margin: "4px 0 0" }}>Admin / Nội dung / Banner</p>
+      </div>
+
+      {/* Metric cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 20 }}>
+        {[
+          { label: "Tổng banner",    value: stats.total,     bt: "#6366f1", vc: "#111827", ic: "#6366f1", ib: "#eef2ff", Icon: LayoutTemplate },
+          { label: "Đang hiển thị",  value: stats.active,    bt: "#16a34a", vc: "#15803d", ic: "#16a34a", ib: "#dcfce7", Icon: CheckCircle2 },
+          { label: "Chờ kích hoạt",  value: stats.scheduled, bt: "#f59e0b", vc: "#92400e", ic: "#f59e0b", ib: "#fef9c3", Icon: Clock },
+          { label: "Hết hạn",        value: stats.expired,   bt: "#9ca3af", vc: "#374151", ic: "#9ca3af", ib: "#f3f4f6", Icon: XCircle },
+          { label: "Đã tắt",         value: stats.off,       bt: "#ef4444", vc: "#b91c1c", ic: "#ef4444", ib: "#fef2f2", Icon: EyeOff },
+        ].map(c => (
+          <div key={c.label} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, borderTop: `3px solid ${c.bt}`, padding: "14px 16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+              <p style={{ fontSize: 12, fontWeight: 500, color: "#9ca3af", margin: 0 }}>{c.label}</p>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: c.ib, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <c.Icon style={{ width: 14, height: 14, color: c.ic }} />
+              </div>
+            </div>
+            <p style={{ fontSize: 24, fontWeight: 700, color: c.vc, margin: 0 }}>{c.value}</p>
           </div>
-          <h1 className="text-4xl font-black italic text-gray-900 uppercase tracking-tight">
-            QUẢN LÝ BANNER
-          </h1>
-          <p className="text-gray-500 font-medium mt-2">
-            Sắp xếp, cập nhật các chương trình khuyến mãi nông sản tại trang
-            chủ.
-          </p>
+        ))}
+      </div>
+
+      {/* Toolbar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {/* Search */}
+          <div style={{ position: "relative", width: 260 }}>
+            <Search style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 14, height: 14, color: "#9ca3af" }} />
+            <input
+              type="text" placeholder="Tìm tên banner..."
+              value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+              style={{ width: "100%", height: 38, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 12px 0 34px", outline: "none", color: "#374151", background: "#fff", boxSizing: "border-box" }}
+            />
+          </div>
+          {/* Loại */}
+          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+            style={{ height: 38, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 10px", color: "#374151", background: "#fff", outline: "none", minWidth: 160 }}>
+            <option value="ALL">Tất cả loại</option>
+            {BANNER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+          {/* Trạng thái */}
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+            style={{ height: 38, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 10px", color: "#374151", background: "#fff", outline: "none", minWidth: 160 }}>
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="active">Đang hiển thị</option>
+            <option value="scheduled">Chờ kích hoạt</option>
+            <option value="expired">Hết hạn</option>
+            <option value="off">Đã tắt</option>
+          </select>
+          {/* View mode */}
+          <div style={{ display: "flex", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
+            {(["list", "grid"] as const).map(m => (
+              <button key={m} onClick={() => setViewMode(m)}
+                style={{ width: 38, height: 38, border: "none", background: viewMode === m ? "#f0fdf4" : "#fff", color: viewMode === m ? "#16a34a" : "#9ca3af", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {m === "list" ? <Rows3 style={{ width: 15, height: 15 }} /> : <LayoutTemplate style={{ width: 15, height: 15 }} />}
+              </button>
+            ))}
+          </div>
         </div>
-        <button
-          onClick={openAddModal}
-          className="bg-[#006b2c] hover:bg-emerald-800 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all"
-        >
-          <Plus className="w-5 h-5" /> Thêm Banner mới
+        <button onClick={openAdd}
+          style={{ display: "flex", alignItems: "center", gap: 6, height: 38, padding: "0 16px", background: "#16a34a", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, color: "#fff", cursor: "pointer" }}
+          onMouseEnter={e => (e.currentTarget.style.background = "#15803d")}
+          onMouseLeave={e => (e.currentTarget.style.background = "#16a34a")}>
+          <Plus style={{ width: 15, height: 15 }} /> Thêm banner mới
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-          <div className="w-10 h-10 bg-gray-100 rounded-xl mb-4"></div>
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            TỔNG BANNER
-          </h3>
-          <p className="text-3xl font-black text-gray-900">{contents.length}</p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden hover:shadow-md transition-all">
-          <div className="w-10 h-10 bg-emerald-50 rounded-xl mb-4"></div>
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            ĐANG HIỂN THỊ
-          </h3>
-          <p className="text-3xl font-black text-emerald-600">{activeCount}</p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-          <div className="w-10 h-10 bg-blue-50 rounded-xl mb-4"></div>
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            TỶ LỆ CLICK (Mẫu)
-          </h3>
-          <p className="text-3xl font-black text-gray-900">3.4%</p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-          <div className="w-10 h-10 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-xl mb-4">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            TRẠNG THÁI
-          </h3>
-          <p className="text-2xl font-black text-gray-900">Ổn định</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 min-h-[400px] flex flex-col">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-black italic uppercase text-gray-900">
-            DANH SÁCH HIỂN THỊ
-          </h2>
-          <button className="w-10 h-10 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-all">
-            <Filter className="w-5 h-5" />
-          </button>
-        </div>
-
+      {/* Table card */}
+      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
         {isLoading ? (
-          <div className="flex-1 flex justify-center items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#006b2c]"></div>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "64px 0" }}>
+            <div style={{ width: 28, height: 28, borderRadius: "50%", border: "3px solid #e5e7eb", borderTopColor: "#16a34a", animation: "spin 0.7s linear infinite" }} />
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "64px 0" }}>
+            <ImageIcon style={{ width: 40, height: 40, color: "#d1d5db", margin: "0 auto 12px" }} />
+            <p style={{ fontSize: 15, fontWeight: 500, color: "#374151", margin: "0 0 4px" }}>
+              {banners.length === 0 ? "Chưa có banner nào" : "Không tìm thấy banner phù hợp"}
+            </p>
+            <p style={{ fontSize: 13, color: "#9ca3af", margin: "0 0 16px" }}>
+              {banners.length === 0 ? "Thêm banner đầu tiên để bắt đầu" : "Thử điều chỉnh bộ lọc"}
+            </p>
+            {banners.length === 0 && (
+              <button onClick={openAdd} style={{ background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Plus style={{ width: 14, height: 14 }} /> Thêm banner ngay
+              </button>
+            )}
+          </div>
+        ) : viewMode === "list" ? (
+          /* ── LIST VIEW ── */
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+              <thead>
+                <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+                  {["#", "Ảnh xem trước", "Tiêu đề & Mô tả", "Loại", "Liên kết", "Thời hạn", "Thứ tự", "Trạng thái", "Thao tác"].map(h => (
+                    <th key={h} style={{ padding: "10px 12px", fontSize: 12, fontWeight: 500, color: "#9ca3af", textAlign: h === "Thứ tự" || h === "#" ? "center" : "left", whiteSpace: "nowrap" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((item, idx) => {
+                  const st   = statusOf(item);
+                  const smeta = STATUS_META[st];
+                  const tmeta = typeMeta(item.loai_banner);
+                  const isLast = idx === filtered.length - 1;
+                  return (
+                    <tr key={item.id}
+                      style={{ borderBottom: isLast ? "none" : "1px solid #f3f4f6" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#fafafa")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <td style={{ padding: "12px 12px", textAlign: "center", fontSize: 12, color: "#9ca3af" }}>{idx + 1}</td>
+                      <td style={{ padding: "12px 12px" }}>
+                        <div style={{ width: 120, height: 60, borderRadius: 8, overflow: "hidden", background: "#f3f4f6", flexShrink: 0, position: "relative" }}>
+                          {item.duong_dan_anh ? (
+                            <img src={item.duong_dan_anh} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                          ) : (
+                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <ImageIcon style={{ width: 18, height: 18, color: "#d1d5db" }} />
+                            </div>
+                          )}
+                          {!item.dang_hoat_dong && (
+                            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <EyeOff style={{ width: 14, height: 14, color: "#fff" }} />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: "12px 12px", maxWidth: 240 }}>
+                        <p style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.tieu_de || "—"}</p>
+                        {item.mo_ta && <p style={{ fontSize: 12, color: "#9ca3af", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.mo_ta}</p>}
+                      </td>
+                      <td style={{ padding: "12px 12px" }}>
+                        <span style={{ fontSize: 11, fontWeight: 500, padding: "3px 8px", borderRadius: 99, background: tmeta.bg, color: tmeta.color, whiteSpace: "nowrap" }}>{tmeta.label}</span>
+                      </td>
+                      <td style={{ padding: "12px 12px" }}>
+                        {item.lien_ket ? (
+                          <a href={item.lien_ket} target="_blank" rel="noreferrer"
+                            style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#6366f1", textDecoration: "none", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <LinkIcon style={{ width: 12, height: 12, flexShrink: 0 }} />
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.lien_ket}</span>
+                            <ExternalLink style={{ width: 11, height: 11, flexShrink: 0 }} />
+                          </a>
+                        ) : <span style={{ fontSize: 12, color: "#d1d5db" }}>—</span>}
+                      </td>
+                      <td style={{ padding: "12px 12px", whiteSpace: "nowrap" }}>
+                        {(item.ngay_bat_dau || item.ngay_ket_thuc) ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            {item.ngay_bat_dau && <span style={{ fontSize: 11, color: "#6b7280" }}>Từ: {fmtDate(item.ngay_bat_dau)}</span>}
+                            {item.ngay_ket_thuc && <span style={{ fontSize: 11, color: "#6b7280" }}>Đến: {fmtDate(item.ngay_ket_thuc)}</span>}
+                          </div>
+                        ) : <span style={{ fontSize: 12, color: "#d1d5db" }}>Không giới hạn</span>}
+                      </td>
+                      <td style={{ padding: "12px 12px", textAlign: "center" }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>{item.thu_tu_sap_xep}</span>
+                      </td>
+                      <td style={{ padding: "12px 12px" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 500, padding: "4px 8px", borderRadius: 99, background: smeta.bg, color: smeta.color, whiteSpace: "nowrap" }}>
+                          <smeta.Icon style={{ width: 11, height: 11 }} />
+                          {smeta.label}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px 12px" }}>
+                        <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                          {/* Toggle */}
+                          <button onClick={() => toggleStatus(item.id, item.dang_hoat_dong)}
+                            title={item.dang_hoat_dong ? "Tắt hiển thị" : "Bật hiển thị"}
+                            style={{ width: 30, height: 30, borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: item.dang_hoat_dong ? "#16a34a" : "#9ca3af" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = item.dang_hoat_dong ? "#dcfce7" : "#f3f4f6")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                            {item.dang_hoat_dong ? <ToggleRight style={{ width: 18, height: 18 }} /> : <ToggleLeft style={{ width: 18, height: 18 }} />}
+                          </button>
+                          {/* Edit */}
+                          <button onClick={() => openEdit(item)}
+                            style={{ width: 30, height: 30, borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "#f0fdf4"; e.currentTarget.style.color = "#16a34a"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#6b7280"; }}>
+                            <Edit style={{ width: 14, height: 14 }} />
+                          </button>
+                          {/* Delete */}
+                          <button onClick={() => setDeleteModal({ isOpen: true, id: item.id, name: item.tieu_de })}
+                            style={{ width: 30, height: 30, borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.color = "#dc2626"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#6b7280"; }}>
+                            <Trash2 style={{ width: 14, height: 14 }} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         ) : (
-          <div className="space-y-4">
-            {contents.length > 0 ? (
-              contents.map((item) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-6 p-4 rounded-2xl border transition-all hover:shadow-sm ${item.dang_hoat_dong ? "border-emerald-100 bg-white" : "border-gray-100 bg-gray-50/50 opacity-70"}`}
-                >
-                  <div className="text-gray-300 cursor-grab hover:text-emerald-600 transition-colors">
-                    <GripVertical className="w-6 h-6" />
-                  </div>
-
-                  <div className="w-48 h-24 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 relative">
-                    <img
-                      src={item.duong_dan_anh}
-                      className="w-full h-full object-cover"
-                      alt="Banner"
-                    />
+          /* ── GRID VIEW ── */
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, padding: 16 }}>
+            {filtered.map(item => {
+              const st   = statusOf(item);
+              const smeta = STATUS_META[st];
+              const tmeta = typeMeta(item.loai_banner);
+              return (
+                <div key={item.id} style={{ border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden", background: "#fff" }}>
+                  <div style={{ height: 140, background: "#f3f4f6", position: "relative" }}>
+                    {item.duong_dan_anh && (
+                      <img src={item.duong_dan_anh} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                    )}
                     {!item.dang_hoat_dong && (
-                      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center font-bold text-white text-xs tracking-widest">
-                        ĐÃ TẮT
+                      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <EyeOff style={{ width: 24, height: 24, color: "#fff" }} />
                       </div>
                     )}
-                  </div>
-
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {item.tieu_de || "Nội dung không tên"}
-                    </h3>
-                    <div className="flex items-center text-sm font-medium text-emerald-600 gap-4">
-                      <span className="flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md">
-                        <LinkIcon className="w-3 h-3" /> /khuyen-mai
-                      </span>
-                      <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md text-xs font-bold">
-                        Thứ tự: {item.thu_tu_sap_xep}
+                    <div style={{ position: "absolute", top: 8, left: 8 }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 7px", borderRadius: 99, background: tmeta.bg, color: tmeta.color }}>{tmeta.label}</span>
+                    </div>
+                    <div style={{ position: "absolute", top: 8, right: 8 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, padding: "3px 7px", borderRadius: 99, background: smeta.bg, color: smeta.color }}>
+                        <smeta.Icon style={{ width: 10, height: 10 }} />
+                        {smeta.label}
                       </span>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => toggleStatus(item.id, item.dang_hoat_dong)}
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${item.dang_hoat_dong ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}
-                      title={
-                        item.dang_hoat_dong ? "Tắt hiển thị" : "Bật hiển thị"
-                      }
-                    >
-                      {item.dang_hoat_dong ? (
-                        <Eye className="w-5 h-5" />
-                      ) : (
-                        <EyeOff className="w-5 h-5" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => openEditModal(item)}
-                      className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-100 transition-all"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setDeleteModal({
-                          isOpen: true,
-                          id: item.id,
-                          name: item.tieu_de,
-                        })
-                      }
-                      className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-100 transition-all"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                  <div style={{ padding: "12px 14px" }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.tieu_de || "Không có tiêu đề"}</p>
+                    {item.mo_ta && <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.mo_ta}</p>}
+                    {item.lien_ket && (
+                      <p style={{ fontSize: 11, color: "#6366f1", margin: "0 0 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
+                        <LinkIcon style={{ width: 11, height: 11, flexShrink: 0 }} />{item.lien_ket}
+                      </p>
+                    )}
+                    {(item.ngay_bat_dau || item.ngay_ket_thuc) && (
+                      <p style={{ fontSize: 11, color: "#6b7280", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 4 }}>
+                        <Calendar style={{ width: 11, height: 11 }} />
+                        {item.ngay_bat_dau && fmtDate(item.ngay_bat_dau)}
+                        {item.ngay_bat_dau && item.ngay_ket_thuc && " → "}
+                        {item.ngay_ket_thuc && fmtDate(item.ngay_ket_thuc)}
+                      </p>
+                    )}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+                      <span style={{ fontSize: 11, color: "#9ca3af" }}>Thứ tự: {item.thu_tu_sap_xep}</span>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <button onClick={() => toggleStatus(item.id, item.dang_hoat_dong)}
+                          style={{ width: 28, height: 28, borderRadius: 6, border: "none", background: item.dang_hoat_dong ? "#dcfce7" : "#f3f4f6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: item.dang_hoat_dong ? "#16a34a" : "#9ca3af" }}>
+                          {item.dang_hoat_dong ? <ToggleRight style={{ width: 15, height: 15 }} /> : <ToggleLeft style={{ width: 15, height: 15 }} />}
+                        </button>
+                        <button onClick={() => openEdit(item)}
+                          style={{ width: 28, height: 28, borderRadius: 6, border: "none", background: "#f0fdf4", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#16a34a" }}>
+                          <Edit style={{ width: 13, height: 13 }} />
+                        </button>
+                        <button onClick={() => setDeleteModal({ isOpen: true, id: item.id, name: item.tieu_de })}
+                          style={{ width: 28, height: 28, borderRadius: 6, border: "none", background: "#fef2f2", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#dc2626" }}>
+                          <Trash2 style={{ width: 13, height: 13 }} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center py-10 text-gray-400 gap-2">
-                <ImageIcon className="w-10 h-10 opacity-20" /> Chưa có nội dung
-                nào.
-              </div>
-            )}
+              );
+            })}
+          </div>
+        )}
+
+        {/* Footer */}
+        {filtered.length > 0 && (
+          <div style={{ padding: "10px 16px", borderTop: "1px solid #f3f4f6", fontSize: 12, color: "#9ca3af" }}>
+            Hiển thị {filtered.length} / {banners.length} banner
           </div>
         )}
       </div>
 
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 cursor-pointer backdrop-blur-sm"
-          onClick={() => setIsModalOpen(false)}
-        >
+      {/* ── MODAL THÊM / SỬA ── */}
+      <AnimatePresence>
+        {isModalOpen && (
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white max-w-lg w-full rounded-[2rem] p-8 cursor-default shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+            onClick={() => setIsModalOpen(false)}
           >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-black uppercase italic text-[#006b2c]">
-                {editingId ? "Sửa Nội Dung" : "Thêm Nội Dung Mới"}
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 bg-gray-50 rounded-full hover:bg-gray-200 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="space-y-6" noValidate>
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                  Tên nội dung
-                </label>
-                <input
-                  type="text"
-                  name="tieu_de"
-                  value={formData.tieu_de}
-                  onChange={handleInputChange}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 focus:border-[#006b2c] focus:ring-4 focus:ring-emerald-50 outline-none font-bold text-gray-800 transition-all"
-                  placeholder="VD: Khuyến mãi Mùa Gặt..."
-                />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 16 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }}
+              style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 560, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Modal header */}
+              <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 600, color: "#111827", margin: 0 }}>{editingId ? "Chỉnh sửa banner" : "Thêm banner mới"}</h3>
+                  <p style={{ fontSize: 12, color: "#9ca3af", margin: "2px 0 0" }}>{editingId ? "Cập nhật thông tin banner" : "Điền đầy đủ thông tin để tạo banner"}</p>
+                </div>
+                <button onClick={() => setIsModalOpen(false)}
+                  style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: "#f3f4f6", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#e5e7eb")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "#f3f4f6")}>
+                  <X style={{ width: 16, height: 16 }} />
+                </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                  Hình ảnh *
-                </label>
-                <div className="flex gap-2 items-center bg-gray-50 p-2 rounded-xl border border-gray-200">
-                  <div className="relative w-12 h-12 flex-shrink-0 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-100 cursor-pointer overflow-hidden transition-colors">
-                    <ImageIcon className="w-5 h-5 text-gray-500" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        const toastId = toast.loading("Đang tải ảnh...");
-                        const fd = new FormData();
-                        fd.append("file", file);
-                        try {
-                          const res = await fetch("/api/admin/upload", {
-                            method: "POST",
-                            body: fd,
-                          });
-                          if (res.ok) {
-                            setFormData({
-                              ...formData,
-                              duong_dan_anh: (await res.json()).url,
-                            });
-                            toast.success("Tải ảnh xong!", { id: toastId });
-                          } else throw new Error();
-                        } catch {
-                          toast.error("Lỗi tải ảnh!", { id: toastId });
-                        }
-                      }}
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    name="duong_dan_anh"
-                    value={formData.duong_dan_anh}
-                    onChange={handleInputChange}
-                    className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-3 text-sm outline-none text-gray-600 focus:border-[#006b2c] transition-colors"
-                    placeholder="Hoặc dán URL ảnh vào đây"
-                  />
-                </div>
-                {formData.duong_dan_anh && (
-                  <motion.img
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    src={formData.duong_dan_anh}
-                    className="mt-3 w-full h-40 object-cover rounded-xl border shadow-sm"
-                    alt="Preview"
-                  />
-                )}
-              </div>
+              {/* Modal body */}
+              <form onSubmit={handleSave} style={{ overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
 
-              <div className="grid grid-cols-2 gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                {/* Tiêu đề */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                    Thứ tự hiển thị
-                  </label>
-                  <input
-                    type="number"
-                    name="thu_tu_sap_xep"
-                    value={formData.thu_tu_sap_xep}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-[#006b2c] outline-none font-bold text-gray-800 transition-all text-center"
-                  />
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 6 }}>Tiêu đề banner <span style={{ color: "#ef4444" }}>*</span></label>
+                  <input type="text" value={formData.tieu_de} onChange={e => setFormData(p => ({ ...p, tieu_de: e.target.value }))}
+                    placeholder="VD: Khuyến mãi Tết Nguyên Đán 2026"
+                    style={{ width: "100%", height: 40, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 12px", outline: "none", color: "#374151", boxSizing: "border-box" }}
+                    onFocus={e => (e.currentTarget.style.borderColor = "#16a34a")}
+                    onBlur={e => (e.currentTarget.style.borderColor = "#e5e7eb")} />
                 </div>
+
+                {/* Mô tả */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                    Trạng thái
-                  </label>
-                  <div className="flex items-center h-[52px] px-4 border-2 border-gray-200 bg-white rounded-xl transition-all hover:border-[#006b2c]">
-                    <label className="relative inline-flex items-center cursor-pointer w-full justify-between">
-                      <span
-                        className={`text-sm font-bold ${formData.dang_hoat_dong ? "text-[#006b2c]" : "text-gray-400"}`}
-                      >
-                        {formData.dang_hoat_dong ? "Đang Bật" : "Đã Tắt"}
-                      </span>
-                      <input
-                        type="checkbox"
-                        name="dang_hoat_dong"
-                        checked={formData.dang_hoat_dong}
-                        onChange={handleInputChange}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[22px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#006b2c]"></div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 6 }}>Mô tả ngắn</label>
+                  <input type="text" value={formData.mo_ta} onChange={e => setFormData(p => ({ ...p, mo_ta: e.target.value }))}
+                    placeholder="Mô tả ngắn về nội dung banner"
+                    style={{ width: "100%", height: 40, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 12px", outline: "none", color: "#374151", boxSizing: "border-box" }}
+                    onFocus={e => (e.currentTarget.style.borderColor = "#16a34a")}
+                    onBlur={e => (e.currentTarget.style.borderColor = "#e5e7eb")} />
+                </div>
+
+                {/* Hình ảnh */}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 6 }}>Hình ảnh banner <span style={{ color: "#ef4444" }}>*</span></label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {/* Upload button */}
+                    <label style={{ position: "relative", width: 40, height: 40, borderRadius: 8, border: "1px dashed #d1d5db", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: imgUploading ? "#f3f4f6" : "#fff", flexShrink: 0 }}>
+                      {imgUploading
+                        ? <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid #e5e7eb", borderTopColor: "#16a34a", animation: "spin 0.7s linear infinite" }} />
+                        : <ImageIcon style={{ width: 16, height: 16, color: "#9ca3af" }} />}
+                      <input type="file" accept="image/*" style={{ display: "none" }}
+                        onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); }} />
                     </label>
+                    <input type="text" value={formData.duong_dan_anh} onChange={e => setFormData(p => ({ ...p, duong_dan_anh: e.target.value }))}
+                      placeholder="Hoặc dán URL ảnh..."
+                      style={{ flex: 1, height: 40, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 12px", outline: "none", color: "#374151", boxSizing: "border-box" }}
+                      onFocus={e => (e.currentTarget.style.borderColor = "#16a34a")}
+                      onBlur={e => (e.currentTarget.style.borderColor = "#e5e7eb")} />
+                  </div>
+                  {formData.duong_dan_anh && (
+                    <img src={formData.duong_dan_anh} alt="preview"
+                      style={{ marginTop: 8, width: "100%", height: 120, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb" }}
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  )}
+                </div>
+
+                {/* Liên kết */}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 6 }}>Liên kết khi click</label>
+                  <div style={{ position: "relative" }}>
+                    <LinkIcon style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 13, height: 13, color: "#9ca3af" }} />
+                    <input type="text" value={formData.lien_ket} onChange={e => setFormData(p => ({ ...p, lien_ket: e.target.value }))}
+                      placeholder="/san-pham hoặc https://..."
+                      style={{ width: "100%", height: 40, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 12px 0 32px", outline: "none", color: "#374151", boxSizing: "border-box" }}
+                      onFocus={e => (e.currentTarget.style.borderColor = "#16a34a")}
+                      onBlur={e => (e.currentTarget.style.borderColor = "#e5e7eb")} />
                   </div>
                 </div>
-              </div>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-gray-100 font-bold py-4 rounded-xl hover:bg-gray-200 text-gray-700 transition-colors"
-                >
-                  Hủy bỏ
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-[#006b2c] text-white font-bold py-4 rounded-xl hover:bg-emerald-800 shadow-xl shadow-emerald-900/20 transition-all tracking-wide"
-                >
-                  LƯU LẠI
-                </button>
-              </div>
-            </form>
+                {/* Loại + Thứ tự */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 120px", gap: 12 }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 6 }}>Loại banner</label>
+                    <select value={formData.loai_banner} onChange={e => setFormData(p => ({ ...p, loai_banner: e.target.value }))}
+                      style={{ width: "100%", height: 40, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 10px", color: "#374151", background: "#fff", outline: "none" }}>
+                      {BANNER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 6 }}>Thứ tự</label>
+                    <input type="number" min={0} value={formData.thu_tu_sap_xep} onChange={e => setFormData(p => ({ ...p, thu_tu_sap_xep: e.target.value }))}
+                      style={{ width: "100%", height: 40, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 12px", outline: "none", color: "#374151", textAlign: "center", boxSizing: "border-box" }}
+                      onFocus={e => (e.currentTarget.style.borderColor = "#16a34a")}
+                      onBlur={e => (e.currentTarget.style.borderColor = "#e5e7eb")} />
+                  </div>
+                </div>
+
+                {/* Thời hạn hiển thị */}
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
+                    <Calendar style={{ width: 12, height: 12, display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+                    Thời hạn hiển thị <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 400 }}>(để trống = không giới hạn)</span>
+                  </label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    {[
+                      { field: "ngay_bat_dau" as const, label: "Từ ngày" },
+                      { field: "ngay_ket_thuc" as const, label: "Đến ngày" },
+                    ].map(({ field, label }) => (
+                      <div key={field}>
+                        <label style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4, display: "block" }}>{label}</label>
+                        <input type="datetime-local" value={formData[field]} onChange={e => setFormData(p => ({ ...p, [field]: e.target.value }))}
+                          style={{ width: "100%", height: 40, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, padding: "0 10px", outline: "none", color: "#374151", boxSizing: "border-box" }}
+                          onFocus={e => (e.currentTarget.style.borderColor = "#16a34a")}
+                          onBlur={e => (e.currentTarget.style.borderColor = "#e5e7eb")} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Trạng thái */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fafafa" }}>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: "#374151", margin: 0 }}>Bật hiển thị</p>
+                    <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>Banner sẽ xuất hiện trên trang người dùng</p>
+                  </div>
+                  <button type="button" onClick={() => setFormData(p => ({ ...p, dang_hoat_dong: !p.dang_hoat_dong }))}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: formData.dang_hoat_dong ? "#16a34a" : "#9ca3af" }}>
+                    {formData.dang_hoat_dong
+                      ? <ToggleRight style={{ width: 36, height: 36 }} />
+                      : <ToggleLeft style={{ width: 36, height: 36 }} />}
+                  </button>
+                </div>
+
+                {/* Actions */}
+                <div style={{ display: "flex", gap: 10, paddingTop: 4 }}>
+                  <button type="button" onClick={() => setIsModalOpen(false)}
+                    style={{ flex: 1, height: 42, border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", fontSize: 14, fontWeight: 500, color: "#374151", cursor: "pointer" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                    Hủy
+                  </button>
+                  <button type="submit"
+                    style={{ flex: 2, height: 42, border: "none", borderRadius: 8, background: "#16a34a", fontSize: 14, fontWeight: 600, color: "#fff", cursor: "pointer" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#15803d")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "#16a34a")}>
+                    {editingId ? "Lưu thay đổi" : "Tạo banner"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </motion.div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
-      {deleteModal.isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center cursor-pointer p-4"
-          onClick={() => setDeleteModal({ isOpen: false, id: null, name: "" })}
-        >
+      {/* ── MODAL XÓA ── */}
+      <AnimatePresence>
+        {deleteModal.isOpen && (
           <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            className="bg-white max-w-sm w-full rounded-[2rem] p-6 text-center cursor-default shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 70, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+            onClick={() => setDeleteModal({ isOpen: false, id: null, name: "" })}
           >
-            <div className="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8" />
-            </div>
-            <h3 className="font-black text-xl text-gray-900 mb-2">
-              Cảnh báo Xóa
-            </h3>
-            <p className="text-gray-500 text-sm mb-6">
-              Bạn có chắc chắn muốn xóa nội dung{" "}
-              <strong className="text-gray-800">
-                {deleteModal.name || "này"}
-              </strong>{" "}
-              vĩnh viễn?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() =>
-                  setDeleteModal({ isOpen: false, id: null, name: "" })
-                }
-                className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                onClick={executeDelete}
-                className="flex-1 py-3.5 bg-rose-500 text-white font-bold rounded-xl hover:bg-rose-600 shadow-lg shadow-rose-500/30 transition-all"
-              >
-                Đồng ý xóa
-              </button>
-            </div>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
+              style={{ background: "#fff", maxWidth: 400, width: "100%", borderRadius: 16, padding: "28px 24px", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                <AlertTriangle style={{ width: 24, height: 24, color: "#ef4444" }} />
+              </div>
+              <h3 style={{ fontSize: 16, fontWeight: 600, color: "#111827", margin: "0 0 8px" }}>Xác nhận xóa banner</h3>
+              <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 20px" }}>
+                Bạn có chắc muốn xóa banner <strong style={{ color: "#111827" }}>"{deleteModal.name || "này"}"</strong>? Hành động này không thể hoàn tác.
+              </p>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => setDeleteModal({ isOpen: false, id: null, name: "" })}
+                  style={{ flex: 1, height: 40, border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", fontSize: 14, fontWeight: 500, color: "#374151", cursor: "pointer" }}>
+                  Hủy
+                </button>
+                <button onClick={executeDelete}
+                  style={{ flex: 1, height: 40, border: "none", borderRadius: 8, background: "#ef4444", fontSize: 14, fontWeight: 600, color: "#fff", cursor: "pointer" }}>
+                  Xóa banner
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -23,10 +23,8 @@ export default function CartPage() {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null);
 
-  // STATE LƯU DỮ LIỆU MÃ GIẢM GIÁ TỪ DATABASE
   const [khoVoucher, setKhoVoucher] = useState<any[]>([]);
 
-  // TỰ ĐỘNG GỌI API LẤY VOUCHER
   useEffect(() => {
     const fetchCoupons = async () => {
       try {
@@ -47,10 +45,8 @@ export default function CartPage() {
     0,
   );
 
-  // 💡 THÊM: Tính toán phí ship (Freeship cho đơn từ 500k)
   const shippingFee = subTotal >= 500000 ? 0 : 30000;
 
-  // THEO DÕI: Nếu tiền hàng thay đổi (do tăng/giảm SP) -> Tính lại tiền giảm giá
   useEffect(() => {
     if (appliedCoupon) {
       const minOrder = Number(appliedCoupon.don_toi_thieu) || 0;
@@ -80,7 +76,6 @@ export default function CartPage() {
       updateQuantity(id, phan_loai, currentQty + 1);
   };
 
-  // HÀM TÍNH TOÁN TIỀN GIẢM GIÁ CHUẨN KẾ TOÁN
   const recalculateDiscount = (coupon: any, currentSubTotal: number) => {
     const giamGia = Number(coupon.gia_tri_giam) || 0;
     const giamToiDa = Number(coupon.giam_toi_da) || null;
@@ -90,7 +85,6 @@ export default function CartPage() {
       calculatedDiscount = giamGia;
     } else if (coupon.loai_giam_gia === "PHAN_TRAM") {
       calculatedDiscount = (currentSubTotal * giamGia) / 100;
-      // Áp dụng luật "Giảm tối đa" nếu có
       if (giamToiDa && calculatedDiscount > giamToiDa) {
         calculatedDiscount = giamToiDa;
       }
@@ -98,7 +92,6 @@ export default function CartPage() {
     setDiscountAmount(calculatedDiscount);
   };
 
-  // HÀM KIỂM TRA VÀ ÁP DỤNG MÃ
   const handleApplyCoupon = (codeToApply: string) => {
     const code = codeToApply.trim().toUpperCase();
     if (!code) {
@@ -134,198 +127,196 @@ export default function CartPage() {
 
   if (totalItems === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-32 font-sans min-h-screen flex flex-col items-center justify-center">
-        <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
-          <ShoppingCart className="w-12 h-12 text-emerald-800" />
+      <div style={{ background: "#f7f8f6", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-sans)" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+          <div style={{ width: 80, height: 80, background: "#dcfce7", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+            <ShoppingCart style={{ width: 36, height: 36, color: "#166534" }} />
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#111827", margin: "0 0 8px" }}>Giỏ hàng trống</h1>
+          <p style={{ fontSize: 14, color: "#6b7280", margin: "0 0 28px" }}>Bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
+          <Link href="/products" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#16a34a", color: "#fff", padding: "12px 24px", borderRadius: 10, fontSize: 14, fontWeight: 500, textDecoration: "none" }}>
+            <ArrowLeft style={{ width: 16, height: 16 }} /> Tiếp tục mua sắm
+          </Link>
         </div>
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-2">
-          Giỏ hàng trống
-        </h1>
-        <p className="text-gray-500 mb-8">
-          Bạn chưa thêm sản phẩm nào vào giỏ hàng.
-        </p>
-        <Link
-          href="/products"
-          className="bg-[#065F46] text-white px-8 py-3.5 rounded-xl font-bold hover:bg-emerald-800 transition-all shadow-md flex items-center gap-2"
-        >
-          <ArrowLeft className="w-5 h-5" /> Tiếp tục mua sắm
-        </Link>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#FDFEFC] min-h-screen py-16 pt-28 font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Toaster />
-        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-10 font-headline">
-          Giỏ hàng của bạn
-        </h1>
+    <div style={{ background: "#f7f8f6", minHeight: "100vh", fontFamily: "var(--font-sans)", padding: "24px 0 48px", width: "100%", boxSizing: "border-box" }}>
+      <Toaster />
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", boxSizing: "border-box" }}>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Header */}
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#111827", margin: 0, lineHeight: 1.3 }}>
+            Giỏ hàng của bạn
+          </h1>
+          <p style={{ fontSize: 13, color: "#9ca3af", margin: "4px 0 0" }}>
+            {totalItems} sản phẩm trong giỏ
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 24, alignItems: "start" }}>
+
           {/* CỘT TRÁI: SẢN PHẨM */}
-          <div className="lg:col-span-8 space-y-5">
-            {cart.map((item, index) => (
-              <div
-                key={`${item.id}-${item.phan_loai}-${index}`}
-                className="bg-white p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-6 shadow-sm border border-gray-100 relative group transition-all hover:shadow-md hover:border-emerald-100"
-              >
-                <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-100">
-                  <img
-                    src={item.anh_chinh}
-                    alt={item.ten_san_pham}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+          <div>
+            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px 20px" }}>
 
-                <div className="flex-1 w-full">
-                  <h3 className="font-extrabold text-gray-900 text-[17px] mb-1 pr-8 leading-tight">
-                    {item.ten_san_pham}
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Loại:{" "}
-                    <span className="font-bold text-gray-700 bg-gray-50 px-2 py-0.5 rounded capitalize">
-                      {item.phan_loai}
-                    </span>
-                  </p>
+              {/* Table header */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px 80px 32px", gap: 8, alignItems: "center", paddingBottom: 8, borderBottom: "1px solid #f3f4f6", marginBottom: 4 }}>
+                <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>Sản phẩm</span>
+                <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500, textAlign: "right" }}>Đơn giá</span>
+                <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500, textAlign: "center" }}>Số lượng</span>
+                <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500, textAlign: "right" }}>Thành tiền</span>
+                <span />
+              </div>
 
-                  <div className="flex flex-wrap items-center gap-x-8 gap-y-4 justify-between sm:justify-start">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-                        Đơn giá
-                      </span>
-                      <span className="font-bold text-gray-900">
-                        {item.gia_ban.toLocaleString("vi-VN")}đ
-                      </span>
+              {/* Product rows */}
+              {cart.map((item, index) => (
+                <div
+                  key={`${item.id}-${item.phan_loai}-${index}`}
+                  style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px 80px 32px", gap: 8, alignItems: "center", padding: "14px 0", borderBottom: index < cart.length - 1 ? "1px solid #f3f4f6" : "none" }}
+                >
+                  {/* Product info */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                    <div style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 8, overflow: "hidden", background: "#f3f4f6", border: "1px solid #e5e7eb" }}>
+                      <img src={item.anh_chinh} alt={item.ten_san_pham} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
-
-                    <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 h-10 w-28">
-                      <button
-                        onClick={() =>
-                          handleQuantity(
-                            item.id,
-                            item.phan_loai,
-                            item.so_luong,
-                            "minus",
-                          )
-                        }
-                        className="w-8 h-full flex items-center justify-center text-gray-500 hover:text-emerald-700 transition"
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="flex-1 text-center font-bold text-sm text-gray-900">
-                        {item.so_luong}
-                      </span>
-                      <button
-                        onClick={() =>
-                          handleQuantity(
-                            item.id,
-                            item.phan_loai,
-                            item.so_luong,
-                            "plus",
-                          )
-                        }
-                        className="w-8 h-full flex items-center justify-center text-gray-500 hover:text-emerald-700 transition"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-                        Thành tiền
-                      </span>
-                      <span className="font-extrabold text-emerald-700 text-lg">
-                        {(item.gia_ban * item.so_luong).toLocaleString("vi-VN")}đ
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: "#111827", margin: "0 0 4px", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {item.ten_san_pham}
+                      </p>
+                      <span style={{ display: "inline-block", background: "#f3f4f6", color: "#6b7280", fontSize: 11, padding: "2px 8px", borderRadius: 4 }}>
+                        {item.phan_loai}
                       </span>
                     </div>
                   </div>
+
+                  {/* Đơn giá */}
+                  <div style={{ textAlign: "right" }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>
+                      {item.gia_ban.toLocaleString("vi-VN")}đ
+                    </span>
+                  </div>
+
+                  {/* Stepper */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", border: "1px solid #e5e7eb", borderRadius: 8, height: 32, overflow: "hidden" }}>
+                      <button
+                        onClick={() => handleQuantity(item.id, item.phan_loai, item.so_luong, "minus")}
+                        style={{ width: 28, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb", border: "none", borderRight: "1px solid #e5e7eb", cursor: "pointer", color: "#374151", fontSize: 16, flexShrink: 0 }}
+                      >
+                        <Minus style={{ width: 12, height: 12 }} />
+                      </button>
+                      <span style={{ width: 36, textAlign: "center", fontSize: 14, fontWeight: 500, color: "#111827" }}>
+                        {item.so_luong}
+                      </span>
+                      <button
+                        onClick={() => handleQuantity(item.id, item.phan_loai, item.so_luong, "plus")}
+                        style={{ width: 28, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb", border: "none", borderLeft: "1px solid #e5e7eb", cursor: "pointer", color: "#374151", fontSize: 16, flexShrink: 0 }}
+                      >
+                        <Plus style={{ width: 12, height: 12 }} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Thành tiền */}
+                  <div style={{ textAlign: "right" }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>
+                      {(item.gia_ban * item.so_luong).toLocaleString("vi-VN")}đ
+                    </span>
+                  </div>
+
+                  {/* Xóa */}
+                  <button
+                    onClick={() => removeFromCart(item.id, item.phan_loai)}
+                    title="Xóa sản phẩm"
+                    style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", borderRadius: 6, transition: "color 0.15s" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "#dc2626")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "#9ca3af")}
+                  >
+                    <Trash2 style={{ width: 15, height: 15 }} />
+                  </button>
                 </div>
+              ))}
+            </div>
 
-                <button
-                  onClick={() => removeFromCart(item.id, item.phan_loai)}
-                  className="absolute top-5 right-5 sm:static p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                  title="Xóa sản phẩm"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
-
-            <div className="pt-4">
+            {/* Tiếp tục mua sắm */}
+            <div style={{ marginTop: 16 }}>
               <Link
                 href="/products"
-                className="inline-flex items-center gap-2 text-emerald-700 font-bold hover:underline"
+                style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 13, color: "#16a34a", textDecoration: "none", fontWeight: 500 }}
               >
-                <ArrowLeft className="w-4 h-4" /> Tiếp tục mua sắm
+                <ArrowLeft style={{ width: 14, height: 14 }} /> Tiếp tục mua sắm
               </Link>
             </div>
           </div>
 
-          {/* CỘT PHẢI: TỔNG KẾT & VOUCHER */}
-          <div className="lg:col-span-4">
-            <div className="bg-[#F4F8F4] rounded-3xl p-7 sticky top-32 shadow-sm border border-emerald-50">
-              <h2 className="text-xl font-extrabold text-gray-900 mb-6 font-headline flex items-center gap-2">
+          {/* CỘT PHẢI: TỔNG KẾT */}
+          <div style={{ position: "sticky", top: 112 }}>
+            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 24px" }}>
+
+              {/* Title */}
+              <h2 style={{ fontSize: 15, fontWeight: 600, color: "#111827", margin: "0 0 12px", paddingBottom: 12, borderBottom: "1px solid #f3f4f6" }}>
                 Tổng kết đơn hàng
               </h2>
 
-              <div className="space-y-4 mb-6 text-sm font-medium">
-                <div className="flex justify-between text-gray-600">
-                  <span>Tạm tính</span>
-                  <span className="text-gray-900 font-bold">
+              {/* Tạm tính / Phí ship */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                  <span style={{ color: "#6b7280" }}>Tạm tính</span>
+                  <span style={{ color: "#111827", fontWeight: 500 }}>
                     {subTotal.toLocaleString("vi-VN")}đ
                   </span>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Phí vận chuyển</span>
-                  <span className="text-gray-900 font-bold">
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                  <span style={{ color: "#6b7280" }}>Phí vận chuyển</span>
+                  <span style={{ color: shippingFee === 0 ? "#16a34a" : "#111827", fontWeight: 500 }}>
                     {shippingFee === 0 ? "Miễn phí" : `${shippingFee.toLocaleString("vi-VN")}đ`}
                   </span>
                 </div>
-
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-rose-600 items-center">
-                    <span>Mã giảm giá</span>
-                    <span className="font-extrabold text-lg">
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                    <span style={{ color: "#6b7280" }}>Mã giảm giá</span>
+                    <span style={{ color: "#dc2626", fontWeight: 600 }}>
                       -{discountAmount.toLocaleString("vi-VN")}đ
                     </span>
                   </div>
                 )}
               </div>
 
-              {/* Ô NHẬP MÃ GIẢM GIÁ */}
-              <div className="mb-6 border-t border-emerald-100 pt-5">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
+              {/* Mã ưu đãi */}
+              <div style={{ marginBottom: 16, borderTop: "1px solid #f3f4f6", paddingTop: 16 }}>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>
                   Mã ưu đãi
                 </label>
 
                 {appliedCoupon ? (
-                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-                    <div className="flex items-center gap-2 text-emerald-800">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                      <span className="font-bold tracking-widest">
-                        {appliedCoupon.ma_code}
-                      </span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#166534" }}>
+                      <CheckCircle2 style={{ width: 16, height: 16, color: "#16a34a" }} />
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{appliedCoupon.ma_code}</span>
                     </div>
                     <button
                       onClick={handleRemoveCoupon}
-                      className="text-xs font-bold text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2 py-1 rounded transition-colors"
+                      style={{ fontSize: 12, fontWeight: 500, color: "#dc2626", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
                     >
                       Hủy
                     </button>
                   </div>
                 ) : (
-                  <div className="flex gap-2">
+                  <div style={{ display: "flex" }}>
                     <input
                       type="text"
                       placeholder="VD: NONGSAN50"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none uppercase font-bold placeholder:font-medium placeholder:normal-case transition-all"
+                      style={{ flex: 1, height: 42, border: "1px solid #d1d5db", borderRight: "none", borderRadius: "8px 0 0 8px", fontSize: 13, padding: "0 12px", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
                     />
                     <button
                       onClick={() => handleApplyCoupon(couponCode)}
-                      className="bg-[#006b2c] text-white font-bold px-5 py-3 rounded-xl hover:bg-emerald-800 text-sm transition-colors shadow-md"
+                      style={{ height: 42, padding: "0 16px", background: "#16a34a", color: "#fff", fontSize: 13, fontWeight: 500, borderRadius: "0 8px 8px 0", whiteSpace: "nowrap", border: "none", cursor: "pointer", flexShrink: 0 }}
                     >
                       Áp dụng
                     </button>
@@ -333,16 +324,14 @@ export default function CartPage() {
                 )}
               </div>
 
-              {/* KHO VOUCHER KHẢ DỤNG TỪ DATABASE */}
+              {/* Voucher list */}
               {!appliedCoupon && khoVoucher.length > 0 && (
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Ticket className="w-4 h-4 text-rose-500" />
-                    <h3 className="text-sm font-bold text-gray-900">
-                      Voucher khả dụng
-                    </h3>
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                    <Ticket style={{ width: 14, height: 14, color: "#ef4444" }} />
+                    <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Voucher khả dụng</span>
                   </div>
-                  <div className="space-y-3 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 180, overflowY: "auto" }}>
                     {khoVoucher.map((voucher) => {
                       const minOrder = Number(voucher.don_toi_thieu) || 0;
                       const giamToiDa = Number(voucher.giam_toi_da) || 0;
@@ -352,46 +341,35 @@ export default function CartPage() {
                       return (
                         <div
                           key={voucher.id}
-                          className={`p-3 rounded-xl border flex justify-between items-center gap-2 transition-colors ${isEligible ? "bg-white border-emerald-200 hover:border-emerald-400 shadow-sm" : "bg-gray-50 border-gray-200 opacity-60"}`}
+                          style={{ padding: "10px 12px", borderRadius: 8, border: `1px solid ${isEligible ? "#bbf7d0" : "#e5e7eb"}`, background: isEligible ? "#fff" : "#f9fafb", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, opacity: isEligible ? 1 : 0.6 }}
                         >
                           <div>
-                            <p
-                              className={`font-black text-sm leading-tight tracking-wider ${isEligible ? "text-rose-600" : "text-gray-500"}`}
-                            >
+                            <p style={{ fontSize: 13, fontWeight: 700, color: isEligible ? "#dc2626" : "#6b7280", margin: "0 0 2px" }}>
                               {voucher.ma_code}
                             </p>
-                            <p className="text-[11px] text-gray-500 mt-1">
+                            <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>
                               Giảm{" "}
                               {voucher.loai_giam_gia === "TIEN_MAT" ? (
-                                <strong className="text-gray-700">
-                                  {giaTriGiam.toLocaleString("vi-VN")}đ
-                                </strong>
+                                <strong style={{ color: "#374151" }}>{giaTriGiam.toLocaleString("vi-VN")}đ</strong>
                               ) : (
-                                <strong className="text-gray-700">
-                                  {giaTriGiam}%
-                                </strong>
+                                <strong style={{ color: "#374151" }}>{giaTriGiam}%</strong>
                               )}
-                              {voucher.loai_giam_gia === "PHAN_TRAM" &&
-                                giamToiDa > 0 &&
-                                ` (Tối đa ${giamToiDa.toLocaleString("vi-VN")}đ)`}
-                              <br />
-                              Cho đơn từ {minOrder.toLocaleString("vi-VN")}đ
+                              {voucher.loai_giam_gia === "PHAN_TRAM" && giamToiDa > 0 && ` (Tối đa ${giamToiDa.toLocaleString("vi-VN")}đ)`}
+                              {" · "}Từ {minOrder.toLocaleString("vi-VN")}đ
                             </p>
                           </div>
                           {isEligible ? (
                             <button
                               onClick={() => handleApplyCoupon(voucher.ma_code)}
-                              className="text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100 px-3 py-1.5 rounded-lg hover:bg-rose-500 hover:text-white transition-colors whitespace-nowrap"
+                              style={{ fontSize: 12, fontWeight: 600, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", padding: "4px 10px", borderRadius: 6, cursor: "pointer", whiteSpace: "nowrap" }}
                             >
                               Dùng
                             </button>
                           ) : (
-                            <div className="group relative flex cursor-not-allowed">
-                              <Info className="w-4 h-4 text-gray-400" />
-                              <div className="absolute bottom-full right-0 mb-2 w-36 bg-gray-800 text-white text-[10px] text-center p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-xl">
-                                Mua thêm{" "}
-                                {(minOrder - subTotal).toLocaleString("vi-VN")}đ
-                                để dùng mã này
+                            <div style={{ position: "relative", display: "flex", cursor: "not-allowed" }} className="group">
+                              <Info style={{ width: 14, height: 14, color: "#9ca3af" }} />
+                              <div style={{ position: "absolute", bottom: "100%", right: 0, marginBottom: 6, width: 140, background: "#1f2937", color: "#fff", fontSize: 10, textAlign: "center", padding: "6px 8px", borderRadius: 6, pointerEvents: "none", zIndex: 10 }} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                Mua thêm {(minOrder - subTotal).toLocaleString("vi-VN")}đ để dùng mã này
                               </div>
                             </div>
                           )}
@@ -402,37 +380,37 @@ export default function CartPage() {
                 </div>
               )}
 
-              {/* FREESHIP & TỔNG TIỀN */}
+              {/* Freeship banner */}
               {subTotal < 500000 && (
-                <p className="text-xs text-emerald-700 mb-6 font-medium bg-emerald-50 border border-emerald-100 p-3 rounded-xl text-center">
+                <div style={{ background: "#fef9c3", border: "1px solid #fde047", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#854d0e", marginBottom: 16 }}>
                   Mua thêm{" "}
-                  <b className="text-rose-500 text-sm">
+                  <strong style={{ fontWeight: 600 }}>
                     {(500000 - subTotal).toLocaleString("vi-VN")}đ
-                  </b>{" "}
+                  </strong>{" "}
                   để được Freeship!
-                </p>
+                </div>
               )}
 
-              <div className="border-t border-emerald-100 pt-5 mt-2">
-                <div className="flex justify-between items-end mb-6">
-                  <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">
-                    Tổng cộng
-                  </span>
-                  <span className="text-3xl font-black text-emerald-700">
+              {/* Tổng cộng */}
+              <div style={{ borderTop: "1px solid #e5e7eb", margin: "0 0 16px", paddingTop: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "#111827" }}>Tổng cộng</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: "#16a34a" }}>
                     {finalTotal.toLocaleString("vi-VN")}đ
                   </span>
                 </div>
-
-                <Link
-                  href={`/payment${appliedCoupon ? `?coupon=${appliedCoupon.ma_code}` : ""}`}
-                  className="w-full bg-[#065F46] text-white py-4 rounded-xl font-black text-lg hover:bg-emerald-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center justify-center gap-2"
-                >
-                  Tiến hành thanh toán <ChevronRight className="w-5 h-5" />
-                </Link>
               </div>
 
+              {/* Checkout button */}
+              <Link
+                href={`/payment${appliedCoupon ? `?coupon=${appliedCoupon.ma_code}` : ""}`}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: 48, borderRadius: 10, background: "#16a34a", color: "#fff", fontSize: 15, fontWeight: 500, textDecoration: "none", boxSizing: "border-box" }}
+              >
+                Tiến hành thanh toán <ChevronRight style={{ width: 18, height: 18 }} />
+              </Link>
             </div>
           </div>
+
         </div>
       </div>
     </div>

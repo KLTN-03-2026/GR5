@@ -16,15 +16,17 @@ export default async function AccountLayout({
   });
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--color-bg)" }}>
+    <div style={{
+      display: "flex",
+      width: "100%",
+      flex: 1,
+      marginTop: "-6rem",         /* cancel store layout pt-24 (96px) */
+      minHeight: "calc(100vh - 64px)",
+      background: "#f7f8f6",
+      alignItems: "stretch",
+    }}>
       <Sidebar user={user} />
-      <main style={{
-        flex: 1,
-        padding: "2.5rem 3rem",
-        overflowY: "auto",
-        background: "var(--color-bg)",
-        minWidth: 0,
-      }}>
+      <main style={{ flex: 1, padding: 0, background: "#f7f8f6", minWidth: 0 }}>
         {children}
       </main>
     </div>

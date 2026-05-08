@@ -53,9 +53,31 @@ export async function GET(req: Request) {
               ho_so_nguoi_dung: true
             }
           },
-          chi_tiet_don_hang: true,
+          chi_tiet_don_hang: {
+            include: {
+              bien_the_san_pham: {
+                include: {
+                  san_pham: {
+                    select: {
+                      ten_san_pham: true,
+                      anh_san_pham: { take: 1, select: { duong_dan_anh: true } },
+                    },
+                  },
+                },
+              },
+            },
+          },
           don_van_chuyen: true,
-          yeu_cau_doi_tra: true
+          yeu_cau_doi_tra: true,
+          giao_dich_thanh_toan: {
+            take: 1,
+            orderBy: { ngay_tao: "desc" },
+            select: { phuong_thuc_thanh_toan: true, trang_thai: true },
+          },
+          lich_su_don_hang: {
+            orderBy: { thoi_gian_doi: "asc" },
+            select: { trang_thai: true, thoi_gian_doi: true },
+          }
         },
         orderBy: {
           ngay_tao: 'desc'

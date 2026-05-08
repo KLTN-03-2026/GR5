@@ -1,558 +1,679 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
-  Plus,
-  Edit,
-  Trash2,
-  TicketPercent,
-  X,
-  Calendar,
-  AlertTriangle,
+  Plus, Edit2, Trash2, TicketPercent, X, Calendar,
+  AlertTriangle, Search, Tag, TrendingDown, Clock,
+  CheckCircle2, XCircle, Infinity, Copy, Check,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
-import Pagination from "@/components/ui/Pagination";
+
+type Promotion = {
+  id: number;
+  ma_code: string;
+  loai_giam_gia: "PHAN_TRAM" | "TIEN_MAT";
+  gia_tri_giam: number | null;
+  don_toi_thieu: number | null;
+  gioi_han_su_dung: number | null;
+  ngay_bat_dau: string | null;
+  ngay_ket_thuc: string | null;
+  _count?: { don_hang: number };
+};
+
+type Status = "DANG_CHAY" | "HET_HAN" | "CHUA_BAT_DAU" | "VO_THOI_HAN";
 
 const formatDateForInput = (dateString: string) => {
   if (!dateString) return "";
   const d = new Date(dateString);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+
+const fmt = (n: number) => new Intl.NumberFormat("vi-VN").format(n);
+
+function getStatus(p: Promotion): Status {
+  const now = Date.now();
+  if (!p.ngay_ket_thuc && !p.ngay_bat_dau) return "VO_THOI_HAN";
+  if (p.ngay_ket_thuc && new Date(p.ngay_ket_thuc).getTime() < now) return "HET_HAN";
+  if (p.ngay_bat_dau && new Date(p.ngay_bat_dau).getTime() > now) return "CHUA_BAT_DAU";
+  return "DANG_CHAY";
+}
+
+const STATUS_CFG: Record<Status, { label: string; bg: string; text: string; border: string; dot: string; icon: React.ElementType }> = {
+  DANG_CHAY:    { label: "Đang chạy",     bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500", icon: CheckCircle2 },
+  HET_HAN:      { label: "Hết hạn",       bg: "bg-gray-100",   text: "text-gray-500",   border: "border-gray-200",   dot: "bg-gray-400",   icon: XCircle },
+  CHUA_BAT_DAU: { label: "Chưa bắt đầu", bg: "bg-blue-50",    text: "text-blue-700",   border: "border-blue-200",   dot: "bg-blue-400",   icon: Clock },
+  VO_THOI_HAN:  { label: "Vô thời hạn",  bg: "bg-violet-50",  text: "text-violet-700", border: "border-violet-200", dot: "bg-violet-400", icon: Infinity },
+};
+
+function CopyButton({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button onClick={copy} className="ml-1 p-0.5 text-gray-400 hover:text-gray-600 transition-colors" title="Sao chép">
+      {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+    </button>
+  );
+}
+
+const EMPTY_FORM = {
+  ma_code: "", loai_giam_gia: "PHAN_TRAM", gia_tri_giam: "",
+  don_toi_thieu: "", gioi_han_su_dung: "", ngay_bat_dau: "", ngay_ket_thuc: "",
 };
 
 export default function PromotionsPage() {
-  const [promotions, setPromotions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"ALL" | Status>("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const itemsPerPage = 15;
+
   const searchParams = useSearchParams();
   const highlightId = searchParams.get("highlight");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 15;
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
-    ma_code: "",
-    loai_giam_gia: "PHAN_TRAM",
-    gia_tri_giam: "",
-    don_toi_thieu: "",
-    gioi_han_su_dung: "",
-    ngay_bat_dau: "",
-    ngay_ket_thuc: "",
-  });
+  const [formData, setFormData] = useState<typeof EMPTY_FORM>({ ...EMPTY_FORM });
+  const [saving, setSaving] = useState(false);
 
-  const [deleteModal, setDeleteModal] = useState({
-    isOpen: false,
-    id: null as number | null,
-    code: "",
-  });
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: number | null; code: string }>({ open: false, id: null, code: "" });
+  const [deleting, setDeleting] = useState(false);
 
   const fetchPromotions = async () => {
-    setIsLoading(true);
+    setLoading(true);
     try {
       const res = await fetch(`/api/admin/promotions?page=${currentPage}&limit=${itemsPerPage}&t=${Date.now()}`);
       if (res.ok) {
         const result = await res.json();
-        setPromotions(result.data || result); // handle both old and new API formats
+        setPromotions(result.data || []);
         setTotalPages(result.meta?.totalPages || 1);
+        setTotal(result.meta?.total || 0);
       }
-    } catch (error) {
+    } catch {
       toast.error("Lỗi tải dữ liệu");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchPromotions();
-  }, [currentPage]);
+  useEffect(() => { fetchPromotions(); }, [currentPage]);
 
   useEffect(() => {
     if (!highlightId) return;
-
-    const element = document.getElementById(`promotion-${highlightId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    const el = document.getElementById(`promo-${highlightId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [highlightId, promotions]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const filtered = promotions.filter((p) => {
+    const matchSearch = p.ma_code.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === "ALL" || getStatus(p) === filterStatus;
+    return matchSearch && matchStatus;
+  });
 
-  const openAddModal = () => {
+  const countByStatus = (s: Status) => promotions.filter((p) => getStatus(p) === s).length;
+
+  const openAdd = () => {
     setEditingId(null);
-    setFormData({
-      ma_code: "",
-      loai_giam_gia: "PHAN_TRAM",
-      gia_tri_giam: "",
-      don_toi_thieu: "",
-      gioi_han_su_dung: "",
-      ngay_bat_dau: "",
-      ngay_ket_thuc: "",
-    });
+    setFormData({ ...EMPTY_FORM });
     setIsModalOpen(true);
   };
 
-  const openEditModal = (promo: any) => {
-    setEditingId(promo.id);
+  const openEdit = (p: Promotion) => {
+    setEditingId(p.id);
     setFormData({
-      ma_code: promo.ma_code,
-      loai_giam_gia: promo.loai_giam_gia || "PHAN_TRAM",
-      gia_tri_giam: promo.gia_tri_giam?.toString() || "",
-      don_toi_thieu: promo.don_toi_thieu?.toString() || "",
-      gioi_han_su_dung: promo.gioi_han_su_dung?.toString() || "",
-      ngay_bat_dau: formatDateForInput(promo.ngay_bat_dau),
-      ngay_ket_thuc: formatDateForInput(promo.ngay_ket_thuc),
+      ma_code: p.ma_code,
+      loai_giam_gia: p.loai_giam_gia || "PHAN_TRAM",
+      gia_tri_giam: p.gia_tri_giam?.toString() || "",
+      don_toi_thieu: p.don_toi_thieu?.toString() || "",
+      gioi_han_su_dung: p.gioi_han_su_dung?.toString() || "",
+      ngay_bat_dau: formatDateForInput(p.ngay_bat_dau || ""),
+      ngay_ket_thuc: formatDateForInput(p.ngay_ket_thuc || ""),
     });
     setIsModalOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.ma_code.trim()) {
-      toast.error("Vui lòng nhập Mã Code!");
-      return;
+    if (!formData.ma_code.trim()) { toast.error("Vui lòng nhập Mã Code!"); return; }
+    if (!formData.gia_tri_giam) { toast.error("Vui lòng nhập Giá trị giảm!"); return; }
+    if (Number(formData.gia_tri_giam) < 0 || Number(formData.don_toi_thieu) < 0) {
+      toast.error("Giá trị không được là số âm!"); return;
     }
-    if (!formData.gia_tri_giam) {
-      toast.error("Vui lòng nhập Giá trị giảm!");
-      return;
+    if (formData.loai_giam_gia === "PHAN_TRAM" && Number(formData.gia_tri_giam) > 100) {
+      toast.error("Giảm % không được vượt quá 100!"); return;
     }
-
-    // Chặn số âm
-    if (
-      Number(formData.gia_tri_giam) < 0 ||
-      Number(formData.don_toi_thieu) < 0 ||
-      Number(formData.gioi_han_su_dung) < 0
-    ) {
-      toast.error("Các giá trị số không được là số âm!");
-      return;
-    }
-
-    // === BẮT ĐẦU KIỂM TRA THỜI GIAN LOGIC ===
     const now = new Date();
-    const startDate = formData.ngay_bat_dau
-      ? new Date(formData.ngay_bat_dau)
-      : null;
-    const endDate = formData.ngay_ket_thuc
-      ? new Date(formData.ngay_ket_thuc)
-      : null;
+    const startDate = formData.ngay_bat_dau ? new Date(formData.ngay_bat_dau) : null;
+    const endDate = formData.ngay_ket_thuc ? new Date(formData.ngay_ket_thuc) : null;
+    if (!editingId && startDate && startDate < now) { toast.error("Ngày bắt đầu không được ở trong quá khứ!"); return; }
+    if (startDate && endDate && startDate >= endDate) { toast.error("Ngày kết thúc phải sau ngày bắt đầu!"); return; }
 
-    // 1. Nếu tạo mới -> Ngày bắt đầu không được ở trong quá khứ
-    if (!editingId && startDate && startDate < now) {
-      toast.error("Thời gian bắt đầu không được ở trong quá khứ!");
-      return;
-    }
-
-    // 2. Cả lúc tạo lẫn sửa -> Ngày kết thúc phải sau ngày bắt đầu
-    if (startDate && endDate && startDate >= endDate) {
-      toast.error("Thời gian kết thúc phải lớn hơn thời gian bắt đầu!");
-      return;
-    }
-    // === KẾT THÚC KIỂM TRA ===
-
-    const url = editingId
-      ? `/api/admin/promotions/${editingId}`
-      : "/api/admin/promotions";
-    const method = editingId ? "PUT" : "POST";
-
+    setSaving(true);
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        editingId ? `/api/admin/promotions/${editingId}` : "/api/admin/promotions",
+        { method: editingId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) }
+      );
       if (res.ok) {
-        toast.success(
-          editingId ? "Cập nhật thành công!" : "Tạo mã khuyến mãi thành công!",
-        );
+        toast.success(editingId ? "Cập nhật thành công!" : "Tạo mã thành công!");
         setIsModalOpen(false);
         fetchPromotions();
       } else {
-        const data = await res.json();
-        toast.error(data.error || "Lỗi hệ thống!");
+        const d = await res.json();
+        toast.error(d.error || "Lỗi hệ thống!");
       }
-    } catch (error) {
-      toast.error("Lỗi kết nối API!");
-    }
+    } catch { toast.error("Lỗi kết nối!"); }
+    finally { setSaving(false); }
   };
 
-  const executeDelete = async () => {
+  const handleDelete = async () => {
     if (!deleteModal.id) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/promotions/${deleteModal.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/admin/promotions/${deleteModal.id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Đã xóa mã khuyến mãi!");
-        setDeleteModal({ isOpen: false, id: null, code: "" });
+        setDeleteModal({ open: false, id: null, code: "" });
         fetchPromotions();
       } else {
-        const data = await res.json();
-        toast.error(data.error || "Không thể xóa!");
+        const d = await res.json();
+        toast.error(d.error || "Không thể xóa!");
       }
-    } catch (error) {
-      toast.error("Lỗi hệ thống!");
-    }
+    } catch { toast.error("Lỗi hệ thống!"); }
+    finally { setDeleting(false); }
   };
 
-  const checkStatus = (endDate: string | null) => {
-    if (!endDate)
-      return {
-        label: "Vô thời hạn",
-        color: "bg-blue-50 text-blue-600 border-blue-100",
-      };
-    const end = new Date(endDate).getTime();
-    const now = new Date().getTime();
-    return end > now
-      ? {
-          label: "Đang chạy",
-          color: "bg-emerald-50 text-emerald-600 border-emerald-100",
-        }
-      : {
-          label: "Đã hết hạn",
-          color: "bg-gray-100 text-gray-500 border-gray-200",
-        };
-  };
+  const statCards = [
+    { label: "Tổng mã", value: total, icon: Tag, bg: "bg-blue-50", border: "border-blue-100", text: "text-blue-700", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+    { label: "Đang chạy", value: countByStatus("DANG_CHAY"), icon: CheckCircle2, bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-700", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
+    { label: "Vô thời hạn", value: countByStatus("VO_THOI_HAN"), icon: Infinity, bg: "bg-violet-50", border: "border-violet-100", text: "text-violet-700", iconBg: "bg-violet-100", iconColor: "text-violet-600" },
+    { label: "Hết hạn", value: countByStatus("HET_HAN"), icon: TrendingDown, bg: "bg-red-50", border: "border-red-100", text: "text-red-700", iconBg: "bg-red-100", iconColor: "text-red-600" },
+  ];
 
   return (
-    <div className="space-y-8 max-w-[1200px] mx-auto pb-10 font-sans">
+    <div className="p-6 space-y-6 bg-gray-50 min-h-full">
       <Toaster />
-      <div className="flex justify-between items-center bg-white p-6 rounded-3xl border shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-rose-50 rounded-2xl flex justify-center items-center text-rose-500">
-            <TicketPercent className="w-7 h-7" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900">
-              Mã Giảm Giá
-            </h2>
-            <p className="text-sm text-gray-500 font-medium mt-1">
-              Quản lý kho voucher, chiến dịch khuyến mãi
-            </p>
-          </div>
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Khuyến Mãi</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Quản lý mã giảm giá và chương trình ưu đãi</p>
         </div>
         <button
-          onClick={openAddModal}
-          className="flex gap-2 bg-rose-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all active:scale-95"
+          onClick={openAdd}
+          className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition shadow-sm text-sm"
         >
-          <Plus className="w-5 h-5" /> Tạo Mã Mới
+          <Plus size={16} />
+          Tạo Mã Mới
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (
-          <div className="col-span-full text-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-rose-500 mx-auto"></div>
+      {/* Stats */}
+      {!loading && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {statCards.map((s) => (
+            <div key={s.label} className={`${s.bg} ${s.border} border rounded-xl p-4 flex items-center gap-3`}>
+              <div className={`${s.iconBg} rounded-xl p-2.5 flex-shrink-0`}>
+                <s.icon size={18} className={s.iconColor} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-medium">{s.label}</p>
+                <p className={`text-xl font-bold ${s.text}`}>{s.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Toolbar */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="flex flex-col sm:flex-row gap-3 p-4 border-b border-gray-100">
+          {/* Search */}
+          <div className="relative flex-1 max-w-xs">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Tìm mã code..."
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-50 bg-gray-50"
+            />
           </div>
-        ) : promotions.length === 0 ? (
-          <div className="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 text-gray-400">
-            <TicketPercent className="w-12 h-12 mx-auto mb-3 opacity-20" />
-            <p>Chưa có mã giảm giá nào.</p>
+
+          {/* Filter tabs */}
+          <div className="flex gap-1.5 flex-wrap">
+            {([
+              { key: "ALL", label: `Tất cả (${promotions.length})` },
+              { key: "DANG_CHAY", label: `Đang chạy (${countByStatus("DANG_CHAY")})` },
+              { key: "VO_THOI_HAN", label: `Vô thời hạn (${countByStatus("VO_THOI_HAN")})` },
+              { key: "CHUA_BAT_DAU", label: `Chưa bắt đầu (${countByStatus("CHUA_BAT_DAU")})` },
+              { key: "HET_HAN", label: `Hết hạn (${countByStatus("HET_HAN")})` },
+            ] as const).map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setFilterStatus(tab.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
+                  filterStatus === tab.key
+                    ? "bg-rose-600 text-white border-rose-600"
+                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Table */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-3">
+            <div className="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-gray-400">Đang tải dữ liệu...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center">
+              <TicketPercent size={24} className="text-gray-400" />
+            </div>
+            <p className="text-gray-600 font-medium">Không tìm thấy mã nào</p>
+            <p className="text-sm text-gray-400">Thử thay đổi bộ lọc hoặc tạo mã mới</p>
           </div>
         ) : (
-          promotions.map((p) => {
-            const status = checkStatus(p.ngay_ket_thuc);
-            const isExpired = status.label === "Đã hết hạn";
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mã Code</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Loại & Giá Trị</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Điều Kiện</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sử Dụng</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Thời Gian</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Trạng Thái</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map((p) => {
+                  const status = getStatus(p);
+                  const cfg = STATUS_CFG[status];
+                  const StatusIcon = cfg.icon;
+                  const isExpired = status === "HET_HAN";
+                  const soLanDaDung = p._count?.don_hang ?? 0;
+                  const usagePercent = p.gioi_han_su_dung
+                    ? Math.min(100, Math.round((soLanDaDung / p.gioi_han_su_dung) * 100))
+                    : null;
 
-            return (
-              <div
-                key={p.id}
-                id={`promotion-${p.id}`}
-                className={`bg-white rounded-2xl p-5 border shadow-sm relative overflow-hidden transition-all group ${highlightId === String(p.id) ? "border-amber-400 ring-2 ring-amber-200 shadow-lg" : isExpired ? "border-gray-200 opacity-70" : "border-rose-100 hover:shadow-md hover:border-rose-300"}`}
+                  return (
+                    <tr
+                      key={p.id}
+                      id={`promo-${p.id}`}
+                      className={`hover:bg-gray-50/50 transition-colors ${
+                        highlightId === String(p.id) ? "bg-amber-50 border-l-2 border-amber-400" : ""
+                      } ${isExpired ? "opacity-60" : ""}`}
+                    >
+                      {/* Mã code */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`font-mono font-bold text-sm px-2 py-0.5 rounded border ${
+                            isExpired ? "bg-gray-100 text-gray-500 border-gray-200" : "bg-rose-50 text-rose-600 border-rose-200"
+                          }`}>
+                            {p.ma_code}
+                          </span>
+                          <CopyButton code={p.ma_code} />
+                        </div>
+                      </td>
+
+                      {/* Loại & giá trị */}
+                      <td className="px-4 py-3.5">
+                        <div>
+                          <p className="font-bold text-gray-900">
+                            {p.loai_giam_gia === "TIEN_MAT"
+                              ? `−${fmt(p.gia_tri_giam ?? 0)}đ`
+                              : `−${p.gia_tri_giam}%`}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {p.loai_giam_gia === "TIEN_MAT" ? "Tiền mặt" : "Phần trăm"}
+                          </p>
+                        </div>
+                      </td>
+
+                      {/* Điều kiện */}
+                      <td className="px-4 py-3.5">
+                        <p className="text-gray-700 text-xs">
+                          {p.don_toi_thieu ? `Đơn từ ${fmt(p.don_toi_thieu)}đ` : "Không yêu cầu"}
+                        </p>
+                      </td>
+
+                      {/* Sử dụng */}
+                      <td className="px-4 py-3.5">
+                        {p.gioi_han_su_dung ? (
+                          <div>
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="text-gray-700 font-medium">
+                                {soLanDaDung}/{p.gioi_han_su_dung}
+                              </span>
+                              <span className="text-gray-400">{usagePercent}%</span>
+                            </div>
+                            <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${usagePercent! >= 90 ? "bg-red-400" : usagePercent! >= 60 ? "bg-amber-400" : "bg-emerald-400"}`}
+                                style={{ width: `${usagePercent}%` }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 flex items-center gap-1">
+                            <Infinity size={11} /> Không giới hạn
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Thời gian */}
+                      <td className="px-4 py-3.5">
+                        <div className="text-xs text-gray-600 space-y-0.5">
+                          {p.ngay_bat_dau ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-400">Từ:</span>
+                              {new Date(p.ngay_bat_dau).toLocaleDateString("vi-VN")}
+                            </div>
+                          ) : null}
+                          {p.ngay_ket_thuc ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-400">Đến:</span>
+                              <span className={isExpired ? "text-red-500 font-medium" : ""}>
+                                {new Date(p.ngay_ket_thuc).toLocaleDateString("vi-VN")}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">Không có hạn</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Trạng thái */}
+                      <td className="px-4 py-3.5">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                          {cfg.label}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => openEdit(p)}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Chỉnh sửa"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteModal({ open: true, id: p.id, code: p.ma_code })}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Xóa"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+            <p className="text-xs text-gray-500">
+              Trang {currentPage}/{totalPages} — {total} mã
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg border text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
-                <div
-                  className={`absolute top-0 right-0 w-2 h-full ${highlightId === String(p.id) ? "bg-amber-400" : isExpired ? "bg-gray-300" : "bg-rose-400"}`}
-                ></div>
-
-                <div className="flex justify-between items-start mb-4 pr-2">
-                  <span
-                    className={`inline-block px-3 py-1 font-black text-lg border-2 border-dashed rounded tracking-wider ${isExpired ? "bg-gray-50 text-gray-500 border-gray-300" : "bg-rose-50 text-rose-600 border-rose-200"}`}
+                <ChevronLeft size={14} />
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
+                if (page < 1 || page > totalPages) return null;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-7 h-7 rounded-lg text-xs font-medium transition border ${
+                      page === currentPage ? "bg-rose-600 text-white border-rose-600" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                    }`}
                   >
-                    {p.ma_code}
-                  </span>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-1 rounded border uppercase tracking-wider ${status.color}`}
-                  >
-                    {status.label}
-                  </span>
-                </div>
-
-                {/* ĐÃ FIX HIỂN THỊ: Chắc chắn check đúng TIEN_MAT hay PHAN_TRAM */}
-                <p
-                  className={`text-3xl font-black mb-4 ${isExpired ? "text-gray-400" : "text-gray-900"}`}
-                >
-                  Giảm{" "}
-                  {p.loai_giam_gia === "TIEN_MAT" ? (
-                    <span className="text-rose-500">
-                      {Number(p.gia_tri_giam).toLocaleString("vi-VN")}đ
-                    </span>
-                  ) : (
-                    <span className="text-rose-500">
-                      {Number(p.gia_tri_giam)}%
-                    </span>
-                  )}
-                </p>
-
-                <div className="text-xs text-gray-500 space-y-2 mb-6">
-                  <div className="flex justify-between border-b border-gray-50 pb-2">
-                    <span>Đơn tối thiểu:</span>
-                    <strong className="text-gray-700">
-                      {p.don_toi_thieu
-                        ? `${Number(p.don_toi_thieu).toLocaleString("vi-VN")}đ`
-                        : "Không yêu cầu"}
-                    </strong>
-                  </div>
-                  <div className="flex justify-between border-b border-gray-50 pb-2">
-                    <span>Lượt sử dụng:</span>
-                    <strong className="text-gray-700">
-                      {p.gioi_han_su_dung
-                        ? `${p.gioi_han_su_dung} lượt`
-                        : "Không giới hạn"}
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t pt-4 mt-auto">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
-                    <Calendar className="w-4 h-4" />
-                    {p.ngay_ket_thuc
-                      ? new Date(p.ngay_ket_thuc).toLocaleDateString("vi-VN")
-                      : "Không có hạn"}
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => openEditModal(p)}
-                      className="p-2 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setDeleteModal({
-                          isOpen: true,
-                          id: p.id,
-                          code: p.ma_code,
-                        })
-                      }
-                      className="p-2 text-gray-400 hover:text-rose-600 bg-gray-50 rounded-lg hover:bg-rose-50 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })
+                    {page}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-lg border text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Pagination Component */}
-      <Pagination 
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
-
+      {/* Create / Edit Modal */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 cursor-pointer"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
           onClick={() => setIsModalOpen(false)}
         >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white max-w-2xl w-full rounded-[2rem] p-8 cursor-default shadow-2xl"
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-              <h3 className="text-2xl font-black uppercase text-rose-600 flex items-center gap-2">
-                <TicketPercent className="w-6 h-6" />{" "}
-                {editingId ? "Cập Nhật Mã Code" : "Tạo Mã Code Mới"}
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 bg-gray-50 rounded-full hover:bg-gray-200"
-              >
-                <X className="w-5 h-5" />
+            {/* Modal header */}
+            <div className="flex items-center gap-3 px-6 py-4 border-b bg-rose-50">
+              <div className="w-9 h-9 bg-rose-100 rounded-xl flex items-center justify-center">
+                <TicketPercent size={18} className="text-rose-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900">{editingId ? "Chỉnh sửa mã giảm giá" : "Tạo mã giảm giá mới"}</h3>
+                <p className="text-xs text-gray-500">{editingId ? "Cập nhật thông tin mã" : "Điền thông tin để phát hành mã"}</p>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg hover:bg-rose-100 text-gray-500 transition">
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-5" noValidate>
-              <div className="grid grid-cols-2 gap-5">
-                <div className="col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                    Mã Code (Chữ & Số) *
-                  </label>
-                  <input
-                    type="text"
-                    name="ma_code"
-                    value={formData.ma_code}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 uppercase font-black text-rose-600 tracking-widest focus:border-rose-400 focus:ring-4 focus:ring-rose-50 outline-none transition-all"
-                    placeholder="VD: TET2026"
-                  />
-                </div>
+            <form onSubmit={handleSave} className="p-6 space-y-4">
+              {/* Mã code */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Mã Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="ma_code"
+                  value={formData.ma_code}
+                  onChange={(e) => setFormData({ ...formData, ma_code: e.target.value.toUpperCase() })}
+                  className="w-full border rounded-lg px-3 py-2.5 text-sm font-mono font-bold text-rose-600 uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400"
+                  placeholder="VD: TET2026"
+                />
+              </div>
 
+              {/* Loại + Giá trị */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                    Hình thức giảm
-                  </label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Hình thức giảm</label>
                   <select
                     name="loai_giam_gia"
                     value={formData.loai_giam_gia}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 font-bold text-gray-700 focus:border-rose-400 outline-none"
+                    onChange={(e) => setFormData({ ...formData, loai_giam_gia: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
                   >
-                    <option value="PHAN_TRAM">Giảm theo %</option>
+                    <option value="PHAN_TRAM">Giảm theo % (phần trăm)</option>
                     <option value="TIEN_MAT">Giảm tiền mặt (VNĐ)</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                    Giá trị giảm *
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Giá trị giảm <span className="text-red-500">*</span>
+                    <span className="ml-1 text-gray-400 font-normal">
+                      {formData.loai_giam_gia === "PHAN_TRAM" ? "(%)" : "(VNĐ)"}
+                    </span>
                   </label>
-                  {/* ĐÃ FIX: Thêm min="0" chống số âm */}
                   <input
                     type="number"
                     min="0"
+                    max={formData.loai_giam_gia === "PHAN_TRAM" ? 100 : undefined}
                     name="gia_tri_giam"
                     value={formData.gia_tri_giam}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 font-bold focus:border-rose-400 outline-none"
-                    placeholder={
-                      formData.loai_giam_gia === "PHAN_TRAM"
-                        ? "VD: 10 (%)"
-                        : "VD: 50000 (VNĐ)"
-                    }
+                    onChange={(e) => setFormData({ ...formData, gia_tri_giam: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                    placeholder={formData.loai_giam_gia === "PHAN_TRAM" ? "VD: 10" : "VD: 50000"}
                   />
                 </div>
+              </div>
 
-                <div className="col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-200 grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                      Đơn tối thiểu (Tùy chọn)
-                    </label>
-                    {/* ĐÃ FIX: Thêm min="0" chống số âm */}
-                    <input
-                      type="number"
-                      min="0"
-                      name="don_toi_thieu"
-                      value={formData.don_toi_thieu}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-rose-400"
-                      placeholder="VD: 200000"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                      Giới hạn số lượt (Tùy chọn)
-                    </label>
-                    {/* ĐÃ FIX: Thêm min="0" chống số âm */}
-                    <input
-                      type="number"
-                      min="0"
-                      name="gioi_han_su_dung"
-                      value={formData.gioi_han_su_dung}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-rose-400"
-                      placeholder="VD: 100 lượt"
-                    />
-                  </div>
-                </div>
-
+              {/* Điều kiện */}
+              <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                    Thời gian bắt đầu
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Đơn tối thiểu (VNĐ)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    name="don_toi_thieu"
+                    value={formData.don_toi_thieu}
+                    onChange={(e) => setFormData({ ...formData, don_toi_thieu: e.target.value })}
+                    className="w-full border bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                    placeholder="Không yêu cầu"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Giới hạn lượt dùng</label>
+                  <input
+                    type="number"
+                    min="0"
+                    name="gioi_han_su_dung"
+                    value={formData.gioi_han_su_dung}
+                    onChange={(e) => setFormData({ ...formData, gioi_han_su_dung: e.target.value })}
+                    className="w-full border bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                    placeholder="Không giới hạn"
+                  />
+                </div>
+              </div>
+
+              {/* Thời gian */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    <span className="flex items-center gap-1"><Calendar size={11} />Ngày bắt đầu</span>
                   </label>
                   <input
                     type="datetime-local"
                     name="ngay_bat_dau"
                     value={formData.ngay_bat_dau}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-600 outline-none focus:border-rose-400"
+                    onChange={(e) => setFormData({ ...formData, ngay_bat_dau: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                    Thời gian kết thúc
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    <span className="flex items-center gap-1"><Calendar size={11} />Ngày kết thúc</span>
                   </label>
                   <input
                     type="datetime-local"
                     name="ngay_ket_thuc"
                     value={formData.ngay_ket_thuc}
-                    onChange={handleInputChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-600 outline-none focus:border-rose-400"
+                    onChange={(e) => setFormData({ ...formData, ngay_ket_thuc: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
                   />
                 </div>
               </div>
 
-              <div className="pt-6 flex gap-3 mt-6">
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-gray-100 font-bold py-4 rounded-xl text-gray-600 hover:bg-gray-200 transition-colors"
+                  className="flex-1 py-2.5 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                 >
-                  Hủy bỏ
+                  Hủy
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-rose-500 text-white font-black tracking-widest py-4 rounded-xl hover:bg-rose-600 shadow-xl shadow-rose-500/30 transition-all active:scale-95"
+                  disabled={saving}
+                  className="flex-1 py-2.5 bg-rose-600 text-white rounded-lg text-sm font-semibold hover:bg-rose-700 transition shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {editingId ? "CẬP NHẬT MÃ" : "PHÁT HÀNH MÃ"}
+                  {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                  {editingId ? "Cập nhật" : "Phát hành mã"}
                 </button>
               </div>
             </form>
-          </motion.div>
+          </div>
         </div>
       )}
 
-      {deleteModal.isOpen && (
+      {/* Delete Modal */}
+      {deleteModal.open && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center cursor-pointer p-4"
-          onClick={() => setDeleteModal({ isOpen: false, id: null, code: "" })}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setDeleteModal({ open: false, id: null, code: "" })}
         >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            className="bg-white max-w-sm w-full rounded-[2rem] p-6 text-center cursor-default shadow-2xl"
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8" />
+            <div className="flex items-center gap-3 px-6 py-4 border-b bg-red-50">
+              <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center">
+                <AlertTriangle size={18} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Xóa mã giảm giá</h3>
+                <p className="text-xs text-gray-500">Hành động này không thể hoàn tác</p>
+              </div>
             </div>
-            <h3 className="font-black text-xl text-gray-900 mb-2">
-              Xóa Mã Giảm Giá
-            </h3>
-            <p className="text-gray-500 text-sm mb-6">
-              Xóa vĩnh viễn mã{" "}
-              <strong className="text-rose-500">{deleteModal.code}</strong>?
-            </p>
-            <div className="flex gap-3">
+            <div className="px-6 py-5">
+              <p className="text-sm text-gray-600">
+                Bạn có chắc muốn xóa mã{" "}
+                <span className="font-mono font-bold text-rose-600 px-1.5 py-0.5 bg-rose-50 rounded border border-rose-200">
+                  {deleteModal.code}
+                </span>
+                ?
+              </p>
+              <p className="text-xs text-gray-400 mt-2">Các đơn hàng đã áp dụng mã này sẽ không bị ảnh hưởng.</p>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t bg-gray-50">
               <button
-                onClick={() =>
-                  setDeleteModal({ isOpen: false, id: null, code: "" })
-                }
-                className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                onClick={() => setDeleteModal({ open: false, id: null, code: "" })}
+                className="flex-1 py-2.5 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
               >
-                Hủy bỏ
+                Hủy
               </button>
               <button
-                onClick={executeDelete}
-                className="flex-1 py-3.5 bg-rose-500 text-white font-bold rounded-xl hover:bg-rose-600 shadow-lg shadow-rose-500/30 transition-all"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
               >
-                Đồng ý xóa
+                {deleting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                Xóa mã
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>

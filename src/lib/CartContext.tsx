@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export interface CartItem {
   id: string | number;
@@ -20,29 +22,50 @@ interface CartContextType {
     phan_loai: string,
     quantity: number,
   ) => void;
+  clearCart: () => void;
   totalItems: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
 
+  // Key localStorage theo email user
+  const cartKey = session?.user?.email
+    ? `verdant_cart_${session.user.email}`
+    : null;
+
+  // Load giỏ hàng chỉ khi session đã xác định (không còn loading)
   useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem("verdant_cart");
-      if (savedCart) setCart(JSON.parse(savedCart));
-    } catch (error) {
-      console.error("Lỗi đọc giỏ:", error);
+    if (status === "loading") return;
+    if (!cartKey) {
+      setCart([]);
+      return;
     }
-  }, []);
+    try {
+      const saved = localStorage.getItem(cartKey);
+      setCart(saved ? JSON.parse(saved) : []);
+    } catch {
+      setCart([]);
+    }
+  }, [cartKey, status]);
 
   const saveCart = (newCart: CartItem[]) => {
     setCart(newCart);
-    localStorage.setItem("verdant_cart", JSON.stringify(newCart));
+    if (cartKey) {
+      localStorage.setItem(cartKey, JSON.stringify(newCart));
+    }
   };
 
   const addToCart = (newItem: CartItem) => {
+    if (status === "loading") return;
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
     const existingIndex = cart.findIndex(
       (item) => item.id === newItem.id && item.phan_loai === newItem.phan_loai,
     );
@@ -57,10 +80,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = (id: string | number, phan_loai: string) => {
-    const updatedCart = cart.filter(
+    saveCart(cart.filter(
       (item) => !(item.id === id && item.phan_loai === phan_loai),
-    );
-    saveCart(updatedCart);
+    ));
   };
 
   const updateQuantity = (
@@ -68,21 +90,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     phan_loai: string,
     quantity: number,
   ) => {
-    const updatedCart = cart.map((item) => {
-      if (item.id === id && item.phan_loai === phan_loai) {
-        return { ...item, so_luong: quantity };
-      }
-      return item;
-    });
-    saveCart(updatedCart);
+    saveCart(cart.map((item) =>
+      item.id === id && item.phan_loai === phan_loai
+        ? { ...item, so_luong: quantity }
+        : item,
+    ));
   };
 
-  // ĐÃ SỬA THEO SHOPEE: Đếm số loại sản phẩm khác nhau trong giỏ thay vì đếm tổng số lượng
+  const clearCart = () => {
+    setCart([]);
+    if (cartKey) localStorage.removeItem(cartKey);
+  };
+
+  // Đếm số loại sản phẩm khác nhau trong giỏ
   const totalItems = cart.length;
 
   return (
     <CartContext.Provider
-      value={{ cart, addToCart, removeFromCart, updateQuantity, totalItems }}
+      value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, totalItems }}
     >
       {children}
     </CartContext.Provider>

@@ -10,7 +10,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       where: { id },
       data: {
         trang_thai,
-        ma_nguoi_duyet,
+        nguoi_duyet_id: ma_nguoi_duyet ?? null,
         phan_hoi_admin,
         ngay_duyet: new Date()
       }

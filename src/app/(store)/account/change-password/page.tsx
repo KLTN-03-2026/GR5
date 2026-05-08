@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import {
   KeyRound, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, X,
-  ShieldCheck, ArrowRight, ScanFace, Trash2, Shield,
+  ShieldCheck, ScanFace, Trash2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -111,36 +111,27 @@ export default function SecurityPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto py-6">
+    <div className="sec-page">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
 
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
-              <Shield size={22} className="text-[#007A33]" />
-            </div>
-            <h1 className="text-2xl font-black text-slate-800">Bảo mật tài khoản</h1>
-          </div>
-          <p className="text-sm text-slate-400 ml-[52px]">Quản lý mật khẩu và xác thực khuôn mặt</p>
+        <div style={{ marginBottom: 20 }}>
+          <h1 className="sec-page__title">Bảo mật tài khoản</h1>
+          <p className="sec-page__sub">Quản lý mật khẩu và xác thực khuôn mặt</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 bg-slate-100 p-1.5 rounded-2xl">
+        <div className="sec-tabs">
           {([
-            { id: "PASSWORD", label: "Đổi Mật Khẩu", icon: KeyRound },
+            { id: "PASSWORD", label: "Đổi mật khẩu", icon: KeyRound },
             { id: "FACE_ID", label: "FaceID", icon: ScanFace },
           ] as { id: Tab; label: string; icon: any }[]).map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                activeTab === tab.id
-                  ? "bg-white text-[#007A33] shadow-sm"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
+              className={`sec-tab${activeTab === tab.id ? " sec-tab--active" : ""}`}
             >
-              <tab.icon size={16} />
+              <tab.icon size={15} />
               {tab.label}
             </button>
           ))}
@@ -148,188 +139,186 @@ export default function SecurityPage() {
 
         <AnimatePresence mode="wait">
 
-          {/* ── TAB ĐỔI MẬT KHẨU ─────────────────────────────────────────── */}
+          {/* ── TAB ĐỔI MẬT KHẨU ── */}
           {activeTab === "PASSWORD" && (
             <motion.div key="pw" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.2 }}>
 
-              <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4 mb-5 flex items-start gap-3">
-                <ShieldCheck size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div className="text-xs text-emerald-700">
-                  <p className="font-bold text-emerald-800 mb-0.5">Mẹo bảo mật</p>
-                  <p>Dùng ít nhất 8 ký tự, kết hợp chữ hoa, số và ký tự đặc biệt.</p>
-                </div>
-              </div>
-
+              {/* Alert messages */}
               {pwSuccess && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="mb-5 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 text-sm font-medium">
-                  <CheckCircle2 size={18} className="text-emerald-600" />
-                  Đổi mật khẩu thành công!
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="sec-alert sec-alert--success">
+                  <CheckCircle2 size={16} /> Đổi mật khẩu thành công!
                 </motion.div>
               )}
               {pwError && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 text-sm">
-                  <AlertCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
-                  <span>{pwError}</span>
-                  <button onClick={() => setPwError(null)} className="ml-auto"><X size={14} /></button>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="sec-alert sec-alert--error">
+                  <AlertCircle size={16} />
+                  <span style={{ flex: 1 }}>{pwError}</span>
+                  <button type="button" onClick={() => setPwError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", display: "flex" }}><X size={14} /></button>
                 </motion.div>
               )}
 
-              <form onSubmit={handleChangePassword} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
-                {/* Old */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Mật khẩu hiện tại <span className="text-red-400">*</span></label>
-                  <div className={`flex items-center border rounded-xl px-4 py-3 transition-all ${form.oldPassword ? "border-[#007A33]/40 bg-emerald-50/20" : "border-slate-200 bg-slate-50"} focus-within:ring-2 focus-within:ring-[#007A33]/20`}>
-                    <KeyRound size={15} className="text-slate-400 mr-3 flex-shrink-0" />
-                    <input type={showOld ? "text" : "password"} required value={form.oldPassword}
-                      onChange={(e) => setForm({ ...form, oldPassword: e.target.value })}
-                      placeholder="Mật khẩu hiện tại"
-                      className="flex-1 bg-transparent text-sm font-medium text-slate-800 outline-none placeholder:text-slate-300" />
-                    <button type="button" onClick={() => setShowOld(!showOld)} className="text-slate-400 hover:text-[#007A33]">
-                      {showOld ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
+              <div className="sec-card">
+                {/* Security tip banner */}
+                <div className="sec-tip">
+                  <ShieldCheck size={16} style={{ color: "#16a34a", flexShrink: 0, marginTop: 1 }} />
+                  <div>
+                    <p className="sec-tip__title">Mẹo bảo mật</p>
+                    <p className="sec-tip__text">Dùng ít nhất 8 ký tự, kết hợp chữ hoa, số và ký tự đặc biệt.</p>
                   </div>
                 </div>
 
-                <div className="border-t border-dashed border-slate-100" />
-
-                {/* New */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Mật khẩu mới <span className="text-red-400">*</span></label>
-                  <div className={`flex items-center border rounded-xl px-4 py-3 transition-all ${form.newPassword ? "border-[#007A33]/40 bg-emerald-50/20" : "border-slate-200 bg-slate-50"} focus-within:ring-2 focus-within:ring-[#007A33]/20`}>
-                    <KeyRound size={15} className="text-slate-400 mr-3 flex-shrink-0" />
-                    <input type={showNew ? "text" : "password"} required value={form.newPassword}
-                      onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
-                      placeholder="Ít nhất 6 ký tự"
-                      className="flex-1 bg-transparent text-sm font-medium text-slate-800 outline-none placeholder:text-slate-300" />
-                    <button type="button" onClick={() => setShowNew(!showNew)} className="text-slate-400 hover:text-[#007A33]">
-                      {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  </div>
-                  {pwStrength && (
-                    <div className="mt-2 space-y-1">
-                      <div className="flex gap-1">{[1,2,3,4].map(i => <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= pwStrength.level ? pwStrength.color : "bg-slate-200"}`} />)}</div>
-                      <p className="text-xs text-slate-400">Độ mạnh: <span className={`font-bold ${pwStrength.level >= 3 ? "text-[#007A33]" : "text-orange-500"}`}>{pwStrength.label}</span></p>
+                <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 20 }}>
+                  {/* Mật khẩu hiện tại */}
+                  <div>
+                    <label className="sec-label">Mật khẩu hiện tại <span style={{ color: "#ef4444" }}>*</span></label>
+                    <div className={`sec-input-wrap${form.oldPassword ? " sec-input-wrap--filled" : ""}`}>
+                      <input
+                        type={showOld ? "text" : "password"}
+                        required
+                        value={form.oldPassword}
+                        onChange={(e) => setForm({ ...form, oldPassword: e.target.value })}
+                        placeholder="Nhập mật khẩu hiện tại"
+                        className="sec-input"
+                      />
+                      <button type="button" onClick={() => setShowOld(!showOld)} className="sec-eye-btn">
+                        {showOld ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
                     </div>
-                  )}
-                </div>
-
-                {/* Confirm */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Xác nhận mật khẩu mới <span className="text-red-400">*</span></label>
-                  <div className={`flex items-center border rounded-xl px-4 py-3 transition-all ${
-                    form.confirmPassword
-                      ? form.confirmPassword === form.newPassword ? "border-[#007A33] bg-emerald-50/20" : "border-red-300 bg-red-50/20"
-                      : "border-slate-200 bg-slate-50"
-                  } focus-within:ring-2 focus-within:ring-[#007A33]/20`}>
-                    <KeyRound size={15} className="text-slate-400 mr-3 flex-shrink-0" />
-                    <input type={showConfirm ? "text" : "password"} required value={form.confirmPassword}
-                      onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                      placeholder="Nhập lại mật khẩu mới"
-                      className="flex-1 bg-transparent text-sm font-medium text-slate-800 outline-none placeholder:text-slate-300" />
-                    <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-slate-400 hover:text-[#007A33]">
-                      {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
                   </div>
-                  {form.confirmPassword && form.newPassword !== form.confirmPassword && <p className="text-xs text-red-500 mt-1.5 font-medium">⚠ Mật khẩu không khớp</p>}
-                  {form.confirmPassword && form.newPassword === form.confirmPassword && <p className="text-xs text-[#007A33] mt-1.5 font-medium">✓ Mật khẩu khớp</p>}
-                </div>
 
-                <div className="pt-1">
-                  <button type="submit" disabled={pwLoading}
-                    className="w-full bg-[#007A33] hover:bg-[#006329] active:scale-[0.98] disabled:opacity-60 text-white font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
-                    {pwLoading ? <><Loader2 size={16} className="animate-spin" /> Đang xử lý...</> : <><KeyRound size={15} /> Cập nhật mật khẩu <ArrowRight size={15} /></>}
+                  {/* Mật khẩu mới */}
+                  <div>
+                    <label className="sec-label">Mật khẩu mới <span style={{ color: "#ef4444" }}>*</span></label>
+                    <div className={`sec-input-wrap${form.newPassword ? " sec-input-wrap--filled" : ""}`}>
+                      <input
+                        type={showNew ? "text" : "password"}
+                        required
+                        value={form.newPassword}
+                        onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
+                        placeholder="Ít nhất 6 ký tự"
+                        className="sec-input"
+                      />
+                      <button type="button" onClick={() => setShowNew(!showNew)} className="sec-eye-btn">
+                        {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {pwStrength && (
+                      <div style={{ marginTop: 8 }}>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          {[1,2,3,4].map(i => (
+                            <div key={i} style={{ height: 4, flex: 1, borderRadius: 99, background: i <= pwStrength.level ? (pwStrength.level >= 3 ? "#16a34a" : "#f97316") : "#e5e7eb", transition: "background 200ms" }} />
+                          ))}
+                        </div>
+                        <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+                          Độ mạnh: <span style={{ fontWeight: 500, color: pwStrength.level >= 3 ? "#16a34a" : "#f97316" }}>{pwStrength.label}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Xác nhận mật khẩu mới */}
+                  <div>
+                    <label className="sec-label">Xác nhận mật khẩu mới <span style={{ color: "#ef4444" }}>*</span></label>
+                    <div className={`sec-input-wrap${form.confirmPassword ? (form.confirmPassword === form.newPassword ? " sec-input-wrap--ok" : " sec-input-wrap--error") : ""}`}>
+                      <input
+                        type={showConfirm ? "text" : "password"}
+                        required
+                        value={form.confirmPassword}
+                        onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                        placeholder="Nhập lại mật khẩu mới"
+                        className="sec-input"
+                      />
+                      <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="sec-eye-btn">
+                        {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {form.confirmPassword && form.newPassword !== form.confirmPassword && (
+                      <p style={{ fontSize: 12, color: "#ef4444", marginTop: 4 }}>Mật khẩu không khớp</p>
+                    )}
+                    {form.confirmPassword && form.newPassword === form.confirmPassword && (
+                      <p style={{ fontSize: 12, color: "#16a34a", marginTop: 4 }}>Mật khẩu khớp</p>
+                    )}
+                  </div>
+
+                  <button type="submit" disabled={pwLoading} className="sec-submit-btn">
+                    {pwLoading ? <><Loader2 size={15} className="animate-spin" /> Đang xử lý...</> : "Cập nhật mật khẩu"}
                   </button>
-                </div>
-              </form>
+                </form>
+              </div>
             </motion.div>
           )}
 
-          {/* ── TAB FACEID ───────────────────────────────────────────────── */}
+          {/* ── TAB FACEID ── */}
           {activeTab === "FACE_ID" && (
             <motion.div key="face" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.2 }}>
 
               {faceMsg && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className={`mb-5 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium border ${
-                    faceMsg.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-800"
-                  }`}>
-                  {faceMsg.type === "success" ? <CheckCircle2 size={18} className="text-emerald-600" /> : <AlertCircle size={18} className="text-red-500" />}
-                  <span className="flex-1">{faceMsg.text}</span>
-                  <button onClick={() => setFaceMsg(null)}><X size={14} /></button>
+                  className={`sec-alert${faceMsg.type === "success" ? " sec-alert--success" : " sec-alert--error"}`}>
+                  {faceMsg.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                  <span style={{ flex: 1 }}>{faceMsg.text}</span>
+                  <button type="button" onClick={() => setFaceMsg(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", display: "flex" }}><X size={14} /></button>
                 </motion.div>
               )}
 
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
-
-                {/* Status */}
+              <div className="sec-card" style={{ marginTop: 16 }}>
                 {hasFaceData === null ? (
-                  <div className="flex items-center justify-center py-8 text-slate-400">
-                    <Loader2 size={22} className="animate-spin mr-2" /> Đang kiểm tra...
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 0", color: "#9ca3af", gap: 8 }}>
+                    <Loader2 size={20} className="animate-spin" /> Đang kiểm tra...
                   </div>
                 ) : (
                   <>
-                    {/* Status card */}
-                    <div className={`rounded-2xl p-5 flex items-center gap-4 border-2 transition-all ${
-                      hasFaceData ? "border-[#007A33]/30 bg-emerald-50/50" : "border-slate-200 bg-slate-50"
-                    }`}>
-                      <div className={`p-3 rounded-full ${hasFaceData ? "bg-[#007A33]/10" : "bg-slate-200"}`}>
-                        <ScanFace size={30} className={hasFaceData ? "text-[#007A33]" : "text-slate-400"} />
+                    {/* Status row */}
+                    <div className={`sec-face-status${hasFaceData ? " sec-face-status--active" : ""}`}>
+                      <div className="sec-face-icon-wrap">
+                        <ScanFace size={24} color={hasFaceData ? "#16a34a" : "#9ca3af"} />
+                        {!hasFaceData && <span className="sec-face-dot" />}
                       </div>
-                      <div className="flex-1">
-                        <p className={`font-bold ${hasFaceData ? "text-[#007A33]" : "text-slate-500"}`}>
-                          {hasFaceData ? "✅ FaceID đã được kích hoạt" : "⛔ Chưa đăng ký FaceID"}
+                      <div style={{ flex: 1 }}>
+                        <p className="sec-face-title">
+                          {hasFaceData ? "FaceID đã được kích hoạt" : "Chưa đăng ký FaceID"}
                         </p>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="sec-face-sub">
                           {hasFaceData
                             ? "Bạn có thể đăng nhập nhanh bằng khuôn mặt mà không cần nhập mật khẩu."
                             : "Đăng ký khuôn mặt để đăng nhập chỉ với 1 cái nhìn vào camera."}
                         </p>
                       </div>
-                      {hasFaceData && <ShieldCheck size={24} className="text-[#007A33]" />}
+                      {hasFaceData && <ShieldCheck size={20} color="#16a34a" />}
                     </div>
 
-                    {/* Hướng dẫn khi chưa đăng ký */}
+                    {/* Hướng dẫn */}
                     {!hasFaceData && !showScanner && (
-                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700 space-y-1.5">
-                        <p className="font-bold text-blue-800">📋 Hướng dẫn đăng ký FaceID:</p>
-                        <p>① Nhấn "Đăng ký khuôn mặt" và cho phép truy cập camera</p>
-                        <p>② Nhìn thẳng vào camera trong điều kiện ánh sáng tốt</p>
-                        <p>③ Giữ yên trong ~5 giây để hệ thống chụp 5 ảnh</p>
-                        <p>④ Sau đó dùng FaceID để đăng nhập tại trang đăng nhập</p>
+                      <div className="sec-guide">
+                        <p className="sec-guide__title">Hướng dẫn đăng ký FaceID</p>
+                        <p className="sec-guide__step">1. Nhấn "Đăng ký khuôn mặt" và cho phép truy cập camera</p>
+                        <p className="sec-guide__step">2. Nhìn thẳng vào camera trong điều kiện ánh sáng tốt</p>
+                        <p className="sec-guide__step">3. Giữ yên trong ~5 giây để hệ thống chụp 5 ảnh</p>
+                        <p className="sec-guide__step">4. Sau đó dùng FaceID để đăng nhập tại trang đăng nhập</p>
                       </div>
                     )}
 
                     {/* Camera */}
                     {showScanner && (
-                      <FaceRegister
-                        onSuccess={handleFaceSuccess}
-                        onCancel={() => setShowScanner(false)}
-                      />
+                      <FaceRegister onSuccess={handleFaceSuccess} onCancel={() => setShowScanner(false)} />
                     )}
 
                     {/* Actions */}
                     {!showScanner && (
-                      <div className="space-y-3">
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
                         <button
                           onClick={() => { setFaceMsg(null); setShowScanner(true); }}
                           disabled={faceLoading}
-                          className="w-full bg-[#007A33] hover:bg-[#006329] active:scale-[0.98] disabled:opacity-60 text-white font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
+                          className="sec-submit-btn"
                         >
                           {faceLoading
-                            ? <><Loader2 size={16} className="animate-spin" /> Đang lưu...</>
-                            : <><ScanFace size={16} /> {hasFaceData ? "Cập nhật FaceID" : "Đăng ký khuôn mặt"}</>
+                            ? <><Loader2 size={15} className="animate-spin" /> Đang lưu...</>
+                            : <><ScanFace size={15} /> {hasFaceData ? "Cập nhật FaceID" : "Đăng ký khuôn mặt"}</>
                           }
                         </button>
-
                         {hasFaceData && (
-                          <button
-                            onClick={handleDeleteFace}
-                            disabled={faceLoading}
-                            className="w-full bg-red-50 hover:bg-red-100 active:scale-[0.98] disabled:opacity-60 text-red-600 font-bold py-3 rounded-xl text-sm border border-red-200 flex items-center justify-center gap-2 transition-all"
-                          >
-                            <Trash2 size={15} /> Xóa dữ liệu FaceID
+                          <button onClick={handleDeleteFace} disabled={faceLoading} className="sec-delete-btn">
+                            <Trash2 size={14} /> Xóa dữ liệu FaceID
                           </button>
                         )}
                       </div>
@@ -338,10 +327,8 @@ export default function SecurityPage() {
                 )}
               </div>
 
-              {/* Privacy note */}
-              <p className="text-center text-[11px] text-slate-400 mt-4 leading-relaxed">
-                🔒 Dữ liệu khuôn mặt được mã hóa và lưu trữ an toàn trong hệ thống.
-                Chúng tôi không chia sẻ thông tin sinh trắc học của bạn.
+              <p className="sec-disclaimer">
+                Dữ liệu khuôn mặt được mã hóa và lưu trữ an toàn. Chúng tôi không chia sẻ thông tin sinh trắc học của bạn.
               </p>
             </motion.div>
           )}

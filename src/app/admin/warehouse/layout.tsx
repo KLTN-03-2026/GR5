@@ -11,9 +11,11 @@ export default function WarehouseLayout({
       <div>
         <h1 className="text-2xl font-bold text-[#2C2C2A]">Quản lý Kho hàng</h1>
         <p className="text-sm text-[#888780] mt-1">
-          Sơ đồ kho, nhập kho master-detail và cảnh báo HSD
+          Sơ đồ kho, tồn kho sản phẩm, cảnh báo HSD và lịch sử
         </p>
       </div>
+
+      <WarehouseLayoutTabs />
 
       <div>{children}</div>
     </div>

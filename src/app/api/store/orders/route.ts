@@ -9,25 +9,42 @@
   export async function POST(req: Request) {
     try {
       const body = await req.json();
-      const { ma_nguoi_dung, tong_tien, items, ghi_chu } = body;
+      const {
+        ma_nguoi_dung, tong_tien, phi_van_chuyen, items, ghi_chu,
+        phuong_thuc_thanh_toan,
+        ho_ten_nguoi_nhan, sdt_nguoi_nhan, dia_chi_giao_hang,
+        ma_tinh_ghn, ma_quan_huyen_ghn, ma_phuong_xa_ghn,
+      } = body;
 
       const newOrder = await prisma.don_hang.create({
-        // 💡 Dùng 'as any' để ép TypeScript bỏ qua lỗi cache của Prisma với cột ghi_chu
         data: {
-          nguoi_dung: {
-            connect: { id: Number(ma_nguoi_dung || 1) }
-          },
-          // ghi_chu: ghi_chu || null,
+          nguoi_dung: { connect: { id: Number(ma_nguoi_dung || 1) } },
           tong_tien: Number(tong_tien || 0),
+          phi_van_chuyen: Number(phi_van_chuyen || 0),
           trang_thai: "CHO_XAC_NHAN",
+          // Snapshot địa chỉ giao hàng
+          ho_ten_nguoi_nhan: ho_ten_nguoi_nhan || null,
+          sdt_nguoi_nhan: sdt_nguoi_nhan || null,
+          dia_chi_giao_hang: dia_chi_giao_hang || null,
+          ma_tinh_ghn: ma_tinh_ghn ? Number(ma_tinh_ghn) : null,
+          ma_quan_huyen_ghn: ma_quan_huyen_ghn ? Number(ma_quan_huyen_ghn) : null,
+          ma_phuong_xa_ghn: ma_phuong_xa_ghn || null,
           chi_tiet_don_hang: {
             create: items.map((item: any) => ({
               ma_bien_the: Number(item.ma_bien_the || item.id),
               so_luong: Number(item.so_luong || 1),
-              don_gia: Number(item.gia_ban || item.don_gia || 0), 
+              don_gia: Number(item.gia_ban || item.don_gia || 0),
             }))
-          }
-        } as any 
+          },
+          // Tạo giao dịch thanh toán
+          giao_dich_thanh_toan: {
+            create: {
+              so_tien: Number(tong_tien || 0),
+              phuong_thuc_thanh_toan: phuong_thuc_thanh_toan || "COD",
+              trang_thai: phuong_thuc_thanh_toan === "COD" ? "CHO_THANH_TOAN" : "CHO_THANH_TOAN",
+            }
+          },
+        } as any
       });
 
       return NextResponse.json({ success: true, orderId: newOrder.id });

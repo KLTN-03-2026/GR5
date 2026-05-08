@@ -57,7 +57,7 @@ const FILTERS = [
 ];
 
 // ─── Main Component ────────────────────────────────────────
-export default function ExpirationWarnings({ warningsData }: { warningsData: Warning[] }) {
+export default function ExpirationWarnings({ warningsData }: { warningsData?: Warning[] }) {
   const [filter, setFilter]   = useState("chua_xu_ly");
   const [resolving, setResolving] = useState<Warning | null>(null);
   const [workflow, setWorkflow] = useState<string | null>(null);
@@ -66,6 +66,21 @@ export default function ExpirationWarnings({ warningsData }: { warningsData: War
   const [toast, setToast]   = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [localWarnings, setLocalWarnings] = useState<Warning[]>(warningsData || []);
   const [refreshing, setRefreshing] = useState(false);
+  const [filterContext, setFilterContext] = useState<{ zone: string, day: string, ke: string } | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const z = sp.get("zone");
+      const d = sp.get("day");
+      const k = sp.get("ke");
+      if (z || d || k) {
+        setFilterContext({ zone: z || "", day: d || "", ke: k || "" });
+      }
+    }
+    // Auto-fetch on mount
+    refresh();
+  }, []);
 
   const showToast = (type: "success" | "error", msg: string) => {
     setToast({ type, msg });
@@ -85,11 +100,24 @@ export default function ExpirationWarnings({ warningsData }: { warningsData: War
 
   // Filtered list
   const filtered = useMemo(() => {
-    if (filter === "all") return localWarnings;
-    if (filter === "chua_xu_ly") return localWarnings.filter((w) => !w.da_xu_ly);
-    if (filter === "da_xu_ly") return localWarnings.filter((w) => w.da_xu_ly);
-    return localWarnings.filter((w) => !w.da_xu_ly && w.loai_canh_bao === filter);
-  }, [localWarnings, filter]);
+    let list = localWarnings;
+    
+    // Apply URL filter
+    if (filterContext) {
+      list = list.filter(w => {
+        const lowerViTri = w.vi_tri?.toLowerCase() || "";
+        const matchZ = !filterContext.zone || lowerViTri.includes(filterContext.zone.toLowerCase());
+        const matchD = !filterContext.day || lowerViTri.includes(filterContext.day.toLowerCase());
+        const matchK = !filterContext.ke || lowerViTri.includes(filterContext.ke.toLowerCase());
+        return matchZ && matchD && matchK;
+      });
+    }
+
+    if (filter === "all") return list;
+    if (filter === "chua_xu_ly") return list.filter((w) => !w.da_xu_ly);
+    if (filter === "da_xu_ly") return list.filter((w) => w.da_xu_ly);
+    return list.filter((w) => !w.da_xu_ly && w.loai_canh_bao === filter);
+  }, [localWarnings, filter, filterContext]);
 
   // Count badges
   const counts = useMemo(() => {
@@ -155,6 +183,19 @@ export default function ExpirationWarnings({ warningsData }: { warningsData: War
           Làm mới
         </button>
       </div>
+
+      {/* Filter Badge */}
+      {filterContext && (
+        <div className="flex items-center justify-between px-4 py-2.5 bg-[#fef9c3] border border-[#f59e0b] rounded-xl">
+          <div className="text-sm font-medium text-[#92400e] flex items-center gap-2">
+            <Filter size={14} />
+            Đang lọc: {[filterContext.zone, filterContext.day, filterContext.ke].filter(Boolean).join(" > ")}
+          </div>
+          <button onClick={() => setFilterContext(null)} className="text-[#92400e] hover:bg-[#fde68a] p-1 rounded-md transition-colors flex items-center gap-1 text-xs font-semibold">
+            <X size={14} /> Xóa lọc
+          </button>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -225,7 +266,7 @@ export default function ExpirationWarnings({ warningsData }: { warningsData: War
                   const m = meta(w.loai_canh_bao);
                   const Icon = m.icon;
                   return (
-                    <tr key={w.id} className={`transition-colors ${w.da_xu_ly ? "opacity-50 bg-gray-50/50" : "hover:bg-gray-50/40"}`}>
+                    <tr key={w.id} className={`transition-colors ${w.da_xu_ly ? "opacity-50 bg-gray-50/50" : (filterContext ? "bg-[#fef9c3] hover:bg-[#fef08a]" : "hover:bg-gray-50/40")}`}>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${m.bg} ${m.color} ${m.pulse ? "animate-pulse" : ""}`}>
                           <Icon size={10} />

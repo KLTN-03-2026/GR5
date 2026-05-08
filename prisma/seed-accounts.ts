@@ -31,14 +31,19 @@ async function main() {
     update: {},
   });
 
-  // Gán role ADMIN (id=1)
+  // Upsert role ADMIN theo tên (không dùng id hardcode)
+  const adminRole = await prisma.vai_tro.upsert({
+    where: { ten_vai_tro: "ADMIN" },
+    create: { ten_vai_tro: "ADMIN", mo_ta: "Quản trị viên" },
+    update: {},
+  });
   await prisma.vai_tro_nguoi_dung.upsert({
-    where: { ma_nguoi_dung_ma_vai_tro: { ma_nguoi_dung: admin.id, ma_vai_tro: 1 } },
-    create: { ma_nguoi_dung: admin.id, ma_vai_tro: 1 },
+    where: { ma_nguoi_dung_ma_vai_tro: { ma_nguoi_dung: admin.id, ma_vai_tro: adminRole.id } },
+    create: { ma_nguoi_dung: admin.id, ma_vai_tro: adminRole.id },
     update: {},
   });
 
-  console.log(`✅ ADMIN: admin@nongsan.vn / 123456 (id=${admin.id})`);
+  console.log(`✅ ADMIN: admin@nongsan.vn / 123456 (id=${admin.id}, role_id=${adminRole.id})`);
 
   // ── 2. Tài khoản STAFF ────────────────────────────────────────────────────
   const staff = await prisma.nguoi_dung.upsert({
@@ -62,14 +67,19 @@ async function main() {
     update: {},
   });
 
-  // Gán role STAFF (id=2)
+  // Upsert role STAFF theo tên
+  const staffRole = await prisma.vai_tro.upsert({
+    where: { ten_vai_tro: "STAFF" },
+    create: { ten_vai_tro: "STAFF", mo_ta: "Nhân viên vận hành" },
+    update: {},
+  });
   await prisma.vai_tro_nguoi_dung.upsert({
-    where: { ma_nguoi_dung_ma_vai_tro: { ma_nguoi_dung: staff.id, ma_vai_tro: 2 } },
-    create: { ma_nguoi_dung: staff.id, ma_vai_tro: 2 },
+    where: { ma_nguoi_dung_ma_vai_tro: { ma_nguoi_dung: staff.id, ma_vai_tro: staffRole.id } },
+    create: { ma_nguoi_dung: staff.id, ma_vai_tro: staffRole.id },
     update: {},
   });
 
-  console.log(`✅ STAFF: staff@nongsan.vn / 123456 (id=${staff.id})`);
+  console.log(`✅ STAFF: staff@nongsan.vn / 123456 (id=${staff.id}, role_id=${staffRole.id})`);
   // ── 3. Tài khoản THU_KHO ────────────────────────────────────────────────────
   const thukho = await prisma.nguoi_dung.upsert({
     where: { email: "thukho@nongsan.vn" },
@@ -106,6 +116,21 @@ async function main() {
   });
 
   console.log(`✅ THU KHO: thukho@nongsan.vn / 123456 (id=${thukho.id})`);
+
+  // ── 4. Tài khoản quochungisme ────────────────────────────────────────────────
+  const hung = await prisma.nguoi_dung.upsert({
+    where: { email: "quochungisme@gmail.com" },
+    create: { email: "quochungisme@gmail.com", mat_khau: password, trang_thai: 1 },
+    update: { mat_khau: password },
+  });
+
+  await prisma.ho_so_nguoi_dung.upsert({
+    where: { ma_nguoi_dung: hung.id },
+    create: { ma_nguoi_dung: hung.id, ho_ten: "Quoc Hung" },
+    update: {},
+  });
+
+  console.log(`✅ USER: quochungisme@gmail.com / 123456 (id=${hung.id})`);
   console.log("\n🎉 Tạo tài khoản thành công!");
 }
 

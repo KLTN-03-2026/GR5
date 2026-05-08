@@ -1,580 +1,443 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Boxes, ChevronRight, Clock, Layers3, LayoutGrid, Package, ArrowDownToLine, RefreshCw, ScanLine, Warehouse, X, Pencil } from "lucide-react";
-import WarehouseFloorPlan, { type Day, type Floor, type Shelf, type Zone } from "./WarehouseFloorPlan";
+import {
+  AlertTriangle, ArrowLeft, ChevronRight,
+  Clock, History, Layers3, LayoutGrid, Maximize2, Minimize2,
+  Package, PlusCircle, RefreshCw, TrendingUp, X, ZoomIn, ZoomOut,
+} from "lucide-react";
 import ExpirationWarnings from "./ExpirationWarnings";
 import IssueHistory from "./IssueHistory";
+import { type Day, type Floor, type Shelf, type Zone } from "./WarehouseFloorPlan";
 
 type MapData = { zones: Zone[]; stats: { totalBoxes: number; expiringBoxes: number; zonesCount: number } };
 
-/* ── Mock data (fallback / dev preview) ──────────────────────── */
-const mk = (id: number, pct: number, warn: boolean): Floor => ({
-  id, tang: "T1", capacity: 50, current: Math.round(50 * pct / 100),
-  percent: pct, expiringSoon: warn, so_luong_ton: Math.round(50 * pct / 100),
-  batches: warn ? [{
-    id, ma_lo_hang: `LH-${id.toString().padStart(4,"0")}`,
-    san_pham: "Gạo ST25", so_luong: Math.round(50 * pct / 100),
-    han_su_dung: "2025-06-10", days_left: 14, warning: true,
-    vi_tri: `Tầng T1`, ncc: "NCC Miền Tây",
-  }] : [],
-});
 
-const MOCK_ZONES: Zone[] = [
-  {
-    name: "Khu khác", totalCapacity: 750, totalCurrent: 152, expiringSoon: 3,
-    days: [
-      { name: "D1", shelves: [
-        { name: "K1", floors: [mk(1,  2,  true)]  },
-        { name: "K2", floors: [mk(2,  60, false)] },
-        { name: "K3", floors: [mk(3,  90, false)] },
-        { name: "K4", floors: [mk(4,  20, false)] },
-        { name: "K5", floors: [mk(5,  80, true)]  },
-      ]},
-      { name: "D2", shelves: [
-        { name: "K1", floors: [mk(6,  10, false)] },
-        { name: "K2", floors: [mk(7,  50, false)] },
-        { name: "K3", floors: [mk(8,  96, true)]  },
-        { name: "K4", floors: [mk(9,  30, false)] },
-      ]},
-      { name: "D3", shelves: [
-        { name: "K1", floors: [mk(10, 70, false)] },
-        { name: "K2", floors: [mk(11, 40, false)] },
-        { name: "K3", floors: [mk(12, 84, true)]  },
-      ]},
-      { name: "D4", shelves: [
-        { name: "K1", floors: [mk(51, 15, false)] },
-        { name: "K2", floors: [mk(52, 60, false)] },
-        { name: "K3", floors: [mk(53, 90, true)]  },
-        { name: "K4", floors: [mk(54, 45, false)] },
-      ]},
-    ],
-  },
-  {
-    name: "Khu A", totalCapacity: 800, totalCurrent: 430, expiringSoon: 1,
-    days: [
-      { name: "D1", shelves: [
-        { name: "K1", floors: [mk(13, 55, false)] },
-        { name: "K2", floors: [mk(14, 70, false)] },
-        { name: "K3", floors: [mk(15, 30, false)] },
-        { name: "K4", floors: [mk(16, 85, true)]  },
-        { name: "K5", floors: [mk(17, 45, false)] },
-        { name: "K6", floors: [mk(18, 92, false)] },
-      ]},
-      { name: "D2", shelves: [
-        { name: "K1", floors: [mk(19, 20, false)] },
-        { name: "K2", floors: [mk(20, 60, false)] },
-        { name: "K3", floors: [mk(21, 75, false)] },
-        { name: "K4", floors: [mk(22, 40, false)] },
-        { name: "K5", floors: [mk(23, 88, false)] },
-      ]},
-      { name: "D3", shelves: [
-        { name: "K1", floors: [mk(24, 65, false)] },
-        { name: "K2", floors: [mk(25, 35, false)] },
-        { name: "K3", floors: [mk(26, 91, false)] },
-        { name: "K4", floors: [mk(27, 15, false)] },
-      ]},
-      { name: "D4", shelves: [
-        { name: "K1", floors: [mk(28, 78, false)] },
-        { name: "K2", floors: [mk(29, 52, false)] },
-        { name: "K3", floors: [mk(30, 23, false)] },
-      ]},
-    ],
-  },
-  {
-    name: "Khu B", totalCapacity: 800, totalCurrent: 290, expiringSoon: 2,
-    days: [
-      { name: "D1", shelves: [
-        { name: "K1", floors: [mk(31, 5,  false)] },
-        { name: "K2", floors: [mk(32, 12, false)] },
-        { name: "K3", floors: [mk(33, 87, true)]  },
-        { name: "K4", floors: [mk(34, 3,  false)] },
-        { name: "K5", floors: [mk(35, 65, false)] },
-      ]},
-      { name: "D2", shelves: [
-        { name: "K1", floors: [mk(36, 45, false)] },
-        { name: "K2", floors: [mk(37, 72, false)] },
-        { name: "K3", floors: [mk(38, 8,  false)] },
-        { name: "K4", floors: [mk(39, 93, true)]  },
-      ]},
-      { name: "D3", shelves: [
-        { name: "K1", floors: [mk(40, 55, false)] },
-        { name: "K2", floors: [mk(41, 30, false)] },
-        { name: "K3", floors: [mk(42, 18, false)] },
-        { name: "K4", floors: [mk(43, 82, false)] },
-        { name: "K5", floors: [mk(44, 47, false)] },
-      ]},
-      { name: "D4", shelves: [
-        { name: "K1", floors: [mk(45, 60, false)] },
-        { name: "K2", floors: [mk(46, 25, false)] },
-        { name: "K3", floors: [mk(47, 95, true)]  },
-        { name: "K4", floors: [mk(48, 40, false)] },
-        { name: "K5", floors: [mk(49, 14, false)] },
-        { name: "K6", floors: [mk(50, 73, false)] },
-      ]},
-    ],
-  },
-];
-
-const S: Record<string, React.CSSProperties> = {
-  page:    { fontFamily: "Inter,system-ui,sans-serif", color: "#0f172a" },
-  card:    { background: "#fff", border: "0.5px solid #e2e8f0", borderRadius: 8 },
-  label:   { fontSize: 11, fontWeight: 500, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8" },
-  body:    { fontSize: 13, color: "#475569" },
-  val:     { fontSize: 13, fontWeight: 500, color: "#0f172a" },
-};
-
-/* ── KPI card ─────────────────────────────────────────────────── */
-function KPI({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number; accent: string }) {
-  return (
-    <div style={{ ...S.card, borderLeft: `3px solid ${accent}`, height: 64, display: "flex", alignItems: "center", gap: 10, padding: "0 14px" }}>
-      <div style={{ color: "#94a3b8", flexShrink: 0 }}>{icon}</div>
-      <div>
-        <p style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: "#64748b", lineHeight: 1 }}>{label}</p>
-        <p style={{ fontSize: 20, fontWeight: 500, fontVariantNumeric: "tabular-nums", color: "#0f172a", marginTop: 4, lineHeight: 1 }}>{value}</p>
-      </div>
-    </div>
-  );
-}
+/* ── Helpers ──────────────────────────────────────────────────── */
+const pctColor = (p: number) => p > 80 ? { bg: "#fee2e2", text: "#991b1b", bar: "#ef4444" } : p > 50 ? { bg: "#fef9c3", text: "#92400e", bar: "#f59e0b" } : { bg: "#f0fdf4", text: "#065f46", bar: "#059669" };
+const zonePct = (z: Zone) => z.totalCapacity > 0 ? Math.round((z.totalCurrent / z.totalCapacity) * 100) : 0;
+const shelfAvgPct = (sh: Shelf) => sh.floors.length ? Math.round(sh.floors.reduce((a,f) => a + f.percent, 0) / sh.floors.length) : 0;
 
 /* ── Tab bar ──────────────────────────────────────────────────── */
 function TabBar({ active, onChange }: { active: string; onChange: (t: string) => void }) {
   return (
-    <div style={{ display: "flex", borderBottom: "0.5px solid #e2e8f0", background: "#fff" }}>
-      {[["map","Sơ đồ kho",LayoutGrid],["warnings","Cảnh báo HSD",AlertTriangle],["history","Lịch sử",Clock]].map(([id, lbl, Icon]: any) => (
-        <button key={id} onClick={() => onChange(id)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", fontSize: 13, fontWeight: active === id ? 500 : 400, color: active === id ? "#047857" : "#64748b", background: "none", border: "none", borderBottom: active === id ? "2px solid #059669" : "2px solid transparent", cursor: "pointer" }}>
-          <Icon size={14} />
-          {lbl}
+    <div style={{ display:"flex", borderBottom:"0.5px solid #e2e8f0", background:"#fff" }}>
+      {[["map","Sơ đồ kho",LayoutGrid],["warnings","Cảnh báo HSD",AlertTriangle],["history","Lịch sử",Clock]].map(([id,lbl,Icon]: any) => (
+        <button key={id} onClick={() => onChange(id)} style={{ display:"flex",alignItems:"center",gap:6,padding:"10px 16px",fontSize:13,fontWeight:active===id?500:400,color:active===id?"#047857":"#64748b",background:"none",border:"none",borderBottom:active===id?"2px solid #059669":"2px solid transparent",cursor:"pointer" }}>
+          <Icon size={14} />{lbl}
         </button>
       ))}
     </div>
   );
 }
 
-/* ── Pill chip (Dãy / Kệ selector) ───────────────────────────── */
-function Pill({ label, sub, active, onClick }: { label: string; sub: string; active: boolean; onClick: () => void }) {
+/* ── Zone List card ───────────────────────────────────────────── */
+function ZoneCard({ zone, onClick }: { zone: Zone; onClick: () => void }) {
+  const pct = zonePct(zone);
+  const col = pctColor(pct);
+  const dayCount = zone.days.length;
+  const shelfCount = zone.days.reduce((a, d) => a + d.shelves.length, 0);
   return (
-    <button onClick={onClick} style={{ display: "inline-flex", alignItems: "center", gap: 5, height: 30, padding: "0 10px", border: `0.5px solid ${active ? "#6ee7b7" : "#e2e8f0"}`, borderRadius: 6, background: active ? "#ecfdf5" : "#fff", color: active ? "#065f46" : "#475569", fontSize: 12, fontWeight: active ? 500 : 400, cursor: "pointer", whiteSpace: "nowrap" }}>
-      <span>{label}</span><span style={{ color: active ? "#34d399" : "#94a3b8", fontSize: 11 }}>· {sub}</span>
-    </button>
-  );
-}
-
-/* ── Tầng table ───────────────────────────────────────────────── */
-function FloorTable({ shelf }: { shelf: Shelf }) {
-  const rows = shelf.floors.flatMap(f => f.batches.map(b => ({ f, b })));
-  if (!rows.length) return <p style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>Chưa có lô hàng.</p>;
-  return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-        <thead>
-          <tr style={{ borderBottom: "0.5px solid #e2e8f0" }}>
-            {["Tầng","Sản phẩm","Lô","Kiện","HSD","Trạng thái"].map(h => (
-              <th key={h} style={{ padding: "4px 8px", textAlign: "left", fontWeight: 500, color: "#64748b", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ f, b }) => (
-            <tr key={b.id} style={{ borderBottom: "0.5px solid #f1f5f9" }}>
-              <td style={{ padding: "5px 8px", color: "#64748b" }}>{f.tang}</td>
-              <td style={{ padding: "5px 8px", fontWeight: 500, color: "#0f172a" }}>{b.san_pham}</td>
-              <td style={{ padding: "5px 8px", color: "#64748b", fontFamily: "monospace" }}>{b.ma_lo_hang}</td>
-              <td style={{ padding: "5px 8px", fontVariantNumeric: "tabular-nums" }}>{b.so_luong}</td>
-              <td style={{ padding: "5px 8px", color: "#64748b", whiteSpace: "nowrap" }}>{b.han_su_dung}</td>
-              <td style={{ padding: "5px 8px" }}>
-                <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 4, background: b.warning ? "#fef3c7" : "#ecfdf5", color: b.warning ? "#92400e" : "#065f46", border: `0.5px solid ${b.warning ? "#fbbf24" : "#6ee7b7"}` }}>
-                  {b.days_left == null ? "N/A" : b.warning ? `⚠ ${b.days_left}n` : `✓ ${b.days_left}n`}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div onClick={onClick} style={{ width:280,height:160,background:"#fff",border:"0.5px solid #e2e8f0",borderRadius:10,padding:"14px 16px",cursor:"pointer",flexShrink:0,display:"flex",flexDirection:"column",justifyContent:"space-between",transition:"border-color 0.15s,box-shadow 0.15s" }}
+      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor="#059669"; (e.currentTarget as HTMLDivElement).style.boxShadow="0 2px 8px rgba(0,0,0,0.06)"; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor="#e2e8f0"; (e.currentTarget as HTMLDivElement).style.boxShadow="none"; }}>
+      {/* Header */}
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+        <span style={{ fontSize:14,fontWeight:500,color:"#0f172a" }}>{zone.name}</span>
+        <span style={{ fontSize:11,fontWeight:600,padding:"2px 8px",borderRadius:20,background:col.bg,color:col.text }}>{pct}%</span>
+      </div>
+      {/* Bar */}
+      <div style={{ height:6,background:"#f1f5f9",borderRadius:3,overflow:"hidden",margin:"10px 0" }}>
+        <div style={{ height:"100%",width:`${Math.min(pct,100)}%`,background:col.bar,borderRadius:3,transition:"width 0.3s" }} />
+      </div>
+      {/* Stats */}
+      <div style={{ display:"flex",gap:12,fontSize:12,color:"#64748b" }}>
+        <span>📦 {dayCount} dãy</span>
+        <span>🗄 {shelfCount} kệ</span>
+        <span>⚠ {zone.expiringSoon} sắp HH</span>
+      </div>
+      {/* Footer */}
+      <div style={{ textAlign:"right",fontSize:11,color:"#94a3b8",marginTop:8 }}>Xem chi tiết →</div>
     </div>
   );
 }
 
-/* ── Detail panel ─────────────────────────────────────────────── */
-function DetailPanel({ zone, day, shelf, floor, onClearFloor }: { zone: Zone | null; day: Day | null; shelf: Shelf | null; floor: Floor | null; onClearFloor: () => void }) {
-  const shelfPct = shelf ? (shelf.floors.length ? Math.round(shelf.floors.reduce((a, f) => a + f.percent, 0) / shelf.floors.length) : 0) : 0;
+/* ── Detail panel (360px right) ──────────────────────────────── */
+function DetailPanel({ zone, day, shelf, floor, onClose, onExport, onHistory }: { zone: Zone|null; day: Day|null; shelf: Shelf|null; floor: Floor|null; onClose: () => void; onExport: () => void; onHistory: () => void }) {
+  const sp = shelf ? shelfAvgPct(shelf) : 0;
+  const col = pctColor(sp);
+  const hsdBadge = (days: number|null) => {
+    if (days == null) return { bg:"#f1f5f9", text:"#64748b", label:"N/A" };
+    if (days < 7)  return { bg:"#fee2e2", text:"#991b1b", label:`${days}n` };
+    if (days < 30) return { bg:"#fef9c3", text:"#92400e", label:`${days}n` };
+    return { bg:"#f0fdf4", text:"#065f46", label:`${days}n` };
+  };
   return (
-    <aside style={{ ...S.card, width: 260, flexShrink: 0, alignSelf: "flex-start", borderRadius: 10, padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 500, color: "#334155" }}>
-          <Layers3 size={14} color="#94a3b8" /> Chi tiết
-        </span>
-        {floor && <button onClick={onClearFloor} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8" }}><X size={14} /></button>}
+    <div style={{ width:360,height:"100%",background:"#fff",borderLeft:"1px solid #e2e8f0",flexShrink:0,display:"flex",flexDirection:"column",overflow:"hidden" }}>
+      <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderBottom:"0.5px solid #e2e8f0" }}>
+        <span style={{ fontSize:14,fontWeight:500,color:"#334155",display:"flex",alignItems:"center",gap:6 }}><Layers3 size={14} color="#94a3b8"/>Chi tiết</span>
+        <button onClick={onClose} style={{ background:"none",border:"none",cursor:"pointer",color:"#94a3b8" }}><X size={14}/></button>
       </div>
-
-      {!zone ? (
-        <p style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>Chọn một khu để xem chi tiết.</p>
+      {!shelf ? (
+        <p style={{ padding:16,fontSize:12,color:"#94a3b8",fontStyle:"italic" }}>Chọn một kệ để xem chi tiết.</p>
       ) : (
-        <>
-          {[["Khu", zone.name], ["Dãy", day?.name ?? "—"], ["Kệ", shelf?.name ?? "—"], ["Tầng", floor?.tang ?? "—"]].map(([k, v]) => (
-            <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #f1f5f9" }}>
-              <span style={{ fontSize: 12, color: "#94a3b8" }}>{k}</span>
-              <span style={{ fontSize: 12, fontWeight: 500, color: "#0f172a" }}>{v}</span>
+        <div style={{ overflowY:"auto",flex:1 }}>
+          {/* Key-value rows */}
+          {[["Khu",zone?.name??""],["Dãy",day?.name??"—"],["Kệ",shelf.name]].map(([k,v]) => (
+            <div key={k} style={{ display:"flex",alignItems:"center",justifyContent:"space-between",height:36,padding:"0 16px",borderBottom:"0.5px solid #f1f5f9" }}>
+              <span style={{ fontSize:12,color:"#94a3b8" }}>{k}</span>
+              <span style={{ fontSize:13,fontWeight:500,color:"#0f172a" }}>{v}</span>
             </div>
           ))}
-
-          {shelf && (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#64748b", marginBottom: 4 }}>
-                <span>Sức chứa kệ</span><span style={{ fontWeight: 500 }}>{shelfPct}%</span>
-              </div>
-              <div style={{ height: 6, background: "#f1f5f9", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${Math.min(shelfPct, 100)}%`, background: shelfPct > 80 ? "#ef4444" : shelfPct > 50 ? "#f59e0b" : "#059669", borderRadius: 3, transition: "width 0.3s" }} />
-              </div>
+          {/* Occupancy bar */}
+          <div style={{ padding:"12px 16px" }}>
+            <div style={{ display:"flex",justifyContent:"space-between",marginBottom:6 }}>
+              <span style={{ fontSize:12,color:"#64748b" }}>Sức chứa kệ</span>
+              <span style={{ fontSize:13,fontWeight:500,color:col.text }}>{sp}%</span>
             </div>
-          )}
-
-          {zone.expiringSoon > 0 && (
-            <div style={{ marginTop: 10, padding: "5px 8px", background: "#fef9c3", border: "0.5px solid #fbbf24", borderRadius: 6, fontSize: 11, color: "#92400e" }}>
+            <div style={{ height:8,background:"#f1f5f9",borderRadius:4,overflow:"hidden" }}>
+              <div style={{ height:"100%",width:`${Math.min(sp,100)}%`,background:col.bar,borderRadius:4 }}/>
+            </div>
+          </div>
+          {/* Warning chip */}
+          {zone && zone.expiringSoon > 0 && (
+            <div style={{ margin:"0 16px 12px",padding:"8px 12px",background:"#fef9c3",border:"0.5px solid #fbbf24",borderRadius:8,fontSize:12,color:"#92400e" }}>
               ⚠ {zone.expiringSoon} lô sắp hết hạn trong khu này
             </div>
           )}
-
-          <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-            {[["Xem lô hàng", Package], ["Nhập kho", ArrowDownToLine]].map(([lbl, Icon]: any) => (
-              <button key={lbl} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, height: 32, border: "0.5px solid #e2e8f0", borderRadius: 6, background: "#fff", fontSize: 12, color: "#334155", cursor: "pointer" }}>
-                <Icon size={13} /> {lbl}
+          {/* Dynamic action buttons */}
+          <div style={{ margin:"0 16px 16px",display:"flex",flexDirection:"column",gap:8 }}>
+            {/* Always: shelf history */}
+            <button
+              onClick={onHistory}
+              style={{ display:"flex",alignItems:"center",gap:6,height:36,borderWidth:"0.5px",borderStyle:"solid",borderColor:"#e2e8f0",borderRadius:8,background:"#fff",fontSize:13,color:"#475569",cursor:"pointer",width:"100%",paddingLeft:12 }}>
+              <History size={14}/>Lịch sử kệ này
+            </button>
+            {/* Conditional: order OR export based on occupancy */}
+            {sp >= 80 && (
+              <button
+                onClick={onExport}
+                style={{ display:"flex",alignItems:"center",gap:6,height:36,borderWidth:"0.5px",borderStyle:"solid",borderColor:"#f59e0b",borderRadius:8,background:"#fef9c3",fontSize:13,color:"#92400e",cursor:"pointer",width:"100%",paddingLeft:12 }}>
+                <TrendingUp size={14}/>↗ Tạo phiếu xuất kho
               </button>
+            )}
+            {/* Conditional: HSD warning if expiring */}
+            {shelf.floors.some(f => f.expiringSoon) && (
+              <button
+                onClick={() => window.location.href=`/warehouse/map?tab=canh-bao-hsd&shelf=${encodeURIComponent(shelf.name)}`}
+                style={{ display:"flex",alignItems:"center",gap:6,height:36,borderWidth:"0.5px",borderStyle:"solid",borderColor:"#ef4444",borderRadius:8,background:"#fee2e2",fontSize:13,color:"#991b1b",cursor:"pointer",width:"100%",paddingLeft:12 }}>
+                <AlertTriangle size={14}/>⚠ Xem cảnh báo HSD
+              </button>
+            )}
+          </div>
+          {/* Lot rows */}
+          <p style={{ fontSize:11,fontWeight:500,textTransform:"uppercase",letterSpacing:"0.08em",color:"#94a3b8",padding:"12px 16px 8px" }}>LÔ HÀNG</p>
+          {shelf.floors.flatMap(f => f.batches).length === 0 ? (
+            <p style={{ padding:"0 16px",fontSize:12,color:"#94a3b8",fontStyle:"italic" }}>Chưa có lô hàng.</p>
+          ) : shelf.floors.flatMap(f => f.batches).map(b => {
+            const hsd = hsdBadge(b.days_left);
+            return (
+              <div key={b.id} style={{ padding:"10px 16px",borderBottom:"0.5px solid #f1f5f9",cursor:"default" }}
+                onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.background="#f8fafc"}
+                onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.background="#fff"}>
+                <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+                  <span style={{ fontSize:13,fontWeight:500,color:"#0f172a" }}>{b.san_pham}</span>
+                  <span style={{ fontSize:12,padding:"2px 6px",borderRadius:4,background:hsd.bg,color:hsd.text,whiteSpace:"nowrap" }}>{hsd.label}</span>
+                </div>
+                <div style={{ display:"flex",justifyContent:"space-between",marginTop:3 }}>
+                  <span style={{ fontSize:11,color:"#94a3b8",fontFamily:"monospace" }}>{b.ma_lo_hang}</span>
+                  <span style={{ fontSize:11,color:"#64748b" }}>SL: {b.so_luong}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Zone Detail overlay ──────────────────────────────────────── */
+function ZoneDetail({ zone, onBack, readOnly, onShowHistory }: { zone: Zone; onBack: () => void; readOnly: boolean; onShowHistory: () => void }) {
+  const [selDay,   setSelDay]   = useState<Day|null>(zone.days[0]??null);
+  const [selShelf, setSelShelf] = useState<Shelf|null>(null);
+  const [zoom,     setZoom]     = useState(100);
+  const [fullscreen, setFullscreen] = useState(false);
+  const pct = zonePct(zone);
+  const col = pctColor(pct);
+
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportForm, setExportForm] = useState({ lo_hang_id: "", so_luong_xuat: "", ly_do: "Giao khách hàng", ghi_chu: "" });
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportError, setExportError] = useState("");
+  const [exportSuccess, setExportSuccess] = useState("");
+
+  const handleCreateExport = async () => {
+    setExportError(""); setExportSuccess("");
+    if (!exportForm.so_luong_xuat || isNaN(Number(exportForm.so_luong_xuat))) return setExportError("Vui lòng nhập số lượng hợp lệ");
+    if (!exportForm.lo_hang_id) return setExportError("Vui lòng chọn lô hàng");
+    
+    setExportLoading(true);
+    try {
+      const r = await fetch("/api/admin/warehouse/export-receipt", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shelf_id: selShelf?.name, // Use name since mock data lacks real DB id
+          lo_hang_id: Number(exportForm.lo_hang_id),
+          so_luong_xuat: Number(exportForm.so_luong_xuat),
+          ly_do: exportForm.ly_do,
+          ghi_chu: exportForm.ghi_chu,
+        })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Có lỗi xảy ra");
+      setExportSuccess(`Đã tạo phiếu xuất ${d.ma_phieu}`);
+      setTimeout(() => { setShowExportModal(false); setExportSuccess(""); }, 2000);
+    } catch (e: any) {
+      setExportError(e.message);
+    } finally { setExportLoading(false); }
+  };
+
+  return (
+    <div style={{ position:"fixed",inset:0,zIndex:50,background:"#fff",display:"flex",flexDirection:"column",animation:"fadeIn 0.15s ease" }}>
+      {/* Top bar */}
+      <div style={{ height:52,borderBottom:"0.5px solid #e2e8f0",display:"flex",alignItems:"center",gap:10,padding:"0 16px",flexShrink:0 }}>
+        <button onClick={onBack} style={{ display:"flex",alignItems:"center",justifyContent:"center",width:28,height:28,border:"0.5px solid #e2e8f0",borderRadius:6,background:"#fff",cursor:"pointer",color:"#475569" }}>
+          <ArrowLeft size={14}/>
+        </button>
+        <span style={{ fontSize:16,fontWeight:500,color:"#0f172a" }}>{zone.name}</span>
+        <span style={{ fontSize:11,fontWeight:600,padding:"2px 8px",borderRadius:20,background:col.bg,color:col.text }}>{pct}%</span>
+        <div style={{ marginLeft:"auto",display:"flex",alignItems:"center",gap:8 }}>
+          <div style={{ display:"flex",alignItems:"center",gap:0,border:"0.5px solid #e2e8f0",borderRadius:6,overflow:"hidden" }}>
+            <button onClick={() => setZoom(z => Math.max(50,z-10))} style={{ width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",background:"none",border:"none",cursor:"pointer",color:"#64748b" }}><ZoomOut size={13}/></button>
+            <span style={{ fontSize:11,fontWeight:500,color:"#334155",padding:"0 6px",borderLeft:"0.5px solid #e2e8f0",borderRight:"0.5px solid #e2e8f0" }}>{zoom}%</span>
+            <button onClick={() => setZoom(z => Math.min(150,z+10))} style={{ width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",background:"none",border:"none",cursor:"pointer",color:"#64748b" }}><ZoomIn size={13}/></button>
+          </div>
+          <button onClick={() => setFullscreen(f => !f)} style={{ display:"flex",alignItems:"center",gap:4,height:28,padding:"0 10px",border:"0.5px solid #e2e8f0",borderRadius:6,background:"none",cursor:"pointer",fontSize:11,color:"#64748b" }}>
+            {fullscreen ? <Minimize2 size={13}/> : <Maximize2 size={13}/>} Toàn màn hình
+          </button>
+        </div>
+      </div>
+
+      {/* Main content: 2-col grid */}
+      <div style={{ flex:1,display:"grid",gridTemplateColumns:`calc(100% - ${selShelf?360:0}px) ${selShelf?360:0}px`,overflow:"hidden",transition:"grid-template-columns 0.2s ease" }}>
+        {/* Left column */}
+        <div style={{ overflowY:"auto",minWidth:0 }}>
+          {/* KPI inline strip */}
+          <div style={{ display:"flex",borderBottom:"1px solid #e2e8f0" }}>
+            {[
+              { label:"KHU",         val:zone.name,                                      accent:"#94a3b8" },
+              { label:"DÃY",          val:zone.days.length,                               accent:"#059669" },
+              { label:"KỆ",           val:zone.days.reduce((a,d)=>a+d.shelves.length,0), accent:"#3b82f6" },
+              { label:"SẮP HẾT HẠN", val:zone.expiringSoon,                              accent:"#f59e0b" },
+            ].map((k,i,arr) => (
+              <div key={k.label} style={{ flex:1,height:56,display:"flex",alignItems:"center",padding:"0 16px",borderTopWidth:0,borderBottomWidth:0,borderLeftWidth:3,borderLeftStyle:"solid",borderLeftColor:k.accent,borderRightWidth:i<arr.length-1?1:0,borderRightStyle:"solid",borderRightColor:"#e2e8f0" }}>
+                <div>
+                  <div style={{ fontSize:10,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.06em",lineHeight:1,marginBottom:4 }}>{k.label}</div>
+                  <div style={{ fontSize:18,fontWeight:500,color:"#0f172a",lineHeight:1 }}>{k.val}</div>
+                </div>
+              </div>
             ))}
           </div>
 
-          <div style={{ marginTop: 14 }}>
-            <p style={{ ...S.label, marginBottom: 8 }}>Lô hàng{floor ? ` — Tầng ${floor.tang}` : ""}</p>
-            {floor ? (
-              floor.batches.length === 0
-                ? <p style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>Tầng này chưa có lô hàng.</p>
-                : <div style={{ maxHeight: 220, overflowY: "auto" }}>
-                    {floor.batches.map(b => (
-                      <div key={b.id} style={{ borderBottom: "0.5px solid #f1f5f9", padding: "6px 0" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                          <div>
-                            <p style={{ fontSize: 12, fontWeight: 500, color: "#0f172a", lineHeight: 1 }}>{b.san_pham}</p>
-                            <p style={{ fontSize: 10, color: "#94a3b8", fontFamily: "monospace", marginTop: 2 }}>{b.ma_lo_hang}</p>
-                          </div>
-                          <span style={{ fontSize: 10, padding: "2px 5px", borderRadius: 4, background: b.warning ? "#fef3c7" : "#ecfdf5", color: b.warning ? "#92400e" : "#065f46", border: `0.5px solid ${b.warning ? "#fbbf24" : "#6ee7b7"}`, whiteSpace: "nowrap" }}>
-                            {b.days_left == null ? "N/A" : `${b.days_left}n`}
-                          </span>
-                        </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px 12px", marginTop: 4, fontSize: 10, color: "#64748b" }}>
-                          <span>SL: <strong style={{ color: "#334155" }}>{b.so_luong}</strong></span>
-                          <span>HSD: <strong style={{ color: "#334155" }}>{b.han_su_dung}</strong></span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-            ) : (
-              <p style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>Chọn một tầng ở bên trái.</p>
-            )}
+          {/* Legend */}
+          <div style={{ display:"flex",gap:14,padding:"12px 16px",borderBottom:"0.5px solid #e2e8f0" }}>
+            {[["#ecfdf5","#059669","Trống (0–50%)"],["#fef9c3","#f59e0b","Vừa (51–80%)"],["#fee2e2","#ef4444","Gần đầy (>80%)"],["#fef3c7","#f59e0b","Sắp hết hạn"]].map(([bg,border,lbl]) => (
+              <div key={lbl} style={{ display:"flex",alignItems:"center",gap:5,fontSize:11,color:"#64748b" }}>
+                <div style={{ width:10,height:10,borderRadius:2,background:bg,border:`1px solid ${border}` }}/>{lbl}
+              </div>
+            ))}
           </div>
-        </>
+
+          {/* Dãy sections */}
+          {zone.days.map((day) => (
+            <div key={day.name} style={{ marginBottom:4 }}>
+              {/* Section header */}
+              <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",height:32,padding:"0 16px",background:"#f8fafc",borderTop:"0.5px solid #e2e8f0",borderBottom:"0.5px solid #e2e8f0" }}>
+                <span style={{ fontSize:11,fontWeight:500,textTransform:"uppercase",letterSpacing:"0.07em",color:"#64748b" }}>{day.name}</span>
+                <span style={{ fontSize:10,color:"#94a3b8" }}>{day.shelves.length} kệ</span>
+              </div>
+              {/* Shelf cells */}
+              <div style={{ display:"flex",flexWrap:"wrap",gap:12,padding:16,transform:`scale(${zoom/100})`,transformOrigin:"top left" }}>
+                {day.shelves.map(sh => {
+                  const sp = shelfAvgPct(sh);
+                  const c = pctColor(sp);
+                  const isAct = selShelf?.name === sh.name && selDay?.name === day.name;
+                  const hasWarn = sh.floors.some(f => f.expiringSoon);
+                  const numCol = sp > 80 ? "#991b1b" : sp > 50 ? "#92400e" : "#059669";
+                  return (
+                    <div key={sh.name} onClick={() => { setSelDay(day); setSelShelf(sh); }}
+                      style={{ position:"relative",width:120,height:110,borderRadius:10,border:isAct?`2px solid #059669`:`1px solid ${c.bar}`,background:c.bg,cursor:"pointer",padding:12,boxSizing:"border-box",display:"flex",flexDirection:"column",transition:"all 0.15s",boxShadow:isAct?"0 0 0 3px rgba(5,150,105,0.15)":"none" }}>
+                      {/* Row 1 */}
+                      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+                        <span style={{ fontSize:14,fontWeight:500,color:isAct?"#065f46":"#1e293b" }}>{sh.name}</span>
+                        {hasWarn && <div style={{ width:8,height:8,borderRadius:"50%",background:"#f59e0b",flexShrink:0 }}/>}
+                      </div>
+                      {/* Row 2 */}
+                      <div style={{ fontSize:22,fontWeight:500,color:numCol,fontVariantNumeric:"tabular-nums",textAlign:"center",flex:1,display:"flex",alignItems:"center",justifyContent:"center" }}>{sp}%</div>
+                      {/* Row 3 bar */}
+                      <div style={{ height:5,background:"#e2e8f0",borderRadius:3,overflow:"hidden",marginTop:"auto" }}>
+                        <div style={{ height:"100%",width:`${Math.min(sp,100)}%`,background:c.bar,borderRadius:3 }}/>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Right detail panel (no wrapper div needed — panel handles its own width) */}
+        <DetailPanel zone={zone} day={selDay} shelf={selShelf} floor={null} onClose={() => setSelShelf(null)} onExport={() => setShowExportModal(true)} onHistory={onShowHistory} />
+      </div>
+
+      {/* Export Modal */}
+      {showExportModal && selShelf && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyItems: "center" }}>
+          <div style={{ background: "#fff", width: 480, margin: "auto", borderRadius: 12, display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0" }}>
+              <h3 style={{ fontSize: 15, fontWeight: 500, color: "#0f172a", margin: 0 }}>Tạo phiếu xuất kho</h3>
+              <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>Vị trí: {zone.name} &gt; {selDay?.name} &gt; {selShelf.name}</p>
+            </div>
+            <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+              {exportError && <div style={{ padding: 12, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontSize: 13 }}>{exportError}</div>}
+              {exportSuccess && <div style={{ padding: 12, background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: 8, fontSize: 13 }}>{exportSuccess}</div>}
+              
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#475569", marginBottom: 6 }}>Sản phẩm (Lô hàng)</label>
+                <select 
+                  value={exportForm.lo_hang_id} 
+                  onChange={e => setExportForm(p => ({ ...p, lo_hang_id: e.target.value }))}
+                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13, color: "#0f172a", outline: "none" }}>
+                  <option value="">-- Chọn lô hàng --</option>
+                  {selShelf.floors.flatMap(f => f.batches).map(b => (
+                    <option key={b.id} value={b.id}>{b.san_pham} ({b.ma_lo_hang}) - Tồn: {b.so_luong}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#475569", marginBottom: 6 }}>Số lượng xuất *</label>
+                <input 
+                  type="number" 
+                  value={exportForm.so_luong_xuat} 
+                  onChange={e => setExportForm(p => ({ ...p, so_luong_xuat: e.target.value }))}
+                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13, color: "#0f172a", outline: "none" }} />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#475569", marginBottom: 6 }}>Lý do xuất</label>
+                <select 
+                  value={exportForm.ly_do} 
+                  onChange={e => setExportForm(p => ({ ...p, ly_do: e.target.value }))}
+                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13, color: "#0f172a", outline: "none" }}>
+                  <option value="Giao khách hàng">Giao khách hàng</option>
+                  <option value="Chuyển kho">Chuyển kho</option>
+                  <option value="Hàng lỗi/hỏng">Hàng lỗi/hỏng</option>
+                  <option value="Hết hạn sử dụng">Hết hạn sử dụng</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#475569", marginBottom: 6 }}>Ghi chú (Tùy chọn)</label>
+                <textarea 
+                  value={exportForm.ghi_chu} 
+                  onChange={e => setExportForm(p => ({ ...p, ghi_chu: e.target.value }))}
+                  rows={2}
+                  style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13, color: "#0f172a", outline: "none", resize: "none" }} />
+              </div>
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid #e2e8f0", background: "#f8fafc", display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={() => setShowExportModal(false)} style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#fff", fontSize: 13, fontWeight: 500, color: "#475569", cursor: "pointer" }}>Hủy</button>
+              <button onClick={handleCreateExport} disabled={exportLoading} style={{ padding: "8px 16px", borderRadius: 6, border: "none", background: "#f59e0b", fontSize: 13, fontWeight: 500, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                {exportLoading ? "Đang tạo..." : "Tạo phiếu xuất"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-    </aside>
+
+      <style>{`@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
+    </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════════════ */
-/*  Main component                                               */
-/* ══════════════════════════════════════════════════════════════ */
 export default function WarehouseMapView({ readOnly = false }: { readOnly?: boolean }) {
-  const [stats,   setStats]   = useState({ totalBoxes: 23, expiringBoxes: 7, zonesCount: MOCK_ZONES.length });
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [stats,   setStats]   = useState({ totalBoxes: 0, expiringBoxes: 0, zonesCount: 0 });
+  const [loading, setLoading] = useState(true);
   const [tab,     setTab]     = useState("map");
-  const [zoneIdx, setZoneIdx] = useState(0);
-  const [selDay,  setSelDay]  = useState<Day | null>(MOCK_ZONES[0]?.days[0] ?? null);
-  const [selShelf,setSelShelf]= useState<Shelf | null>(null);
-  const [selFloor,setSelFloor]= useState<Floor | null>(null);
+  const [zones,   setZones]   = useState<Zone[]>([]);
+  const [activeZone, setActiveZone] = useState<Zone|null>(null);
 
   const load = async (showSpinner = false) => {
     if (showSpinner) setLoading(true);
-    setError(null);
     try {
       const r = await fetch("/api/admin/warehouse/map", { cache: "no-store" });
-      if (!r.ok) throw new Error("Không thể tải sơ đồ kho");
+      if (!r.ok) return;
       const j = await r.json() as MapData;
-      // Only update KPI stats — zones display always uses MOCK_ZONES
+      setZones(j.zones ?? []);
       setStats({
-        totalBoxes: j.stats?.totalBoxes ?? 0,
+        totalBoxes:    j.stats?.totalBoxes    ?? 0,
         expiringBoxes: j.stats?.expiringBoxes ?? 0,
-        zonesCount: j.stats?.zonesCount ?? MOCK_ZONES.length,
+        zonesCount:    j.stats?.zonesCount    ?? 0,
       });
-    } catch { /* silently ignore — mock data still shows */ }
-    finally { if (showSpinner) setLoading(false); }
+    } catch {}
+    finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
-  const [zones, setZones] = useState<Zone[]>(MOCK_ZONES);
-  const zone  = zones[zoneIdx] ?? null;
-  const shelfCount = useMemo(() => (selShelf?.floors.length ?? 0), [selShelf]);
-
-  // --- CRUD Handlers ---
-  const handleAddZone = () => {
-    const name = prompt("Nhập tên khu mới (VD: Khu C):");
-    if (!name) return;
-    const newZones = [...zones];
-    newZones.push({ name, totalCapacity: 0, totalCurrent: 0, expiringSoon: 0, days: [] });
-    setZones(newZones);
-    setZoneIdx(newZones.length - 1);
-    setSelDay(null); setSelShelf(null); setSelFloor(null);
-  };
-  const handleEditZone = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!zone) return;
-    const newName = prompt(`Sửa tên ${zone.name}:`, zone.name);
-    if (!newName || newName === zone.name) return;
-    const newZones = [...zones];
-    newZones[zoneIdx].name = newName;
-    setZones(newZones);
-  };
-  const handleDeleteZone = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!zone || !confirm(`CẢNH BÁO: Bạn có chắc muốn xóa TOÀN BỘ ${zone.name}?`)) return;
-    const newZones = zones.filter((_, i) => i !== zoneIdx);
-    setZones(newZones);
-    setZoneIdx(0);
-    setSelDay(newZones[0]?.days[0] ?? null);
-    setSelShelf(null);
-    setSelFloor(null);
-  };
-
-  const handleAddDay = () => {
-    const name = prompt("Nhập tên dãy mới (VD: D5):");
-    if (!name || !zone) return;
-    const newZones = [...zones];
-    newZones[zoneIdx].days.push({ name, shelves: [] });
-    setZones(newZones);
-  };
-  const handleEditDay = (e: React.MouseEvent, dName: string) => {
-    e.stopPropagation();
-    const newName = prompt(`Sửa tên dãy ${dName}:`, dName);
-    if (!newName || newName === dName) return;
-    const newZones = [...zones];
-    const d = newZones[zoneIdx].days.find(d => d.name === dName);
-    if (d) {
-      d.name = newName;
-      setZones(newZones);
-      if (selDay?.name === dName) setSelDay(d);
-    }
-  };
-  const handleDeleteDay = (e: React.MouseEvent, dName: string) => {
-    e.stopPropagation();
-    if (!confirm(`Xóa dãy ${dName}?`)) return;
-    const newZones = [...zones];
-    newZones[zoneIdx].days = newZones[zoneIdx].days.filter(d => d.name !== dName);
-    setZones(newZones);
-    if (selDay?.name === dName) { setSelDay(null); setSelShelf(null); setSelFloor(null); }
-  };
-  const handleAddShelf = () => {
-    if (!selDay) return;
-    const name = prompt("Nhập tên kệ mới (VD: K7):");
-    if (!name) return;
-    const newZones = [...zones];
-    const d = newZones[zoneIdx].days.find(d => d.name === selDay.name);
-    if (d) d.shelves.push({ name, floors: [] });
-    setZones(newZones);
-  };
-  const handleEditShelf = (e: React.MouseEvent, shName: string) => {
-    e.stopPropagation();
-    if (!selDay) return;
-    const newName = prompt(`Sửa tên kệ ${shName}:`, shName);
-    if (!newName || newName === shName) return;
-    const newZones = [...zones];
-    const d = newZones[zoneIdx].days.find(d => d.name === selDay.name);
-    if (d) {
-      const sh = d.shelves.find(s => s.name === shName);
-      if (sh) {
-        sh.name = newName;
-        setZones(newZones);
-        if (selShelf?.name === shName) setSelShelf(sh);
-      }
-    }
-  };
-  const handleDeleteShelf = (e: React.MouseEvent, shName: string) => {
-    e.stopPropagation();
-    if (!selDay || !confirm(`Xóa kệ ${shName}?`)) return;
-    const newZones = [...zones];
-    const d = newZones[zoneIdx].days.find(d => d.name === selDay.name);
-    if (d) d.shelves = d.shelves.filter(s => s.name !== shName);
-    setZones(newZones);
-    if (selShelf?.name === shName) { setSelShelf(null); setSelFloor(null); }
-  };
-
-  const handleZone = (i: number) => {
-    setZoneIdx(i);
-    setSelDay(zones[i]?.days[0] ?? null);
-    setSelShelf(null); setSelFloor(null);
-  };
-  const handleShelf = (zi: number, day: Day, shelf: Shelf) => {
-    setZoneIdx(zi); setSelDay(day); setSelShelf(shelf); setSelFloor(null);
-  };
-
   return (
+    <div style={{ fontFamily:"Inter,system-ui,sans-serif",color:"#0f172a" }}>
+      {/* Zone detail overlay */}
+      {activeZone && tab === "map" && <ZoneDetail zone={activeZone} onBack={() => setActiveZone(null)} readOnly={readOnly} onShowHistory={() => { setActiveZone(null); setTab("history"); }} />}
 
-    <div style={{ ...S.page }}>
-      {/* Tab bar + content card */}
-      <div style={{ ...S.card, borderRadius: 10 }}>
-        <TabBar active={tab} onChange={setTab} />
-
-        <div style={{ padding: 16 }}>
+      <div style={{ background:"#fff",border:"0.5px solid #e2e8f0",borderRadius:10 }}>
+        {!readOnly && <TabBar active={tab} onChange={setTab} />}
+        <div style={{ padding:16 }}>
           {tab === "map" && (
             loading ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 300, gap: 8, color: "#94a3b8" }}>
-                <RefreshCw size={20} style={{ animation: "spin 1s linear infinite" }} />
-                <span style={{ fontSize: 13 }}>Đang tải sơ đồ kho...</span>
+              <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:300,gap:8,color:"#94a3b8" }}>
+                <RefreshCw size={20} style={{ animation:"spin 1s linear infinite" }}/>
+                <span style={{ fontSize:13 }}>Đang tải sơ đồ kho...</span>
               </div>
-            ) : error ? (
-              <div style={{ padding: "10px 14px", background: "#fef2f2", border: "0.5px solid #fca5a5", borderRadius: 8, fontSize: 13, color: "#dc2626" }}>{error}</div>
-            ) : zones.length === 0 ? (
-              <p style={{ fontSize: 13, color: "#94a3b8" }}>Chưa có dữ liệu vị trí kho.</p>
             ) : (
-              <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                {/* Left column */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* Header row: label + refresh + breadcrumb */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <p style={{ ...S.label }}>Bản đồ kho</p>
-                      {!readOnly && (
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <button onClick={() => load(true)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", border: "0.5px solid #e2e8f0", borderRadius: 5, background: "#fff", fontSize: 11, color: "#64748b", cursor: "pointer" }}>
-                            <RefreshCw size={11} /> Làm mới
-                          </button>
-                          <button onClick={handleAddZone} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", border: "0.5px solid #059669", borderRadius: 5, background: "#ecfdf5", fontSize: 11, color: "#065f46", cursor: "pointer", fontWeight: 500 }}>
-                            + Thêm Khu
-                          </button>
-                        </div>
-                      )}
+              <>
+                {/* KPI cards */}
+                <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:16 }}>
+                  {[
+                    { label:"KHU THEO DÕI",   val:stats.zonesCount,    accent:"#94a3b8" },
+                    { label:"KIỆN TRONG KHO",  val:stats.totalBoxes,    accent:"#059669" },
+                    { label:"LÔ GẦN HẾT HẠN", val:stats.expiringBoxes, accent:"#f59e0b" },
+                    { label:"TỔNG DÃY",         val:zones.reduce((a,z)=>a+z.days.length,0), accent:"#3b82f6" },
+                  ].map(k => (
+                    <div key={k.label} style={{ background:"#fff",border:"0.5px solid #e2e8f0",borderLeft:`3px solid ${k.accent}`,borderRadius:8,padding:"8px 12px" }}>
+                      <div style={{ fontSize:10,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:3 }}>{k.label}</div>
+                      <div style={{ fontSize:22,fontWeight:500,color:"#0f172a",lineHeight:1 }}>{k.val}</div>
                     </div>
-                    {zone && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#94a3b8" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <span style={{ fontWeight: 500, color: "#334155" }}>{zone.name}</span>
-                          {!readOnly && (
-                            <div style={{ display: "flex", gap: 2 }}>
-                              <button onClick={handleEditZone} style={{ padding: 2, background: "none", border: "none", color: "#3b82f6", cursor: "pointer" }}><Pencil size={10} /></button>
-                              <button onClick={handleDeleteZone} style={{ padding: 2, background: "none", border: "none", color: "#ef4444", cursor: "pointer" }}><X size={10} /></button>
-                            </div>
-                          )}
-                        </div>
-                        {selDay && <><ChevronRight size={11} /><span style={{ fontWeight: 500, color: "#334155" }}>{selDay.name}</span></>}
-                        {selShelf && <><ChevronRight size={11} /><span style={{ fontWeight: 500, color: "#334155" }}>{selShelf.name}</span></>}
-                        {selFloor && <><ChevronRight size={11} /><span style={{ fontWeight: 500, color: "#334155" }}>T.{selFloor.tang}</span></>}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* KPI row — above floor plan */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 12 }}>
-                    {[
-                      { label: "KHU THEO DÕI",   val: stats.zonesCount,    accent: "#94a3b8", valColor: "#0f172a" },
-                      { label: "KIỆN TRONG KHO",  val: stats.totalBoxes,    accent: "#059669", valColor: "#0f172a" },
-                      { label: "LÔ GẦN HẾT HẠN", val: stats.expiringBoxes, accent: "#f59e0b", valColor: "#92400e" },
-                      { label: "TẦNG ĐÃ MẼ",       val: shelfCount,          accent: "#cbd5e1", valColor: "#0f172a" },
-                    ].map(k => (
-                      <div key={k.label} style={{ background: "white", borderTop: "0.5px solid #e2e8f0", borderRight: "0.5px solid #e2e8f0", borderBottom: "0.5px solid #e2e8f0", borderLeft: `3px solid ${k.accent}`, borderRadius: 8, padding: "8px 12px" }}>
-                        <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>{k.label}</div>
-                        <div style={{ fontSize: 22, fontWeight: 500, color: k.valColor, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{k.val}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* SVG floor plan */}
-                  <WarehouseFloorPlan zones={zones} selZone={zoneIdx} selShelf={selShelf?.name ?? null} onZone={handleZone} onShelf={handleShelf} />
-
-                  {/* Drill-down section */}
-                  {zone && (
-                    <div style={{ marginTop: 16 }}>
-                      {/* Dãy pills */}
-                      <p style={{ ...S.label, marginBottom: 8 }}>Dãy</p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-                        {zone.days.map(d => (
-                          <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <Pill label={d.name} sub={`${d.shelves.length} kệ`}
-                              active={selDay?.name === d.name}
-                              onClick={() => { setSelDay(d); setSelShelf(null); setSelFloor(null); }} />
-                            {!readOnly && (
-                              <div style={{ display: "flex", gap: 2 }}>
-                                <button onClick={(e) => handleEditDay(e, d.name)} style={{ padding: 4, background: "none", border: "none", color: "#3b82f6", cursor: "pointer" }}><Pencil size={12} /></button>
-                                <button onClick={(e) => handleDeleteDay(e, d.name)} style={{ padding: 4, background: "none", border: "none", color: "#ef4444", cursor: "pointer" }}><X size={12} /></button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                        {!readOnly && (
-                          <button onClick={handleAddDay} style={{ height: 30, padding: "0 10px", border: "1px dashed #cbd5e1", borderRadius: 6, fontSize: 12, color: "#64748b", background: "none", cursor: "pointer" }}>
-                            + Thêm dãy
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Kệ grid */}
-                      {selDay && (
-                        <>
-                          <p style={{ ...S.label, marginBottom: 8 }}>Kệ</p>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 14 }}>
-                            {selDay.shelves.map(sh => {
-                              const sp = sh.floors.length ? Math.round(sh.floors.reduce((a, f) => a + f.percent, 0) / sh.floors.length) : 0;
-                              const isAct = selShelf?.name === sh.name;
-                              return (
-                                <button key={sh.name} onClick={() => { setSelShelf(sh); setSelFloor(null); }} style={{ position: "relative", border: `0.5px solid ${isAct ? "#6ee7b7" : "#e2e8f0"}`, borderRadius: 7, padding: "8px 10px", background: isAct ? "#ecfdf5" : "#fff", cursor: "pointer", textAlign: "left" }}>
-                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <div style={{ fontSize: 12, fontWeight: 500, color: isAct ? "#065f46" : "#1e293b" }}>{sh.name}</div>
-                                    {!readOnly && (
-                                      <div style={{ display: "flex", gap: 4 }}>
-                                        <div onClick={(e) => handleEditShelf(e, sh.name)} style={{ color: "#3b82f6", padding: 2, cursor: "pointer" }}><Pencil size={12} /></div>
-                                        <div onClick={(e) => handleDeleteShelf(e, sh.name)} style={{ color: "#ef4444", padding: 2, cursor: "pointer" }}><X size={12} /></div>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>{sh.floors.length} tầng</div>
-                                  <div style={{ height: 4, background: "#f1f5f9", borderRadius: 2, overflow: "hidden", marginTop: 6 }}>
-                                    <div style={{ height: "100%", width: `${Math.min(sp, 100)}%`, background: sp > 80 ? "#ef4444" : sp > 50 ? "#f59e0b" : "#059669", borderRadius: 2 }} />
-                                  </div>
-                                </button>
-                              );
-                            })}
-                            {!readOnly && (
-                              <button onClick={handleAddShelf} style={{ border: "1px dashed #cbd5e1", borderRadius: 7, minHeight: 52, background: "transparent", cursor: "pointer", color: "#64748b", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                + Thêm kệ
-                              </button>
-                            )}
-                          </div>
-                        </>
-                      )}
-
-                      {/* Tầng table */}
-                      {selShelf && (
-                        <>
-                          <p style={{ ...S.label, marginBottom: 8 }}>Tầng — Lô hàng trong {selShelf.name}</p>
-                          <div style={{ border: "0.5px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
-                            <FloorTable shelf={selShelf} />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
+                  ))}
                 </div>
 
-                {/* Detail panel */}
-                <DetailPanel zone={zone} day={selDay} shelf={selShelf} floor={selFloor} onClearFloor={() => setSelFloor(null)} />
-              </div>
+                {/* Legend */}
+                <div style={{ display:"flex",gap:14,marginBottom:14 }}>
+                  {[["#ecfdf5","#059669","Trống"],["#fef9c3","#f59e0b","Vừa"],["#fee2e2","#ef4444","Gần đầy"],["#fef3c7","#f59e0b","Sắp hết hạn"]].map(([bg,border,lbl]) => (
+                    <div key={lbl} style={{ display:"flex",alignItems:"center",gap:5,fontSize:11,color:"#64748b" }}>
+                      <div style={{ width:10,height:10,borderRadius:2,background:bg,border:`1px solid ${border}` }}/>{lbl}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Zone card row */}
+                <div style={{ display:"flex",gap:12,overflowX:"auto",paddingBottom:8 }}>
+                  {zones.map(zone => <ZoneCard key={zone.name} zone={zone} onClick={() => setActiveZone(zone)} />)}
+                </div>
+              </>
             )
           )}
-
-          {tab === "warnings" && (
-            <ExpirationWarnings warningsData={[]} />
-          )}
-
-          {tab === "history" && (
-            <IssueHistory historyData={[]} importHistoryData={[]} />
-          )}
+          {!readOnly && tab === "warnings" && <ExpirationWarnings />}
+          {!readOnly && tab === "history"  && <IssueHistory />}
         </div>
       </div>
-
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
     </div>
   );

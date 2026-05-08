@@ -12,6 +12,9 @@ import {
   ShieldCheck,
   X,
   Loader2,
+  Leaf,
+  Package,
+  Bell,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -42,10 +45,7 @@ function SearchDropdown() {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -63,14 +63,10 @@ function SearchDropdown() {
     setIsLoading(true);
     setIsOpen(true);
     try {
-      const res = await fetch(
-        `/api/store/products?q=${encodeURIComponent(searchQuery.trim())}&limit=5`,
-      );
+      const res = await fetch(`/api/store/products?q=${encodeURIComponent(searchQuery.trim())}&limit=5`);
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
-      const products: Product[] = Array.isArray(data)
-        ? data
-        : (data.data ?? []);
+      const products: Product[] = Array.isArray(data) ? data : (data.data ?? []);
       setResults(products.slice(0, 5));
       setHasSearched(true);
     } catch {
@@ -122,17 +118,18 @@ function SearchDropdown() {
     <div ref={containerRef} className="relative hidden lg:block">
       <form
         onSubmit={handleSubmit}
-        className={`flex items-center bg-gray-50/80 px-4 py-2 rounded-full border transition-all shadow-sm ${
+        className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-200 ${
           isOpen
-            ? "border-[#007832] bg-white ring-2 ring-[#007832]/10"
-            : "border-gray-200 focus-within:border-[#007832] focus-within:bg-white"
+            ? "border-[#007832] bg-white shadow-lg shadow-green-100 ring-2 ring-[#007832]/10"
+            : "border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white focus-within:border-[#007832] focus-within:bg-white focus-within:shadow-md"
         }`}
+        style={{ minWidth: 160, maxWidth: 200 }}
       >
-        <button type="submit">
+        <button type="submit" className="flex-shrink-0">
           {isLoading ? (
-            <Loader2 className="w-4 h-4 text-[#007832] animate-spin mr-2" />
+            <Loader2 className="w-4 h-4 text-[#007832] animate-spin" />
           ) : (
-            <Search className="w-4 h-4 text-gray-400 mr-2 hover:text-[#007832] transition-colors" />
+            <Search className="w-4 h-4 text-gray-400" />
           )}
         </button>
         <input
@@ -140,28 +137,22 @@ function SearchDropdown() {
           type="text"
           value={query}
           onChange={handleChange}
-          onFocus={() => {
-            if (query.trim()) setIsOpen(true);
-          }}
+          onFocus={() => { if (query.trim()) setIsOpen(true); }}
           placeholder="Tìm kiếm nông sản..."
-          className="bg-transparent border-none focus:ring-0 text-sm w-48 font-body outline-none text-slate-700"
+          className="bg-transparent border-none focus:ring-0 text-sm flex-1 outline-none text-slate-700 placeholder-gray-400"
         />
         {query && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="text-gray-400 hover:text-gray-600 transition-colors ml-1"
-          >
+          <button type="button" onClick={handleClear} className="flex-shrink-0 text-gray-300 hover:text-gray-500 transition-colors">
             <X className="w-3.5 h-3.5" />
           </button>
         )}
       </form>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-2xl shadow-black/10 overflow-hidden z-50 min-w-[320px]">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-2xl shadow-black/10 overflow-hidden z-50 min-w-[340px]">
           {isLoading && (
             <div className="flex items-center justify-center gap-2 py-6 text-sm text-gray-400">
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#007832]" />
               <span>Đang tìm kiếm...</span>
             </div>
           )}
@@ -176,14 +167,10 @@ function SearchDropdown() {
                   >
                     <div className="w-11 h-11 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
                       {product.anh_chinh ? (
-                        <img
-                          src={product.anh_chinh}
-                          alt={product.ten_san_pham}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={product.anh_chinh} alt={product.ten_san_pham} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                          🌿
+                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                          <Leaf className="w-5 h-5" />
                         </div>
                       )}
                     </div>
@@ -192,25 +179,17 @@ function SearchDropdown() {
                         {product.ten_san_pham}
                       </p>
                       {product.xuat_xu && (
-                        <p className="text-xs text-gray-400 truncate mt-0.5">
-                          {product.xuat_xu}
-                        </p>
+                        <p className="text-xs text-gray-400 truncate mt-0.5">{product.xuat_xu}</p>
                       )}
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-sm font-bold text-[#007832]">
                         {product.gia_ban.toLocaleString("vi-VN")}đ
                       </p>
-                      {product.don_vi && (
-                        <p className="text-xs text-gray-400">
-                          /{product.don_vi}
-                        </p>
-                      )}
+                      {product.don_vi && <p className="text-xs text-gray-400">/{product.don_vi}</p>}
                     </div>
                   </button>
-                  {index < results.length - 1 && (
-                    <div className="mx-4 h-px bg-gray-50" />
-                  )}
+                  {index < results.length - 1 && <div className="mx-4 h-px bg-gray-50" />}
                 </li>
               ))}
               <li className="border-t border-gray-50 mt-1">
@@ -228,17 +207,13 @@ function SearchDropdown() {
 
           {!isLoading && hasSearched && results.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-              <div className="text-3xl mb-3">🔍</div>
-              <p className="text-sm font-semibold text-gray-700 mb-1">
-                Không tìm thấy sản phẩm
-              </p>
+              <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
+                <Search className="w-5 h-5 text-gray-300" />
+              </div>
+              <p className="text-sm font-semibold text-gray-700 mb-1">Không tìm thấy sản phẩm</p>
               <p className="text-xs text-gray-400">
                 Thử tìm với từ khoá khác hoặc{" "}
-                <Link
-                  href="/products"
-                  onClick={() => setIsOpen(false)}
-                  className="text-[#007832] hover:underline"
-                >
+                <Link href="/products" onClick={() => setIsOpen(false)} className="text-[#007832] hover:underline font-medium">
                   xem tất cả sản phẩm
                 </Link>
               </p>
@@ -250,19 +225,29 @@ function SearchDropdown() {
   );
 }
 
+const NAV_LINKS = [
+  { name: "Trang chủ", path: "/" },
+  { name: "Sản phẩm", path: "/products" },
+  { name: "Nhà vườn", path: "/farmers" },
+  { name: "Câu chuyện", path: "/about" },
+  { name: "Doanh nghiệp", path: "/b2b", badge: "Sắp ra mắt" },
+];
+
 export default function Header({ session }: { session: any }) {
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const { cart, totalItems } = useCart();
+  const { cart, totalItems, clearCart } = useCart();
   const [avatarUrl, setAvatarUrl] = useState(session?.user?.image || null);
   const [displayName, setDisplayName] = useState(
     session?.user?.name || session?.user?.email?.split("@")[0],
   );
+
   useEffect(() => {
     setMounted(true);
 
-    // Fetch ảnh từ DB để giữ sau reload
     if (session?.user?.email) {
       fetch("/api/store/account/profile/avatar")
         .then((res) => res.json())
@@ -279,12 +264,24 @@ export default function Header({ session }: { session: any }) {
     window.addEventListener("update-name", handleNameUpdate);
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("update-avatar", handleAvatarUpdate);
       window.removeEventListener("update-name", handleNameUpdate);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [session]);
+
+  // Đóng user menu khi chuyển trang
+  useEffect(() => { setUserMenuOpen(false); }, [pathname]);
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
@@ -294,187 +291,268 @@ export default function Header({ session }: { session: any }) {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
+
+      {/* Top bar */}
+      <div className="hidden lg:block bg-[#16a34a] text-white text-xs overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 h-8 flex items-center justify-between">
+          <span className="text-green-100 font-medium tracking-wide flex items-center gap-3">
+            <span>📍 Đặt tại Đà Nẵng</span>
+            <span className="opacity-30">·</span>
+            <span>🥬 Rau tươi giao nội thành 2 giờ</span>
+            <span className="opacity-30">·</span>
+            <span>📦 Đặc sản miền Trung ship toàn quốc</span>
+          </span>
+          <div className="flex items-center gap-5 text-green-100">
+            <span>Hotline: <span className="text-white font-semibold">1900 1234</span></span>
+            <span className="opacity-30">|</span>
+            <Link href="/b2b" className="hover:text-white transition-colors text-green-200">
+              Bán hàng cùng chúng tôi →
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Main header */}
       <header
-        className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+        className={`sticky top-0 w-full z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-white/95 backdrop-blur-md shadow-sm py-3"
-            : "bg-transparent py-5"
+            ? "bg-white shadow-md shadow-black/5 py-0"
+            : "bg-white border-b border-gray-100 py-0"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-12">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6">
+          <div className="flex items-center h-16 gap-4">
+
+            {/* Logo */}
             <Link
               href="/"
-              className="text-2xl font-bold text-[#007832] tracking-tighter hover:scale-105 transition-transform"
+              className="flex items-center gap-2 flex-shrink-0 group"
             >
-              Verdant Curator
+              <div className="w-8 h-8 rounded-lg bg-[#007832] flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                <Leaf className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex flex-col leading-none">
+                <span className="text-base font-black text-[#007832] tracking-tight whitespace-nowrap">
+                  Verdant Curator
+                </span>
+                <span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase">
+                  Fresh · Organic · Đà Nẵng
+                </span>
+              </div>
             </Link>
-            <nav className="hidden lg:flex items-center gap-8">
-              {[
-                { name: "Trang chủ", path: "/" },
-                { name: "Sản phẩm", path: "/products" },
-                { name: "Nhà vườn", path: "/farmers" },
-                { name: "Câu chuyện", path: "/about" },
-              ].map((link) => (
+
+            {/* Nav */}
+            <nav className="hidden lg:flex items-center gap-1 flex-1">
+              {NAV_LINKS.map((link) => (
                 <Link
                   key={link.path}
                   href={link.path}
-                  className={`text-sm transition-colors ${
+                  className={`relative flex items-center gap-1 px-2.5 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-150 ${
                     isActive(link.path)
-                      ? "font-bold text-[#007832] border-b-2 border-[#007832] pb-1"
-                      : "font-semibold text-gray-500 hover:text-[#007832]"
+                      ? "text-[#007832] bg-green-50"
+                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                   }`}
                 >
                   {link.name}
+                  {link.badge && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-100 text-amber-700 leading-none tracking-wide">
+                      {link.badge}
+                    </span>
+                  )}
+                  {isActive(link.path) && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#007832] rounded-full" />
+                  )}
                 </Link>
               ))}
             </nav>
-          </div>
 
-          <div className="flex items-center gap-4 md:gap-6">
-            <SearchDropdown />
+            {/* Right section */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <SearchDropdown />
 
-            <div className="flex items-center border-r border-gray-200 pr-4">
-              <div className="relative group pt-4 pb-4 -my-4">
+              {/* Cart */}
+              <div className="relative group">
                 <Link
                   href="/cart"
-                  className="relative p-2 text-gray-600 hover:bg-emerald-50 hover:text-[#007832] rounded-full transition-all flex"
+                  className={`relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-150 ${
+                    totalItems > 0
+                      ? "bg-green-50 text-[#007832] hover:bg-green-100"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  }`}
                 >
-                  <ShoppingCart size={20} />
+                  <ShoppingCart size={20} data-cart-icon />
                   {mounted && totalItems > 0 && (
-                    <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white">
-                      {totalItems}
+                    <span
+                      data-cart-badge
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-sm"
+                    >
+                      {totalItems > 9 ? "9+" : totalItems}
                     </span>
                   )}
                 </Link>
-                <div className="absolute top-full right-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 p-4">
+
+                {/* Cart hover preview */}
+                <div className="absolute top-full right-0 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-50 p-4 mt-2">
                   {cart.length > 0 ? (
                     <>
-                      <div className="text-[10px] font-black text-gray-400 mb-3 uppercase tracking-widest italic">
+                      <p className="text-[10px] font-black text-gray-300 mb-3 uppercase tracking-widest">
                         Sản phẩm mới thêm
-                      </div>
-                      <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                        {cart
-                          .slice(-4)
-                          .reverse()
-                          .map((item, index) => (
-                            <div
-                              key={index}
-                              className="flex gap-3 items-center"
-                            >
-                              <img
-                                src={item.anh_chinh}
-                                className="w-10 h-10 rounded-lg object-cover"
-                                alt=""
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold text-gray-900 truncate">
-                                  {item.ten_san_pham}
-                                </p>
-                                <p className="text-[10px] text-[#007832] font-bold">
-                                  {item.gia_ban.toLocaleString()}đ x{" "}
-                                  {item.so_luong}
-                                </p>
-                              </div>
+                      </p>
+                      <div className="space-y-3 max-h-[280px] overflow-y-auto">
+                        {cart.slice(-4).reverse().map((item, index) => (
+                          <div key={index} className="flex gap-3 items-center">
+                            <img
+                              src={item.anh_chinh}
+                              className="w-10 h-10 rounded-lg object-cover border border-gray-100"
+                              alt=""
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-gray-900 truncate">{item.ten_san_pham}</p>
+                              <p className="text-[11px] text-[#007832] font-bold mt-0.5">
+                                {item.gia_ban.toLocaleString()}đ × {item.so_luong}
+                              </p>
                             </div>
-                          ))}
+                          </div>
+                        ))}
                       </div>
-                      <Link
-                        href="/cart"
-                        className="block w-full bg-[#007832] text-white text-center py-2.5 mt-4 rounded-xl text-xs font-bold hover:bg-[#006028]"
-                      >
-                        Xem giỏ hàng
-                      </Link>
+                      <div className="mt-4 pt-3 border-t border-gray-50 flex gap-2">
+                        <Link
+                          href="/cart"
+                          className="flex-1 bg-[#007832] text-white text-center py-2.5 rounded-xl text-xs font-bold hover:bg-[#006028] transition-colors"
+                        >
+                          Xem giỏ hàng ({totalItems})
+                        </Link>
+                      </div>
                     </>
                   ) : (
-                    <p className="text-center text-xs text-gray-500 py-4">
-                      Giỏ hàng trống
-                    </p>
+                    <div className="flex flex-col items-center py-6 gap-2">
+                      <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
+                        <ShoppingCart className="w-5 h-5 text-gray-300" />
+                      </div>
+                      <p className="text-xs text-gray-400 font-medium">Giỏ hàng trống</p>
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center min-w-[120px] justify-end">
+              {/* Divider */}
+              <div className="w-px h-6 bg-gray-200 mx-1" />
+
+              {/* User section */}
               {!mounted ? (
-                <div className="h-10 w-24" />
+                <div className="h-9 w-28 rounded-xl bg-gray-100 animate-pulse" />
               ) : session ? (
-                <div className="relative group pt-4 pb-4 -my-4">
-                  <button className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 hover:bg-white hover:shadow-md transition-all">
-                    <div className="w-7 h-7 bg-[#007832] rounded-full flex items-center justify-center text-white text-[10px] font-black overflow-hidden border border-emerald-200">
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setUserMenuOpen(o => !o)}
+                    className="flex items-center gap-2.5 pl-1 pr-3 py-1.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all duration-150"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-700 flex items-center justify-center text-white text-xs font-black overflow-hidden shadow-sm">
                       {avatarUrl ? (
-                        <img
-                          src={avatarUrl}
-                          alt="Avatar"
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
-                        session.user?.email?.[0].toUpperCase()
+                        <span>{session.user?.email?.[0].toUpperCase()}</span>
                       )}
                     </div>
-                    <div className="hidden sm:flex flex-col items-start leading-none text-left">
-                      <span className="text-[9px] font-black text-emerald-600 uppercase italic">
-                        Thành viên
+                    <div className="hidden sm:flex flex-col items-start leading-none">
+                      <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">
+                        Tài khoản
                       </span>
-                      <span className="text-xs font-bold text-gray-700 truncate max-w-[80px]">
+                      <span className="text-xs font-bold text-gray-800 truncate max-w-[80px] mt-0.5">
                         {displayName}
                       </span>
                     </div>
-                    <ChevronDown
-                      size={14}
-                      className="text-gray-400 group-hover:rotate-180 transition-transform"
-                    />
+                    <ChevronDown size={13} className={`text-gray-400 transition-transform duration-200 ml-0.5 ${userMenuOpen ? "rotate-180" : ""}`} />
                   </button>
 
-                  <div className="absolute top-full right-0 w-60 bg-white rounded-2xl shadow-2xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 overflow-hidden p-2">
-                    <div className="px-3 py-2 border-b border-gray-50 mb-1 text-[10px] font-black text-gray-300 uppercase italic tracking-widest">
-                      Quản lý tài khoản
+                  {/* Dropdown */}
+                  {userMenuOpen && (
+                    <div className="absolute top-full right-0 w-64 bg-white rounded-2xl shadow-2xl shadow-black/10 border border-gray-100 z-50 overflow-hidden mt-2">
+                      {/* User info card */}
+                      <div className="px-4 py-3.5 bg-gradient-to-br from-green-50 to-emerald-50 border-b border-green-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-green-700 flex items-center justify-center text-white text-sm font-black overflow-hidden shadow">
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{session.user?.email?.[0].toUpperCase()}</span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-900 truncate max-w-[150px]">{displayName}</p>
+                            <p className="text-[11px] text-gray-400 truncate max-w-[150px]">{session.user?.email}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu items */}
+                      <div className="p-2">
+                        <Link
+                          href="/account/profile"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:text-[#007832] hover:bg-green-50 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <User size={15} className="text-gray-500" />
+                          </div>
+                          Hồ sơ cá nhân
+                        </Link>
+                        <Link
+                          href="/account/orders"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:text-[#007832] hover:bg-green-50 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <Package size={15} className="text-gray-500" />
+                          </div>
+                          Đơn hàng của tôi
+                        </Link>
+                        <Link
+                          href="/account/addresses"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:text-[#007832] hover:bg-green-50 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <MapPin size={15} className="text-gray-500" />
+                          </div>
+                          Địa chỉ giao hàng
+                        </Link>
+                        <Link
+                          href="/account/change-password"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:text-[#007832] hover:bg-green-50 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <ShieldCheck size={15} className="text-gray-500" />
+                          </div>
+                          Đổi mật khẩu
+                        </Link>
+                      </div>
+
+                      <div className="px-2 pb-2">
+                        <button
+                          onClick={() => { clearCart(); signOut({ callbackUrl: "/" }); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
+                            <LogOut size={15} className="text-red-400" />
+                          </div>
+                          Đăng xuất
+                        </button>
+                      </div>
                     </div>
-                    <Link
-                      href="/account/profile"
-                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
-                    >
-                      <User size={16} /> Hồ sơ cá nhân
-                    </Link>
-                    <Link
-                      href="/account/orders"
-                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
-                    >
-                      <ShoppingBag size={16} /> Đơn hàng của tôi
-                    </Link>
-                    <Link
-                      href="/account/addresses"
-                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
-                    >
-                      <MapPin size={16} /> Địa chỉ giao hàng
-                    </Link>
-                    <Link
-                      href="/account/change-password"
-                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl text-xs font-bold text-gray-600 hover:text-[#007832] transition-colors"
-                    >
-                      <ShieldCheck size={16} /> Đổi mật khẩu
-                    </Link>
-                    <div className="border-t border-gray-50 my-1"></div>
-                    <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-red-50 rounded-xl text-xs font-black text-red-500 transition-colors uppercase italic"
-                    >
-                      <LogOut size={16} /> Đăng xuất
-                    </button>
-                  </div>
+                  )}
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <Link
                     href="/login"
-                    className="hidden md:block text-sm font-bold text-gray-600 hover:text-[#007832] transition-colors px-2"
+                    className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-[#007832] hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200 whitespace-nowrap"
                   >
                     Đăng nhập
                   </Link>
-                  <Link href="/register">
-                    <button className="bg-[#007832] text-white px-6 py-2.5 rounded-full text-sm font-black shadow-lg hover:bg-[#006028] transition-all active:scale-95 flex items-center gap-2">
-                      <User size={16} fill="white" /> Đăng ký
-                    </button>
+                  <Link
+                    href="/register"
+                    className="flex items-center gap-1.5 bg-[#007832] text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-[#006028] hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
+                  >
+                    <User size={15} fill="white" />
+                    Đăng ký
                   </Link>
                 </div>
               )}

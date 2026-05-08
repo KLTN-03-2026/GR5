@@ -65,9 +65,9 @@ export function ShiftTable({ ca }: ShiftTableProps) {
                 </td>
               </tr>
             ) : (
-              dsNhanVien.map((nv) => (
+              dsNhanVien.map((nv, idx) => (
                 <tr
-                  key={nv.ma_nguoi_dung}
+                  key={`${nv.ma_nguoi_dung}-${idx}`}
                   className="hover:bg-gray-50 transition-colors"
                 >
                   <td className="px-4 py-3 font-medium text-gray-800">

@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  PayrollTable,
-  LuongNhanVien,
-} from "@/components/admin/payroll/PayrollTable";
-import * as XLSX from "xlsx"; // Import thư viện Excel
+import { PayrollTable, LuongNhanVien } from "@/components/admin/payroll/PayrollTable";
+import * as XLSX from "xlsx";
+import { FileSpreadsheet, DollarSign, Clock, TrendingDown, Users } from "lucide-react";
 
 export default function PayrollPage() {
   const [data, setData] = useState<LuongNhanVien[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Khởi tạo tháng hiện tại (Format: YYYY-MM)
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     const m = (now.getMonth() + 1).toString().padStart(2, "0");
@@ -39,14 +36,8 @@ export default function PayrollPage() {
     if (selectedMonth) fetchLuong(selectedMonth);
   }, [selectedMonth]);
 
-  // LOGIC XUẤT EXCEL (Chuẩn bị data và trigger download)
   const exportToExcel = () => {
-    if (data.length === 0) {
-      alert("Không có dữ liệu để xuất!");
-      return;
-    }
-
-    // 1. Format lại tên cột và dữ liệu cho file Excel dễ đọc
+    if (data.length === 0) { alert("Không có dữ liệu để xuất!"); return; }
     const excelData = data.map((nv, index) => ({
       STT: index + 1,
       "Họ và Tên": nv.ho_ten,
@@ -58,84 +49,91 @@ export default function PayrollPage() {
       "Khấu trừ trễ (VNĐ)": nv.khau_tru_tre,
       "THỰC NHẬN (VNĐ)": nv.thuc_nhan,
     }));
-
-    // 2. Tạo WorkBook và WorkSheet
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      `BangLuong_${selectedMonth}`,
-    );
-
-    // 3. Tự động set độ rộng cột cho đẹp
-    const wscols = [
-      { wch: 5 },
-      { wch: 25 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 15 },
-      { wch: 20 },
-      { wch: 20 },
-    ];
-    worksheet["!cols"] = wscols;
-
-    // 4. Trigger tải file về máy
+    XLSX.utils.book_append_sheet(workbook, worksheet, `BangLuong_${selectedMonth}`);
+    worksheet["!cols"] = [{ wch: 5 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 20 }, { wch: 20 }];
     XLSX.writeFile(workbook, `Bang_Luong_Thang_${selectedMonth}.xlsx`);
   };
 
+  const fmt = (n: number) => new Intl.NumberFormat("vi-VN").format(n);
+
+  const tongQuy = data.reduce((s, nv) => s + nv.thuc_nhan, 0);
+  const tongGio = data.reduce((s, nv) => s + nv.tong_gio_thuc_te, 0);
+  const tongKhau = data.reduce((s, nv) => s + nv.khau_tru_tre, 0);
+  const soNhanVien = data.length;
+
+  const [year, month] = selectedMonth.split("-");
+  const monthLabel = `Tháng ${parseInt(month)}/${year}`;
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header & Công cụ lọc */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b">
+    <div className="p-6 space-y-6 bg-gray-50 min-h-full">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Bảng Lương Tháng</h1>
-          <p className="text-gray-500">
-            Tính toán tự động từ dữ liệu chấm công
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Bảng Lương</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Tính toán tự động từ dữ liệu chấm công — {monthLabel}</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 border rounded-md text-gray-700 outline-none focus:border-blue-500"
-          />
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 bg-white border rounded-lg px-3 py-2 shadow-sm">
+            <span className="text-xs text-gray-500 font-medium">Tháng:</span>
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="text-sm font-semibold text-gray-800 outline-none bg-transparent"
+            />
+          </div>
           <button
             onClick={exportToExcel}
             disabled={loading || data.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 shadow-sm text-sm"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
+            <FileSpreadsheet size={15} />
             Xuất Excel
           </button>
         </div>
       </div>
 
-      {/* Hiển thị Bảng Lương */}
+      {/* Summary Cards */}
+      {!loading && data.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Nhân viên", value: soNhanVien.toString(), unit: "người", icon: Users, bg: "bg-blue-50", border: "border-blue-100", text: "text-blue-700", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+            { label: "Tổng quỹ lương", value: fmt(tongQuy), unit: "₫", icon: DollarSign, bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-700", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
+            { label: "Tổng giờ công", value: tongGio.toFixed(1), unit: "giờ", icon: Clock, bg: "bg-violet-50", border: "border-violet-100", text: "text-violet-700", iconBg: "bg-violet-100", iconColor: "text-violet-600" },
+            { label: "Tổng khấu trừ", value: fmt(tongKhau), unit: "₫", icon: TrendingDown, bg: "bg-red-50", border: "border-red-100", text: "text-red-700", iconBg: "bg-red-100", iconColor: "text-red-600" },
+          ].map((s) => (
+            <div key={s.label} className={`${s.bg} ${s.border} border rounded-xl p-4 flex items-center gap-4`}>
+              <div className={`${s.iconBg} rounded-xl p-2.5 flex-shrink-0`}>
+                <s.icon size={20} className={s.iconColor} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 font-medium">{s.label}</p>
+                <p className={`text-lg font-bold ${s.text} truncate`}>
+                  {s.value} <span className="text-sm font-medium">{s.unit}</span>
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Table */}
       {loading ? (
-        <div className="py-20 text-center text-gray-500 animate-pulse">
-          Đang tính toán lương...
+        <div className="flex flex-col items-center justify-center py-24 gap-3 bg-white rounded-xl border shadow-sm">
+          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-gray-400">Đang tính toán lương {monthLabel}...</p>
         </div>
       ) : (
         <PayrollTable bangLuong={data} />
+      )}
+
+      {!loading && data.length > 0 && (
+        <p className="text-xs text-gray-400 text-center">
+          Bảng lương được tính tự động từ dữ liệu chấm công. Liên hệ kế toán để điều chỉnh thủ công.
+        </p>
       )}
     </div>
   );

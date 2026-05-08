@@ -1,20 +1,19 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
-import { 
-  MapPin, CheckCircle2, Banknote, FileText, 
-  ArrowRight, ChevronLeft, Building2, Copy, Check, QrCode
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  MapPin, CheckCircle2, Banknote, FileText,
+  ArrowRight, ChevronLeft, Building2, Copy, Check, QrCode,
+  Lock, ShieldCheck, RefreshCw, Truck, Plus, Loader2, Package,
+  ChevronDown, User, Phone,
 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useCart } from "@/lib/CartContext";
-import { useSession } from 'next-auth/react';
 
-// ============================================================
-// THÔNG TIN NGÂN HÀNG (THAY ĐỔI TẠI ĐÂY)
-// ============================================================
 const BANK_INFO = {
-  bankCode: "MB",            // Mã ngân hàng theo VietQR
+  bankCode: "MB",
   bankName: "MB Bank",
   accountNumber: "0935462720",
   accountName: "LE VIET QUOC HUNG",
@@ -25,7 +24,6 @@ const BANK_INFO = {
 // ============================================================
 function BankTransferPanel({ total, orderId }: { total: number; orderId?: number | null }) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  
   const orderNote = orderId ? `DH${orderId}` : "Vui long dat hang truoc";
   const qrUrl = `https://img.vietqr.io/image/${BANK_INFO.bankCode}-${BANK_INFO.accountNumber}-compact2.png?amount=${Math.round(total)}&addInfo=${encodeURIComponent(orderNote)}&accountName=${encodeURIComponent(BANK_INFO.accountName)}`;
 
@@ -36,29 +34,14 @@ function BankTransferPanel({ total, orderId }: { total: number; orderId?: number
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.3 }}
-      className="mt-4 overflow-hidden"
-    >
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 space-y-5">
-        <div className="flex gap-5 items-start">
-          {/* QR Code */}
-          <div className="flex-shrink-0 bg-white rounded-xl p-2 shadow-sm border border-blue-100">
-            <img
-              src={qrUrl}
-              alt="QR Chuyển khoản"
-              className="w-28 h-28 object-contain"
-              onError={(e) => { 
-                (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='112' height='112' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2'%3E%3Crect x='3' y='3' width='7' height='7'/%3E%3Crect x='14' y='3' width='7' height='7'/%3E%3Crect x='3' y='14' width='7' height='7'/%3E%3Cpath d='m14 14h.01M14 17h.01M17 14h.01M17 17h.01'/%3E%3C/svg%3E";
-              }}
-            />
+    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: 12, overflow: "hidden" }}>
+      <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, padding: "16px 20px" }}>
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+          <div style={{ flexShrink: 0, background: "#fff", borderRadius: 10, padding: 6, border: "1px solid #bfdbfe" }}>
+            <img src={qrUrl} alt="QR" style={{ width: 100, height: 100, objectFit: "contain" }}
+              onError={(e) => { (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2'%3E%3Crect x='3' y='3' width='7' height='7'/%3E%3C/svg%3E"; }} />
           </div>
-
-          {/* Thông tin tài khoản */}
-          <div className="flex-1 space-y-3 text-sm">
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
             {[
               { label: "Ngân hàng", value: BANK_INFO.bankName },
               { label: "Số tài khoản", value: BANK_INFO.accountNumber, copyKey: "account" },
@@ -66,21 +49,13 @@ function BankTransferPanel({ total, orderId }: { total: number; orderId?: number
               { label: "Số tiền", value: `${Math.round(total).toLocaleString('vi-VN')}đ`, copyKey: "amount" },
               { label: "Nội dung CK", value: orderNote, copyKey: "note" },
             ].map((row) => (
-              <div key={row.label} className="flex justify-between items-center gap-2">
-                <span className="text-gray-500 text-xs font-bold whitespace-nowrap">{row.label}</span>
-                <div className="flex items-center gap-1.5">
-                  <span className={`font-bold text-gray-900 text-right ${row.label === "Nội dung CK" ? "text-blue-700 font-mono" : ""}`}>
-                    {row.value}
-                  </span>
-                  {row.copyKey && (
-                    <button
-                      onClick={() => handleCopy(row.value, row.copyKey!)}
-                      className="p-1 rounded hover:bg-blue-100 flex-shrink-0 transition-colors"
-                    >
-                      {copiedField === row.copyKey
-                        ? <Check className="w-3.5 h-3.5 text-green-500" />
-                        : <Copy className="w-3.5 h-3.5 text-gray-400" />
-                      }
+              <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 12, color: "#6b7280" }}>{row.label}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: row.label === "Nội dung CK" ? "#1d4ed8" : "#111827", textAlign: "right" }}>{row.value}</span>
+                  {(row as any).copyKey && (
+                    <button onClick={() => handleCopy(row.value, (row as any).copyKey)} style={{ padding: "2px 4px", borderRadius: 4, border: "none", background: "transparent", cursor: "pointer" }}>
+                      {copiedField === (row as any).copyKey ? <Check style={{ width: 12, height: 12, color: "#16a34a" }} /> : <Copy style={{ width: 12, height: 12, color: "#9ca3af" }} />}
                     </button>
                   )}
                 </div>
@@ -88,12 +63,245 @@ function BankTransferPanel({ total, orderId }: { total: number; orderId?: number
             ))}
           </div>
         </div>
-
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 font-medium">
-          ⚠️ Vui lòng ghi đúng nội dung chuyển khoản <strong className="font-mono">{orderNote}</strong> để đơn hàng được xác nhận nhanh.
+        <div style={{ background: "#fefce8", border: "1px solid #fde047", borderRadius: 8, padding: "8px 12px", marginTop: 12, fontSize: 12, color: "#854d0e" }}>
+          ⚠️ Ghi đúng nội dung CK <strong style={{ fontFamily: "monospace" }}>{orderNote}</strong> để đơn hàng được xác nhận nhanh.
         </div>
       </div>
     </motion.div>
+  );
+}
+
+// ============================================================
+// COMPONENT CHỌN ĐỊA CHỈ GHN (hỗ trợ địa chỉ đã lưu)
+// ============================================================
+function AddressForm({ onAddressChange }: {
+  onAddressChange: (addr: {
+    ho_ten: string; so_dien_thoai: string; chi_tiet: string;
+    tinh_thanh: string; quan_huyen: string; phuong_xa: string;
+    ma_tinh: number; ma_quan_huyen: number; ma_phuong_xa: string;
+  } | null) => void
+}) {
+  const { data: session } = useSession();
+
+  // Địa chỉ đã lưu
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedSavedId, setSelectedSavedId] = useState<number | null>(null);
+  const [useNewForm, setUseNewForm] = useState(false);
+
+  // GHN master data cho form mới
+  const [provinces, setProvinces] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [wards, setWards] = useState<any[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState<any>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<any>(null);
+  const [selectedWard, setSelectedWard] = useState<any>(null);
+  const [hoTen, setHoTen] = useState('');
+  const [sdt, setSdt] = useState('');
+  const [diaChi, setDiaChi] = useState('');
+  const [loadingProvince, setLoadingProvince] = useState(false);
+  const [loadingDistrict, setLoadingDistrict] = useState(false);
+  const [loadingWard, setLoadingWard] = useState(false);
+
+  // Load địa chỉ đã lưu khi có session
+  useEffect(() => {
+    if (!session?.user) return;
+    fetch('/api/store/account/addresses')
+      .then(r => r.json())
+      .then((data: any[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setSavedAddresses(data);
+          // Chọn mặc định sẵn
+          const def = data.find(a => a.la_mac_dinh) || data[0];
+          if (def.ma_quan_huyen_ghn && def.ma_phuong_xa_ghn) {
+            setSelectedSavedId(def.id);
+            setUseNewForm(false);
+            onAddressChange({
+              ho_ten: def.ho_ten || '', so_dien_thoai: def.so_dien_thoai || '',
+              chi_tiet: def.chi_tiet_dia_chi || '',
+              tinh_thanh: def.tinh_thanh || '', quan_huyen: def.quan_huyen || '', phuong_xa: def.phuong_xa || '',
+              ma_tinh: def.ma_tinh_ghn, ma_quan_huyen: def.ma_quan_huyen_ghn, ma_phuong_xa: def.ma_phuong_xa_ghn,
+            });
+          } else {
+            // Địa chỉ cũ không có GHN → dùng form mới
+            setUseNewForm(true);
+          }
+        } else {
+          setUseNewForm(true);
+        }
+      })
+      .catch(() => setUseNewForm(true));
+  }, [session]);
+
+  // Load tỉnh khi mở form mới
+  useEffect(() => {
+    if (!useNewForm || provinces.length > 0) return;
+    setLoadingProvince(true);
+    fetch('/api/ghn/master-data?type=province')
+      .then(r => r.json())
+      .then(d => setProvinces(d || []))
+      .finally(() => setLoadingProvince(false));
+  }, [useNewForm]);
+
+  useEffect(() => {
+    if (!selectedProvince) { setDistricts([]); setSelectedDistrict(null); return; }
+    setLoadingDistrict(true);
+    fetch(`/api/ghn/master-data?type=district&province_id=${selectedProvince.ProvinceID}`)
+      .then(r => r.json()).then(d => setDistricts(d || []))
+      .finally(() => setLoadingDistrict(false));
+    setSelectedDistrict(null); setSelectedWard(null); setWards([]);
+  }, [selectedProvince]);
+
+  useEffect(() => {
+    if (!selectedDistrict) { setWards([]); setSelectedWard(null); return; }
+    setLoadingWard(true);
+    fetch(`/api/ghn/master-data?type=ward&district_id=${selectedDistrict.DistrictID}`)
+      .then(r => r.json()).then(d => setWards(d || []))
+      .finally(() => setLoadingWard(false));
+    setSelectedWard(null);
+  }, [selectedDistrict]);
+
+  // Emit khi form mới thay đổi
+  useEffect(() => {
+    if (!useNewForm) return;
+    if (hoTen && sdt && diaChi && selectedProvince && selectedDistrict && selectedWard) {
+      onAddressChange({
+        ho_ten: hoTen, so_dien_thoai: sdt, chi_tiet: diaChi,
+        tinh_thanh: selectedProvince.ProvinceName,
+        quan_huyen: selectedDistrict.DistrictName,
+        phuong_xa: selectedWard.WardName,
+        ma_tinh: selectedProvince.ProvinceID,
+        ma_quan_huyen: selectedDistrict.DistrictID,
+        ma_phuong_xa: String(selectedWard.WardCode),
+      });
+    } else {
+      onAddressChange(null);
+    }
+  }, [hoTen, sdt, diaChi, selectedProvince, selectedDistrict, selectedWard, useNewForm]);
+
+  const selectSaved = (addr: any) => {
+    setSelectedSavedId(addr.id);
+    setUseNewForm(false);
+    onAddressChange({
+      ho_ten: addr.ho_ten || '', so_dien_thoai: addr.so_dien_thoai || '',
+      chi_tiet: addr.chi_tiet_dia_chi || '',
+      tinh_thanh: addr.tinh_thanh || '', quan_huyen: addr.quan_huyen || '', phuong_xa: addr.phuong_xa || '',
+      ma_tinh: addr.ma_tinh_ghn, ma_quan_huyen: addr.ma_quan_huyen_ghn, ma_phuong_xa: addr.ma_phuong_xa_ghn,
+    });
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", height: 40, border: "1px solid #d1d5db", borderRadius: 8,
+    fontSize: 13, padding: "0 12px", outline: "none", boxSizing: "border-box",
+    background: "#f9fafb", fontFamily: "var(--font-sans)",
+  };
+  const selectStyle: React.CSSProperties = { ...inputStyle, cursor: "pointer" };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+      {/* Danh sách địa chỉ đã lưu */}
+      {savedAddresses.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {savedAddresses.filter(a => a.ma_quan_huyen_ghn && a.ma_phuong_xa_ghn).map(addr => (
+            <div key={addr.id} onClick={() => selectSaved(addr)}
+              style={{
+                padding: "12px 14px", borderRadius: 10, cursor: "pointer", transition: "all 0.15s",
+                border: `2px solid ${selectedSavedId === addr.id && !useNewForm ? "#16a34a" : "#e5e7eb"}`,
+                background: selectedSavedId === addr.id && !useNewForm ? "#f0fdf4" : "#fafafa",
+              }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: selectedSavedId === addr.id && !useNewForm ? "#16a34a" : "#111827" }}>
+                      {addr.ho_ten || "Người nhận"}
+                    </span>
+                    {addr.so_dien_thoai && (
+                      <span style={{ fontSize: 12, color: "#6b7280" }}>· {addr.so_dien_thoai}</span>
+                    )}
+                    {addr.la_mac_dinh && (
+                      <span style={{ fontSize: 10, fontWeight: 600, background: "#16a34a", color: "#fff", padding: "1px 6px", borderRadius: 4 }}>Mặc định</span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: 12, color: "#6b7280", margin: 0, lineHeight: 1.5 }}>{addr.chi_tiet_dia_chi}</p>
+                </div>
+                {selectedSavedId === addr.id && !useNewForm && (
+                  <CheckCircle2 style={{ width: 16, height: 16, color: "#16a34a", flexShrink: 0, marginLeft: 8 }} />
+                )}
+              </div>
+            </div>
+          ))}
+
+          {/* Nút dùng địa chỉ mới */}
+          <button onClick={() => { setUseNewForm(true); setSelectedSavedId(null); onAddressChange(null); }}
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#16a34a", background: "transparent", border: "1.5px dashed #86efac", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 500, width: "fit-content" }}>
+            <Plus style={{ width: 14, height: 14 }} /> Dùng địa chỉ khác
+          </button>
+        </div>
+      )}
+
+      {/* Form nhập địa chỉ mới */}
+      {(useNewForm || savedAddresses.length === 0) && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: savedAddresses.length > 0 ? "14px" : "0", borderRadius: 10, border: savedAddresses.length > 0 ? "1.5px solid #e5e7eb" : "none" }}>
+          {savedAddresses.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Địa chỉ mới</span>
+              <button onClick={() => { setUseNewForm(false); const def = savedAddresses.find(a => a.la_mac_dinh && a.ma_quan_huyen_ghn) || savedAddresses.find(a => a.ma_quan_huyen_ghn); if (def) selectSaved(def); }}
+                style={{ fontSize: 12, color: "#6b7280", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                Dùng địa chỉ đã lưu
+              </button>
+            </div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }} className="addr-2col">
+            <div>
+              <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Họ tên người nhận *</label>
+              <input style={inputStyle} value={hoTen} onChange={e => setHoTen(e.target.value)} placeholder="Nguyễn Văn A" />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Số điện thoại *</label>
+              <input style={inputStyle} value={sdt} onChange={e => setSdt(e.target.value)} placeholder="0901234567" />
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }} className="addr-3col">
+            <div>
+              <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Tỉnh/Thành phố *</label>
+              <select style={selectStyle} value={selectedProvince?.ProvinceID || ''} onChange={e => {
+                const p = provinces.find(x => x.ProvinceID === Number(e.target.value));
+                setSelectedProvince(p || null);
+              }}>
+                <option value="">{loadingProvince ? "Đang tải..." : "Chọn tỉnh/thành"}</option>
+                {provinces.map(p => <option key={p.ProvinceID} value={p.ProvinceID}>{p.ProvinceName}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Quận/Huyện *</label>
+              <select style={selectStyle} value={selectedDistrict?.DistrictID || ''} onChange={e => {
+                const d = districts.find(x => x.DistrictID === Number(e.target.value));
+                setSelectedDistrict(d || null);
+              }} disabled={!selectedProvince}>
+                <option value="">{loadingDistrict ? "Đang tải..." : "Chọn quận/huyện"}</option>
+                {districts.map(d => <option key={d.DistrictID} value={d.DistrictID}>{d.DistrictName}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Phường/Xã *</label>
+              <select style={selectStyle} value={selectedWard?.WardCode || ''} onChange={e => {
+                const w = wards.find(x => x.WardCode === e.target.value);
+                setSelectedWard(w || null);
+              }} disabled={!selectedDistrict}>
+                <option value="">{loadingWard ? "Đang tải..." : "Chọn phường/xã"}</option>
+                {wards.map(w => <option key={w.WardCode} value={w.WardCode}>{w.WardName}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Số nhà, tên đường *</label>
+            <input style={inputStyle} value={diaChi} onChange={e => setDiaChi(e.target.value)} placeholder="Ví dụ: 01 Lê Lợi, Phường Bến Thành" />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -102,38 +310,89 @@ function BankTransferPanel({ total, orderId }: { total: number; orderId?: number
 // ============================================================
 export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('cod');
-  const [selectedAddressId, setSelectedAddressId] = useState(1);
   const [note, setNote] = useState('');
+  const [noteLen, setNoteLen] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<number | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponApplied, setCouponApplied] = useState(false);
+
+  const [deliveryAddress, setDeliveryAddress] = useState<any>(null);
+  const [shippingFee, setShippingFee] = useState(0);
+  const [loadingFee, setLoadingFee] = useState(false);
+  const [feeError, setFeeError] = useState('');
+  const [expectedDate, setExpectedDate] = useState<string>('');
 
   const { cart, clearCart } = useCart() as any;
   const { data: session } = useSession();
 
   const subTotal = cart.reduce((acc: number, item: any) => acc + item.gia_ban * item.so_luong, 0);
-  const shippingFee = subTotal >= 500000 ? 0 : 30000;
   const total = subTotal + shippingFee;
+
+  // Tính phí vận chuyển khi địa chỉ thay đổi
+  useEffect(() => {
+    if (!deliveryAddress) { setShippingFee(0); setFeeError(''); return; }
+
+    const totalWeight = Math.max(
+      cart.reduce((s: number, item: any) => s + (item.so_luong || 1) * 500, 0),
+      200
+    );
+
+    setLoadingFee(true);
+    setFeeError('');
+
+    fetch('/api/ghn/fee', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to_district_id: deliveryAddress.ma_quan_huyen,
+        to_ward_code: deliveryAddress.ma_phuong_xa,
+        weight: totalWeight,
+        insurance_value: Math.round(subTotal),
+      }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.fee !== undefined) {
+          setShippingFee(d.fee);
+          if (d.expected_delivery_time) {
+            const dt = new Date(d.expected_delivery_time * 1000);
+            setExpectedDate(dt.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' }));
+          }
+        } else {
+          setFeeError(d.error || 'Không tính được phí ship');
+        }
+      })
+      .catch(() => setFeeError('Lỗi kết nối GHN'))
+      .finally(() => setLoadingFee(false));
+  }, [deliveryAddress]);
 
   const handlePlaceOrder = async () => {
     try {
       setIsSubmitting(true);
-
       if (cart.length === 0) throw new Error("Giỏ hàng của bạn đang trống!");
+      if (!deliveryAddress) throw new Error("Vui lòng nhập địa chỉ giao hàng!");
 
-      // Lấy userId từ session nếu có
       const userId = (session?.user as any)?.id || 1;
+      const fullAddress = `${deliveryAddress.chi_tiet}, ${deliveryAddress.phuong_xa}, ${deliveryAddress.quan_huyen}, ${deliveryAddress.tinh_thanh}`;
 
-      // BƯỚC 1: Tạo đơn hàng
       const createOrderRes = await fetch('/api/store/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ma_nguoi_dung: userId,
-          ma_dia_chi: selectedAddressId,
-          phuong_thuc_thanh_toan: paymentMethod,
+          phuong_thuc_thanh_toan: paymentMethod.toUpperCase() === 'COD' ? 'COD' : paymentMethod === 'bank_transfer' ? 'BANK' : paymentMethod.toUpperCase(),
           ghi_chu: note,
           tong_tien: total,
-          items: cart
+          phi_van_chuyen: shippingFee,
+          items: cart,
+          // Địa chỉ giao hàng snapshot
+          ho_ten_nguoi_nhan: deliveryAddress.ho_ten,
+          sdt_nguoi_nhan: deliveryAddress.so_dien_thoai,
+          dia_chi_giao_hang: fullAddress,
+          ma_tinh_ghn: deliveryAddress.ma_tinh,
+          ma_quan_huyen_ghn: deliveryAddress.ma_quan_huyen,
+          ma_phuong_xa_ghn: deliveryAddress.ma_phuong_xa,
         })
       });
 
@@ -141,26 +400,19 @@ export default function CheckoutPage() {
       if (!orderData.success) throw new Error(orderData.message);
       const orderId = orderData.orderId;
 
-      // BƯỚC 2: Phân luồng theo phương thức
       if (paymentMethod === 'cod') {
         clearCart?.();
         window.location.href = `/payment/check?orderId=${orderId}&status=success&method=cod`;
-
       } else if (paymentMethod === 'bank_transfer') {
-        // Chuyển khoản: không redirect, hiển thị QR inline
         setPendingOrderId(orderId);
         clearCart?.();
-        // Cuộn lên QR
         window.scrollTo({ top: 0, behavior: 'smooth' });
-
       } else {
-        // MoMo hoặc VNPay: Lấy payment URL và redirect
         const paymentRes = await fetch('/api/store/payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId, type: paymentMethod })
         });
-
         const paymentData = await paymentRes.json();
         if (paymentData.success && paymentData.paymentUrl) {
           clearCart?.();
@@ -169,41 +421,33 @@ export default function CheckoutPage() {
           throw new Error(paymentData.message || "Không lấy được link thanh toán");
         }
       }
-
     } catch (error: any) {
       alert("❌ Lỗi: " + error.message);
       setIsSubmitting(false);
     }
   };
 
-  // Nếu đã đặt hàng bằng chuyển khoản → hiển thị màn hình chờ
+  // Màn hình chuyển khoản
   if (pendingOrderId) {
     return (
-      <div className="min-h-screen bg-[#F8FAF7] flex items-center justify-center px-4">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="max-w-lg w-full bg-white rounded-[2rem] p-8 shadow-2xl shadow-emerald-900/5 border border-emerald-50"
-        >
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Building2 className="w-8 h-8 text-blue-600" />
+      <div style={{ minHeight: "100vh", background: "#f7f8f6", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 16px" }}>
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          style={{ maxWidth: 480, width: "100%", background: "#fff", borderRadius: 24, padding: 32, boxShadow: "0 8px 32px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ width: 56, height: 56, background: "#dbeafe", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Building2 style={{ width: 28, height: 28, color: "#2563eb" }} />
             </div>
-            <h1 className="text-2xl font-black text-gray-900">Hoàn tất chuyển khoản</h1>
-            <p className="text-gray-500 text-sm mt-1">Đơn hàng <strong>#{pendingOrderId}</strong> đã được tạo</p>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: "#111827", margin: "0 0 6px" }}>Hoàn tất chuyển khoản</h1>
+            <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>Đơn hàng <strong>#{pendingOrderId}</strong> đã được tạo</p>
           </div>
-
           <BankTransferPanel total={total} orderId={pendingOrderId} />
-
-          <div className="mt-6 flex flex-col gap-3">
-            <button
-              onClick={() => window.location.href = `/payment/check?orderId=${pendingOrderId}&status=pending&method=bank_transfer`}
-              className="w-full py-4 bg-[#007832] text-white font-bold rounded-xl hover:bg-[#006028] transition-all"
-            >
+          <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
+            <button onClick={() => window.location.href = `/payment/check?orderId=${pendingOrderId}&status=pending&method=bank_transfer`}
+              style={{ width: "100%", padding: "14px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
               Tôi đã chuyển khoản xong ✓
             </button>
             <Link href="/orders">
-              <button className="w-full py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">
+              <button style={{ width: "100%", padding: "12px", background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
                 Xem đơn hàng của tôi
               </button>
             </Link>
@@ -213,266 +457,232 @@ export default function CheckoutPage() {
     );
   }
 
+  const isDisabled = isSubmitting || cart.length === 0 || !deliveryAddress;
+
   return (
-    <div className="min-h-screen bg-[#F8FAF7]">
-      <main className="pt-16 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
-        
-        {/* Tiêu đề */}
-        <div className="mb-8">
-          <Link href="/cart" className="flex items-center gap-2 text-gray-400 hover:text-[#007832] font-bold transition-all mb-4 w-fit">
-            <ChevronLeft size={20} /> Quay lại giỏ hàng
+    <div style={{ minHeight: "100vh", background: "#f7f8f6", fontFamily: "var(--font-sans)" }}>
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 60px", boxSizing: "border-box", width: "100%" }}>
+
+        <div style={{ marginBottom: 24 }}>
+          <Link href="/cart" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#6b7280", textDecoration: "none", marginBottom: 12 }}>
+            <ChevronLeft style={{ width: 16, height: 16 }} /> Quay lại giỏ hàng
           </Link>
-          <h1 className="text-4xl font-black text-gray-950 tracking-tight">Thanh toán</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#111827", margin: 0 }}>Thanh toán</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
-          {/* --- CỘT TRÁI --- */}
-          <div className="lg:col-span-8 space-y-8">
-            
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 24, alignItems: "start" }} className="checkout-grid">
+
+          {/* CỘT TRÁI */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
             {/* 1. Địa chỉ giao hàng */}
-            <section className="bg-white p-8 rounded-4xl shadow-sm border border-emerald-50">
-              <div className="flex items-center space-x-3 mb-8">
-                <div className="p-2 bg-emerald-50 rounded-lg text-[#007832]">
-                  <MapPin className="w-6 h-6" />
+            <section style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div style={{ width: 32, height: 32, background: "#f0fdf4", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <MapPin style={{ width: 16, height: 16, color: "#16a34a" }} />
                 </div>
-                <h2 className="text-xl font-black text-gray-900">Địa chỉ giao hàng</h2>
+                <h2 style={{ fontSize: 15, fontWeight: 600, color: "#111827", margin: 0 }}>Địa chỉ giao hàng</h2>
               </div>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                {[
-                  { id: 1, type: "Nhà riêng", address: "01 Lê Lợi, Phường Bến Thành, Quận 1, TP.HCM", phone: "090 123 4567" },
-                  { id: 2, type: "Văn phòng", address: "Toà nhà Bitexco, Quận 1, TP.HCM", phone: "090 123 4567" }
-                ].map((addr) => (
-                  <div 
-                    key={addr.id}
-                    onClick={() => setSelectedAddressId(addr.id)}
-                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all relative ${
-                      selectedAddressId === addr.id 
-                        ? 'border-[#007832] bg-emerald-50/30' 
-                        : 'border-gray-50 hover:border-emerald-100 bg-gray-50/30'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <p className={`font-black text-lg ${selectedAddressId === addr.id ? 'text-[#007832]' : 'text-gray-800'}`}>
-                        {addr.type}
-                      </p>
-                      {selectedAddressId === addr.id && (
-                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                          <CheckCircle2 className="w-6 h-6 text-[#007832] fill-white" />
-                        </motion.div>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500 font-medium leading-relaxed">{addr.address}</p>
-                    <p className="text-xs text-gray-400 mt-2 font-bold">{addr.phone}</p>
-                  </div>
-                ))}
-              </div>
+              <AddressForm onAddressChange={setDeliveryAddress} />
+
+              {/* Phí ship preview */}
+              <AnimatePresence>
+                {deliveryAddress && (
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                    style={{ marginTop: 12, padding: "10px 14px", background: loadingFee ? "#f9fafb" : feeError ? "#fef2f2" : "#f0fdf4", borderRadius: 8, border: `1px solid ${feeError ? "#fecaca" : "#bbf7d0"}`, display: "flex", alignItems: "center", gap: 8 }}>
+                    <Truck style={{ width: 16, height: 16, color: feeError ? "#dc2626" : "#16a34a", flexShrink: 0 }} />
+                    {loadingFee ? (
+                      <span style={{ fontSize: 13, color: "#6b7280" }}>Đang tính phí vận chuyển...</span>
+                    ) : feeError ? (
+                      <span style={{ fontSize: 13, color: "#dc2626" }}>{feeError}</span>
+                    ) : (
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: 13, color: "#16a34a", fontWeight: 600 }}>
+                          Phí ship: {shippingFee.toLocaleString('vi-VN')}đ
+                        </span>
+                        {expectedDate && (
+                          <span style={{ fontSize: 12, color: "#6b7280", marginLeft: 8 }}>· Dự kiến giao: {expectedDate}</span>
+                        )}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </section>
 
             {/* 2. Phương thức thanh toán */}
-            <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-emerald-50">
-              <div className="flex items-center space-x-3 mb-8">
-                <div className="p-2 bg-emerald-50 rounded-lg text-[#007832]">
-                  <Banknote className="w-6 h-6" />
+            <section style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div style={{ width: 32, height: 32, background: "#f0fdf4", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Banknote style={{ width: 16, height: 16, color: "#16a34a" }} />
                 </div>
-                <h2 className="text-xl font-black text-gray-900">Phương thức thanh toán</h2>
+                <h2 style={{ fontSize: 15, fontWeight: 600, color: "#111827", margin: 0 }}>Phương thức thanh toán</h2>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { 
-                    id: 'cod', 
-                    label: 'Tiền mặt (COD)', 
-                    sub: 'Thanh toán trực tiếp khi nhận hàng',
-                    icon: <Banknote className="w-6 h-6 text-gray-400" />,
-                    badge: null
-                  },
-                  { 
-                    id: 'momo', 
-                    label: 'Ví MoMo', 
-                    sub: 'Thanh toán nhanh qua ứng dụng MoMo',
-                    img: 'https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-MoMo-Transparent.png',
-                    badge: 'Phổ biến'
-                  },
-                  { 
-                    id: 'vnpay', 
-                    label: 'VNPay', 
-                    sub: 'ATM / QR Code / Thẻ quốc tế',
-                    img: 'https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-VNPAY-QR-1.png',
-                    badge: null
-                  },
-                  { 
-                    id: 'bank_transfer', 
-                    label: 'Chuyển khoản ngân hàng', 
-                    sub: `MB Bank — ${BANK_INFO.accountNumber} — ${BANK_INFO.accountName}`,
-                    icon: <Building2 className="w-6 h-6 text-blue-500" />,
-                    badge: null
-                  },
-                ].map((m) => (
-                  <div key={m.id}>
-                    <label 
-                      className={`flex items-center p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all group ${
-                        paymentMethod === m.id 
-                          ? 'border-[#007832] bg-emerald-50/30' 
-                          : 'border-gray-50 hover:border-emerald-100 bg-gray-50/30'
-                      }`}
-                    >
-                      <input 
-                        type="radio" 
-                        name="payment"
-                        checked={paymentMethod === m.id} 
-                        onChange={() => setPaymentMethod(m.id)} 
-                        className="w-5 h-5 text-[#007832] focus:ring-[#007832] cursor-pointer" 
-                      />
-
-                      <div className="ml-5 w-12 h-12 flex-shrink-0 bg-white rounded-xl border border-gray-100 p-1 flex items-center justify-center shadow-sm">
-                        {(m as any).img ? (
-                          <img 
-                            src={(m as any).img} 
-                            alt={m.label} 
-                            className="w-full h-full object-contain" 
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          (m as any).icon
-                        )}
-                      </div>
-
-                      <div className="ml-5 flex-grow">
-                        <div className="flex items-center gap-2">
-                          <p className={`font-black text-sm ${paymentMethod === m.id ? 'text-[#007832]' : 'text-gray-700'}`}>
-                            {m.label}
-                          </p>
-                          {m.badge && (
-                            <span className="text-[10px] bg-pink-100 text-pink-600 font-bold px-2 py-0.5 rounded-full">
-                              {m.badge}
-                            </span>
-                          )}
+                  { id: 'cod', label: 'Tiền mặt (COD)', sub: 'Thanh toán khi nhận hàng', icon: <Banknote style={{ width: 22, height: 22, color: "#6b7280" }} />, badge: null },
+                  { id: 'momo', label: 'Ví MoMo', sub: 'Thanh toán nhanh qua ứng dụng MoMo', img: 'https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-MoMo-Transparent.png', badge: 'Phổ biến' },
+                  { id: 'vnpay', label: 'VNPay', sub: 'ATM / QR Code / Thẻ quốc tế', img: 'https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-VNPAY-QR-1.png', badge: null },
+                  { id: 'bank_transfer', label: 'Chuyển khoản ngân hàng', sub: `MB Bank — ${BANK_INFO.accountNumber}`, icon: <Building2 style={{ width: 22, height: 22, color: "#2563eb" }} />, badge: null },
+                ].map((m) => {
+                  const active = paymentMethod === m.id;
+                  return (
+                    <div key={m.id}>
+                      <label style={{ display: "flex", alignItems: "center", padding: "12px 16px", borderRadius: 10, border: `2px solid ${active ? "#16a34a" : "#e5e7eb"}`, background: active ? "#f0fdf4" : "#fafafa", cursor: "pointer", transition: "border-color 0.15s", minHeight: 44 }}>
+                        <input type="radio" name="payment" checked={active} onChange={() => setPaymentMethod(m.id)}
+                          style={{ width: 18, height: 18, accentColor: "#16a34a", cursor: "pointer", flexShrink: 0 }} />
+                        <div style={{ width: 40, height: 40, flexShrink: 0, background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 12px", overflow: "hidden" }}>
+                          {(m as any).img ? <img src={(m as any).img} alt={m.label} style={{ width: "100%", height: "100%", objectFit: "contain" }} referrerPolicy="no-referrer" /> : (m as any).icon}
                         </div>
-                        <p className="text-xs text-gray-400 font-medium mt-0.5">{m.sub}</p>
-                      </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 14, fontWeight: 600, color: active ? "#16a34a" : "#111827" }}>{m.label}</span>
+                            {m.badge && <span style={{ fontSize: 11, fontWeight: 600, background: "#be185d", color: "#fff", padding: "2px 6px", borderRadius: 4 }}>{m.badge}</span>}
+                          </div>
+                          <span style={{ fontSize: 12, color: "#9ca3af" }}>{m.sub}</span>
+                        </div>
+                        {active && <CheckCircle2 style={{ width: 18, height: 18, color: "#16a34a", flexShrink: 0 }} />}
+                      </label>
+                      <AnimatePresence>
+                        {paymentMethod === 'bank_transfer' && m.id === 'bank_transfer' && <BankTransferPanel total={total} orderId={null} />}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
 
-                      {paymentMethod === m.id && (
-                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                          <CheckCircle2 className="w-6 h-6 text-[#007832] fill-white" />
-                        </motion.div>
-                      )}
-                    </label>
-
-                    {/* Panel QR hiển thị ngay khi chọn chuyển khoản */}
-                    <AnimatePresence>
-                      {paymentMethod === 'bank_transfer' && m.id === 'bank_transfer' && (
-                        <BankTransferPanel total={total} orderId={null} />
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ))}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, paddingTop: 14, borderTop: "1px solid #f3f4f6" }}>
+                <Lock style={{ width: 12, height: 12, color: "#9ca3af", flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: "#9ca3af" }}>Thông tin thanh toán được mã hóa SSL 256-bit</span>
               </div>
             </section>
 
             {/* 3. Ghi chú */}
-            <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-emerald-50">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 bg-emerald-50 rounded-lg text-[#007832]">
-                  <FileText className="w-6 h-6" />
+            <section style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                <div style={{ width: 32, height: 32, background: "#f0fdf4", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <FileText style={{ width: 16, height: 16, color: "#16a34a" }} />
                 </div>
-                <h2 className="text-xl font-black text-gray-900">Ghi chú cho cửa hàng</h2>
+                <h2 style={{ fontSize: 15, fontWeight: 600, color: "#111827", margin: 0 }}>Ghi chú cho cửa hàng</h2>
               </div>
-              <textarea 
-                value={note} 
-                onChange={(e) => setNote(e.target.value)}
-                className="w-full p-6 rounded-2xl bg-gray-50/50 border-none focus:ring-2 focus:ring-[#007832] outline-none text-gray-700 font-medium transition-all" 
-                placeholder="Ví dụ: Giao hàng giờ hành chính..." rows={3} 
-              />
+              <div style={{ position: "relative" }}>
+                <textarea value={note} maxLength={300} onChange={(e) => { setNote(e.target.value); setNoteLen(e.target.value.length); }}
+                  placeholder="Ví dụ: Giao hàng giờ hành chính, gọi trước 30 phút..."
+                  rows={3}
+                  style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#f9fafb", fontSize: 13, color: "#374151", outline: "none", resize: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }} />
+                <span style={{ position: "absolute", bottom: 8, right: 12, fontSize: 11, color: "#9ca3af" }}>{noteLen}/300</span>
+              </div>
             </section>
           </div>
 
-          {/* --- CỘT PHẢI: TÓM TẮT --- */}
-          <div className="lg:col-span-4">
-            <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-emerald-900/5 border border-emerald-50 sticky top-28">
-              <h2 className="text-2xl font-black text-gray-950 mb-8 tracking-tight">Chi tiết đơn hàng</h2>
-              
-              <div className="space-y-6 mb-10 max-h-[300px] overflow-y-auto pr-2">
+          {/* CỘT PHẢI */}
+          <div style={{ position: "sticky", top: 100 }}>
+            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "20px 24px" }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600, color: "#111827", margin: "0 0 16px", paddingBottom: 12, borderBottom: "1px solid #f3f4f6" }}>Chi tiết đơn hàng</h2>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, maxHeight: 280, overflowY: "auto", marginBottom: 16 }}>
                 {cart.length === 0 ? (
-                  <p className="text-center text-gray-500 text-sm font-medium py-4">Giỏ hàng trống</p>
+                  <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af", fontSize: 13 }}>Giỏ hàng trống</div>
                 ) : (
                   cart.map((item: any, idx: number) => (
-                    <div key={idx} className="flex space-x-4 group">
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 flex-shrink-0 shadow-sm">
-                        <img 
-                          src={item.anh_chinh} 
-                          className="w-full h-full object-cover transition-transform group-hover:scale-110" 
-                          alt={item.ten_san_pham} 
-                          referrerPolicy="no-referrer"
-                        />
+                    <div key={idx} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 8, overflow: "hidden", border: "1px solid #e5e7eb", flexShrink: 0 }}>
+                        <img src={item.anh_chinh} alt={item.ten_san_pham} style={{ width: "100%", height: "100%", objectFit: "cover" }} referrerPolicy="no-referrer" />
                       </div>
-                      <div className="flex-grow">
-                        <p className="text-sm font-black text-gray-900 leading-tight line-clamp-1">{item.ten_san_pham}</p>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1 line-clamp-1">{item.phan_loai}</p>
-                        <div className="flex justify-between items-end mt-1">
-                          <span className="text-xs font-bold text-gray-400">SL: {item.so_luong}</span>
-                          <span className="font-black text-[#007832]">{(item.gia_ban * item.so_luong).toLocaleString('vi-VN')}đ</span>
-                        </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: "#111827", margin: "0 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.ten_san_pham}</p>
+                        <p style={{ fontSize: 11, color: "#9ca3af", margin: "0 0 4px", textTransform: "uppercase" }}>{item.phan_loai} · SL: {item.so_luong}</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#16a34a", margin: 0 }}>{(item.gia_ban * item.so_luong).toLocaleString('vi-VN')}đ</p>
                       </div>
                     </div>
                   ))
                 )}
               </div>
 
-              <div className="space-y-4 pt-8 border-t border-gray-100">
-                <div className="flex justify-between text-gray-400 text-sm font-bold">
-                  <span>Tiền hàng tạm tính</span>
-                  <span className="text-gray-900">{subTotal.toLocaleString('vi-VN')}đ</span>
+              {/* Coupon */}
+              <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #f3f4f6" }}>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>Mã giảm giá</label>
+                {couponApplied ? (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "8px 12px" }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a" }}>{couponCode}</span>
+                    <button onClick={() => { setCouponApplied(false); setCouponCode(''); }} style={{ fontSize: 12, color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Hủy</button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex" }}>
+                    <input type="text" value={couponCode} onChange={e => setCouponCode(e.target.value)} placeholder="Nhập mã voucher"
+                      style={{ flex: 1, height: 38, border: "1px solid #d1d5db", borderRight: "none", borderRadius: "8px 0 0 8px", fontSize: 13, padding: "0 12px", outline: "none", boxSizing: "border-box" }} />
+                    <button onClick={() => couponCode.trim() && setCouponApplied(true)}
+                      style={{ height: 38, padding: "0 14px", background: "#16a34a", color: "#fff", fontSize: 13, fontWeight: 500, border: "none", borderRadius: "0 8px 8px 0", cursor: "pointer" }}>
+                      Áp dụng
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Price summary */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                  <span style={{ color: "#6b7280" }}>Tiền hàng</span>
+                  <span style={{ color: "#111827", fontWeight: 500 }}>{subTotal.toLocaleString('vi-VN')}đ</span>
                 </div>
-                <div className="flex justify-between text-gray-400 text-sm font-bold">
-                  <span>Phí vận chuyển</span>
-                  {shippingFee === 0 ? (
-                    <span className="text-emerald-600 italic">Miễn phí</span>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                  <span style={{ color: "#6b7280" }}>Phí vận chuyển</span>
+                  {loadingFee ? (
+                    <span style={{ color: "#9ca3af", fontSize: 12 }}>Đang tính...</span>
+                  ) : !deliveryAddress ? (
+                    <span style={{ color: "#9ca3af", fontSize: 12 }}>Nhập địa chỉ để tính</span>
+                  ) : feeError ? (
+                    <span style={{ color: "#dc2626", fontSize: 12 }}>Lỗi</span>
                   ) : (
-                    <span className="text-gray-900">{shippingFee.toLocaleString('vi-VN')}đ</span>
+                    <span style={{ color: "#111827", fontWeight: 500 }}>{shippingFee.toLocaleString('vi-VN')}đ</span>
                   )}
                 </div>
-                
-                <div className="flex justify-between items-center pt-6 mt-4 border-t border-emerald-50">
-                  <span className="text-lg font-black text-gray-950">TỔNG CỘNG</span>
-                  <span className="text-3xl font-black text-[#007832] tracking-tighter">
-                    {total.toLocaleString('vi-VN')}đ
-                  </span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, marginTop: 4, borderTop: "1px solid #e5e7eb" }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "#111827" }}>Tổng cộng</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: "#16a34a" }}>{total.toLocaleString('vi-VN')}đ</span>
                 </div>
               </div>
 
-              <motion.button 
-                onClick={handlePlaceOrder}
-                disabled={isSubmitting || cart.length === 0}
-                whileHover={{ scale: cart.length > 0 ? 1.02 : 1 }}
-                whileTap={{ scale: cart.length > 0 ? 0.98 : 1 }}
-                className={`w-full mt-10 py-5 rounded-[1.5rem] font-black text-white shadow-xl flex items-center justify-center space-x-3 transition-all ${
-                  isSubmitting || cart.length === 0
-                    ? 'bg-gray-300 cursor-not-allowed' 
-                    : 'bg-[#007832] hover:bg-[#006028] shadow-emerald-900/20'
-                }`}
-              >
-                <span className="tracking-widest uppercase">
-                  {isSubmitting 
-                    ? 'Đang xử lý...' 
-                    : paymentMethod === 'bank_transfer' 
-                      ? 'Tạo đơn & Xem QR' 
-                      : 'Xác nhận đặt hàng'
-                  }
-                </span>
-                {!isSubmitting && <ArrowRight className="w-6 h-6" />}
-              </motion.button>
+              {/* CTA */}
+              <button onClick={handlePlaceOrder} disabled={isDisabled}
+                style={{ width: "100%", height: 48, marginTop: 16, background: isDisabled ? "#d1d5db" : "#16a34a", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: isDisabled ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background 0.15s", boxSizing: "border-box" }}>
+                {isSubmitting ? (
+                  <><Loader2 style={{ width: 18, height: 18, animation: "spin 1s linear infinite" }} /> Đang xử lý...</>
+                ) : (
+                  <>{paymentMethod === 'bank_transfer' ? 'Tạo đơn & Xem QR' : 'Xác nhận đặt hàng'} <ArrowRight style={{ width: 18, height: 18 }} /></>
+                )}
+              </button>
 
-              {paymentMethod === 'bank_transfer' && (
-                <p className="text-xs text-gray-400 text-center mt-3 font-medium">
-                  Đơn hàng sẽ được xác nhận sau khi chúng tôi nhận được chuyển khoản.
+              {!deliveryAddress && (
+                <p style={{ fontSize: 12, color: "#f59e0b", textAlign: "center", marginTop: 8 }}>
+                  ⚠️ Vui lòng nhập đầy đủ địa chỉ giao hàng
                 </p>
               )}
+
+              <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 16, paddingTop: 14, borderTop: "1px solid #f3f4f6" }}>
+                {[
+                  { icon: <Lock style={{ width: 12, height: 12 }} />, label: "Bảo mật SSL" },
+                  { icon: <RefreshCw style={{ width: 12, height: 12 }} />, label: "Đổi trả 7 ngày" },
+                  { icon: <Truck style={{ width: 12, height: 12 }} />, label: "Giao hàng GHN" },
+                ].map(({ icon, label }) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#9ca3af" }}>{icon} {label}</div>
+                ))}
+              </div>
             </div>
           </div>
+
         </div>
       </main>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 768px) {
+          .checkout-grid { grid-template-columns: 1fr !important; }
+          .addr-2col { grid-template-columns: 1fr !important; }
+          .addr-3col { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }

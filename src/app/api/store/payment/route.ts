@@ -33,11 +33,11 @@
         return NextResponse.json({ success: false, message: "Số tiền tối thiểu là 5,000đ" }, { status: 400 });
       }
 
-      // 1. KEY VÀ CẤU HÌNH (Dùng đúng Key bạn đang test)
-      const tmnCode = "N2FLX63Y";
-      const secretKey = "GM2XYUP38PA43ASTS8YU4MD2AT22JL8N";
-      const vnpUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-      const returnUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/store/payment/vnpay-return`;
+      // 1. KEY VÀ CẤU HÌNH
+      const tmnCode = process.env.VNPAY_TMN_CODE || "N2FLX63Y";
+      const secretKey = process.env.VNPAY_SECRET_KEY || "GM2XYUP38PA43ASTS8YU4MD2AT22JL8N";
+      const vnpUrl = process.env.VNPAY_URL || "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+      const returnUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001"}/api/store/payment/vnpay-return`;
 
       const createDate = format(new Date(), "yyyyMMddHHmmss");
       const txnRef = `${order.id}_${Date.now()}`;
@@ -107,7 +107,7 @@
         const secretKey = process.env.MOMO_SECRET_KEY || "at67qH6mk8w5Y1nAwMovdPTlcjTA21kH";
         
         const momoApiUrl = "https://test-payment.momo.vn/v2/gateway/api/create";
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001";
         const redirectUrl = `${baseUrl}/payment/check`;
         const ipnUrl = `${baseUrl}/api/store/payment/momo-ipn`;
 

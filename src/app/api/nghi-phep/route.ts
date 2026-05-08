@@ -21,7 +21,7 @@ export async function GET(req: Request) {
             ho_so_nguoi_dung: { select: { ho_ten: true, chuc_vu: true } }
           }
         },
-        nguoi_dung_duyet: {
+        nguoi_duyet: {
           select: {
             ho_so_nguoi_dung: { select: { ho_ten: true } }
           }

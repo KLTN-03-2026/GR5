@@ -94,10 +94,10 @@ export default function WarehouseClient({
           <GoodsIssueScan />
         </div>
         <div className={activeTab === "warnings" ? "block" : "hidden"}>
-          <ExpirationWarnings warningsData={warningsData} />
+          <ExpirationWarnings />
         </div>
         <div className={activeTab === "history" ? "block" : "hidden"}>
-          <IssueHistory historyData={historyData} importHistoryData={importHistoryData} />
+          <IssueHistory />
         </div>
       </div>
     </div>

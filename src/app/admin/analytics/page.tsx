@@ -223,7 +223,7 @@ export default function AnalyticsPage() {
               </div>
             </div>
           </div>
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full min-w-0 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={orderData}
@@ -287,7 +287,7 @@ export default function AnalyticsPage() {
             <p className="text-sm text-gray-500">Phân bổ khách hàng</p>
           </div>
 
-          <div className="flex-1 min-h-[250px]">
+          <div className="flex-1 min-h-[250px] min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

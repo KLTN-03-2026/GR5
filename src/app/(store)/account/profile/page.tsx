@@ -20,10 +20,22 @@ export default async function ProfilePage() {
           ho_ten: true,
           so_dien_thoai: true,
           anh_dai_dien: true,
+          gioi_tinh: true,
+          ngay_sinh: true,
         },
       },
     },
   });
 
-  return <ProfileForm user={user} />;
+  const flatUser = {
+    id: user?.id,
+    email: user?.email,
+    ho_ten: user?.ho_so_nguoi_dung?.ho_ten ?? null,
+    so_dien_thoai: user?.ho_so_nguoi_dung?.so_dien_thoai ?? null,
+    anh_dai_dien: user?.ho_so_nguoi_dung?.anh_dai_dien ?? null,
+    gioi_tinh: user?.ho_so_nguoi_dung?.gioi_tinh ?? null,
+    ngay_sinh: user?.ho_so_nguoi_dung?.ngay_sinh ?? null,
+  };
+
+  return <ProfileForm user={flatUser} />;
 }

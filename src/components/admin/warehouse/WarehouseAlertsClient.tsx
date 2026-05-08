@@ -61,7 +61,7 @@ function suggestEndDate(daysLeft: number | null) {
   return target.toISOString().slice(0, 10);
 }
 
-export default function WarehouseAlertsClient() {
+export default function WarehouseAlertsClient({ readOnly = false }: { readOnly?: boolean }) {
   const router = useRouter();
   const [filter, setFilter] = useState("action-needed");
   const [data, setData] = useState<AlertsResponse | null>(null);
@@ -231,6 +231,7 @@ export default function WarehouseAlertsClient() {
                     })
                   }
                   actionLoading={actionLoading}
+                  readOnly={readOnly}
                 />
                 <AlertGroup
                   title="Chờ Admin duyệt"
@@ -245,6 +246,7 @@ export default function WarehouseAlertsClient() {
                     })
                   }
                   actionLoading={actionLoading}
+                  readOnly={readOnly}
                 />
                 {filter === "all" &&
                   actionNeeded.length === 0 &&
@@ -268,6 +270,7 @@ export default function WarehouseAlertsClient() {
                         })
                       }
                       actionLoading={actionLoading}
+                      readOnly={readOnly}
                     />
                   ))}
               </>
@@ -359,32 +362,38 @@ export default function WarehouseAlertsClient() {
                   </div>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    disabled={actionLoading}
-                    onClick={() => approveDestroy(selectedAlert)}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <AlertTriangle className="h-4 w-4" />
-                    Duyệt tiêu hủy
-                  </button>
-                  <button
-                    type="button"
-                    disabled={actionLoading}
-                    onClick={() =>
-                      setClearanceModal({
-                        alert: selectedAlert,
-                        discount: suggestDiscount(selectedAlert.days_left),
-                        endDate: suggestEndDate(selectedAlert.days_left),
-                      })
-                    }
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    Duyệt xả kho
-                  </button>
-                </div>
+                {readOnly ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
+                    Chỉ Admin mới có thể duyệt tiêu hủy hoặc xả kho.
+                  </div>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={() => approveDestroy(selectedAlert)}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                      Duyệt tiêu hủy
+                    </button>
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={() =>
+                        setClearanceModal({
+                          alert: selectedAlert,
+                          discount: suggestDiscount(selectedAlert.days_left),
+                          endDate: suggestEndDate(selectedAlert.days_left),
+                        })
+                      }
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Duyệt xả kho
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
@@ -474,6 +483,7 @@ function AlertGroup({
   onDestroy,
   onClearance,
   actionLoading,
+  readOnly = false,
 }: {
   title: string;
   items: AlertItem[];
@@ -481,6 +491,7 @@ function AlertGroup({
   onDestroy: (item: AlertItem) => void;
   onClearance: (item: AlertItem) => void;
   actionLoading: boolean;
+  readOnly?: boolean;
 }) {
   if (items.length === 0) return null;
 
@@ -540,30 +551,32 @@ function AlertGroup({
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={actionLoading}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onDestroy(item);
-                }}
-                className="rounded-full bg-rose-600 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Tiêu hủy
-              </button>
-              <button
-                type="button"
-                disabled={actionLoading}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onClearance(item);
-                }}
-                className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Xả kho
-              </button>
-            </div>
+            {!readOnly && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDestroy(item);
+                  }}
+                  className="rounded-full bg-rose-600 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Tiêu hủy
+                </button>
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onClearance(item);
+                  }}
+                  className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Xả kho
+                </button>
+              </div>
+            )}
           </button>
         ))}
       </div>

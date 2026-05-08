@@ -15,6 +15,7 @@ export async function GET(req: Request) {
         orderBy: { id: 'desc' },
         skip,
         take: limit,
+        include: { _count: { select: { don_hang: true } } },
       })
     ]);
 

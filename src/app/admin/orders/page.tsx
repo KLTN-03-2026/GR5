@@ -1,683 +1,701 @@
 'use client'
 
-import { 
-  LayoutDashboard, 
-  ChevronRight, 
-  Calendar, 
-  Eye, 
-  ChevronLeft,
-  TrendingUp,
-  Truck,
-  RotateCcw,
-  CheckCircle2,
-  X,
-  Save,
-  RefreshCcw,
-  Package,
-  User,
-  CreditCard,
-  AlertCircle
+import {
+  Calendar, Eye, Truck, RotateCcw,
+  CheckCircle2, X, Save, Package, User, CreditCard,
+  Search, Clock, Ban, ShoppingBag, DollarSign,
+  MapPin, Phone, ExternalLink, AlertCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useMemo, useEffect } from 'react';
-
+import { useState, useEffect, useRef } from 'react';
 import Pagination from "@/components/ui/Pagination";
 
-// --- MAPPING STATUS ---
-const STATUS_MAP: Record<string, string> = {
-  'Tất cả': 'Tất cả',
-  'CHO_XAC_NHAN': 'Chờ xác nhận',
-  'DANG_GIAO_HANG': 'Đang giao',
-  'DA_GIAO': 'Đã giao',
-  'DA_HUY': 'Đã hủy',
-  'YEU_CAU_DOI_TRA': 'Yêu cầu đổi/trả'
+// ── Constants ──────────────────────────────────────────────────────────────
+const STATUS_CONFIG: Record<string, { label: string; icon: any; bg: string; text: string; dot: string }> = {
+  CHO_XAC_NHAN:    { label: 'Chờ xác nhận',  icon: Clock,       bg: 'bg-amber-50',   text: 'text-amber-700',  dot: 'bg-amber-400' },
+  DANG_GIAO_HANG:  { label: 'Đang giao',      icon: Truck,       bg: 'bg-blue-50',    text: 'text-blue-700',   dot: 'bg-blue-400' },
+  DA_GIAO:         { label: 'Đã giao',        icon: CheckCircle2,bg: 'bg-emerald-50', text: 'text-emerald-700',dot: 'bg-emerald-400' },
+  DA_HUY:          { label: 'Đã hủy',         icon: Ban,         bg: 'bg-rose-50',    text: 'text-rose-700',   dot: 'bg-rose-400' },
+  YEU_CAU_DOI_TRA: { label: 'Đổi/Trả',       icon: RotateCcw,   bg: 'bg-purple-50',  text: 'text-purple-700', dot: 'bg-purple-400' },
 };
 
-const statusStyles: Record<string, string> = {
-  'CHO_XAC_NHAN': 'bg-orange-100 text-orange-700',
-  'DANG_GIAO_HANG': 'bg-blue-100 text-blue-700',
-  'DA_GIAO': 'bg-emerald-100 text-[#00873A]',
-  'DA_HUY': 'bg-rose-100 text-rose-700',
-  'YEU_CAU_DOI_TRA': 'bg-purple-100 text-purple-700',
+const PAYMENT_LABEL: Record<string, string> = {
+  COD: 'COD', cod: 'COD',
+  VNPAY: 'VNPay', vnpay: 'VNPay',
+  MOMO: 'MoMo', momo: 'MoMo',
+  BANK: 'Chuyển khoản',
 };
 
-const formatCurrency = (amount: any) => {
-  const num = parseFloat(amount?.toString() || "0");
-  return num.toLocaleString('vi-VN') + 'đ';
+const fmt = (n: any) => Number(n || 0).toLocaleString('vi-VN') + 'đ';
+const fmtDate = (s: string) => {
+  if (!s) return '—';
+  const d = new Date(s);
+  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} ${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
 };
 
-const formatDate = (dateString: string, type: 'display' | 'input' = 'display') => {
-  if (!dateString) return '...';
-  const d = new Date(dateString);
-  if (type === 'input') {
-    return d.toISOString().split('T')[0];
-  }
-  return d.toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-};
+// ── StatusBadge ───────────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const cfg = STATUS_CONFIG[status] || { label: status, icon: AlertCircle, bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400' };
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
+      <Icon size={11} />
+      {cfg.label}
+    </span>
+  );
+}
 
-export default function OrdersManagementContent() {
-  // --- STATES DỮ LIỆU ---
-  const [orders, setOrders] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+// ── Stat Card ─────────────────────────────────────────────────────────────
+function StatCard({ icon: Icon, label, value, accent, sub }: { icon: any; label: string; value: string | number; accent: string; sub?: string }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4 shadow-sm">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${accent}`}>
+        <Icon size={22} className="text-white" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide truncate">{label}</p>
+        <p className="text-2xl font-bold text-gray-900 leading-tight">{value}</p>
+        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────
+export default function OrdersPage() {
+  const [orders, setOrders]           = useState<any[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [search, setSearch]           = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [activeFilter, setActiveFilter] = useState('Tất cả');
-  
-  // --- STATES PHÂN TRANG ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 15; 
+  const [activeFilter, setActiveFilter] = useState('ALL');
+  const [currentPage, setCurrentPage]   = useState(1);
+  const [totalPages, setTotalPages]     = useState(1);
+  const [totalOrders, setTotalOrders]   = useState(0);
+  const [stats, setStats]               = useState({ total: 0, revenue: 0, pending: 0, delivering: 0 });
 
-  // --- STATES MODAL CHUNG ---
-  const [viewingOrder, setViewingOrder] = useState<any | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<any>(null);
+  const [newStatus, setNewStatus]       = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [newStatus, setNewStatus] = useState("");
-
-  // --- STATES CHO VẬN CHUYỂN & SỬA NGÀY ---
-  const [shippingConfig, setShippingConfig] = useState({ inner: 15000, outer: 30000 });
-  const [isPushing, setIsPushing] = useState(false);
-  const [isEditingDate, setIsEditingDate] = useState(false);
-  const [editingDateValue, setEditingDateValue] = useState("");
-
-  // =====================================================================
-  // 🚀 STATES & HÀM XỬ LÝ YÊU CẦU ĐỔI TRẢ (ĐÃ ĐẶT ĐÚNG VỊ TRÍ TRONG HOOK)
-  // =====================================================================
+  const [isPushing, setIsPushing]           = useState(false);
   const [isHandlingReturn, setIsHandlingReturn] = useState(false);
+  const [isCreatingGHN, setIsCreatingGHN]   = useState(false);
+  const [isEditingDate, setIsEditingDate]   = useState(false);
+  const [editingDateValue, setEditingDateValue] = useState('');
 
-  const handleReturnAction = async (orderId: number, returnStatus: 'DA_DUYET' | 'TU_CHOI') => {
-    const actionText = returnStatus === 'DA_DUYET' ? 'CHẤP NHẬN' : 'TỪ CHỐI';
-    if (!confirm(`Bạn có chắc chắn muốn ${actionText} yêu cầu đổi/trả của đơn hàng #${orderId}?`)) return;
+  const searchTimer = useRef<any>(null);
 
-    setIsHandlingReturn(true);
+  const FILTERS = [
+    { key: 'ALL',            label: 'Tất cả' },
+    { key: 'CHO_XAC_NHAN',  label: 'Chờ xác nhận' },
+    { key: 'DANG_GIAO_HANG',label: 'Đang giao' },
+    { key: 'DA_GIAO',       label: 'Đã giao' },
+    { key: 'DA_HUY',        label: 'Đã hủy' },
+    { key: 'YEU_CAU_DOI_TRA',label: 'Đổi/Trả' },
+  ];
+
+  const fetchOrders = async (page = currentPage) => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/admin/orders', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'HANDLE_RETURN',
-          orderId: orderId,
-          returnStatus: returnStatus
-        })
+      const p = new URLSearchParams({
+        page: page.toString(), limit: '15',
+        status: activeFilter !== 'ALL' ? activeFilter : '',
+        date: selectedDate, search,
       });
-
-      const data = await res.json();
-      if (data.success) {
-        alert(`Đã ${actionText} yêu cầu thành công!`);
-        fetchOrders(); 
-        setViewingOrder(null); 
-      } else {
-        alert("Lỗi: " + data.message);
-      }
-    } catch (error) {
-      alert("Lỗi kết nối khi xử lý yêu cầu!");
-    } finally {
-      setIsHandlingReturn(false);
-    }
-  };
-  // =====================================================================
-
-  // --- FETCH API ---
-  const fetchOrders = async () => {
-    try {
-      setIsLoading(true);
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: itemsPerPage.toString(),
-        status: activeFilter !== 'Tất cả' ? activeFilter : '',
-        date: selectedDate
-      });
-      const res = await fetch(`/api/admin/orders?${params.toString()}`); 
-      if (res.ok) {
-        const data = await res.json();
-        setOrders(data.data || data); // handle both new and old API responses
-        setTotalPages(data.meta?.totalPages || 1);
-      }
-    } catch (error) {
-      console.error("Lỗi tải đơn hàng:", error);
-    } finally {
-      setIsLoading(false);
-    }
+      const res = await fetch(`/api/admin/orders?${p}`);
+      if (!res.ok) return;
+      const json = await res.json();
+      const data = json.data || json;
+      setOrders(data);
+      setTotalPages(json.meta?.totalPages || 1);
+      setTotalOrders(json.meta?.total || data.length);
+      // compute stats from current page + meta
+      const pending    = data.filter((o: any) => o.trang_thai === 'CHO_XAC_NHAN').length;
+      const delivering = data.filter((o: any) => o.trang_thai === 'DANG_GIAO_HANG').length;
+      const revenue    = data.reduce((s: number, o: any) => s + Number(o.tong_tien || 0), 0);
+      setStats({ total: json.meta?.total || data.length, revenue, pending, delivering });
+    } catch {}
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, [currentPage, activeFilter, selectedDate]);
+  useEffect(() => { fetchOrders(currentPage); }, [currentPage, activeFilter, selectedDate, search]);
+  useEffect(() => { setCurrentPage(1); }, [activeFilter, selectedDate, search]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeFilter, selectedDate]);
+  const handleSearchChange = (v: string) => {
+    setSearchInput(v);
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => setSearch(v), 400);
+  };
 
-  // --- HÀM CẬP NHẬT TRẠNG THÁI BÌNH THƯỜNG ---
+  const openModal = (order: any) => { setViewingOrder(order); setNewStatus(order.trang_thai); setIsEditingDate(false); };
+
   const handleUpdateStatus = async () => {
     if (!viewingOrder || !newStatus || newStatus === viewingOrder.trang_thai) return;
-    
     setUpdatingStatus(true);
     try {
-      const res = await fetch('/api/admin/orders', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: viewingOrder.id,
-          status: newStatus
-        })
-      });
-
-      const data = await res.json();
-      if (data.success || res.ok) {
-        setOrders(orders.map(o => o.id === viewingOrder.id ? { ...o, trang_thai: newStatus } : o));
-        setViewingOrder({ ...viewingOrder, trang_thai: newStatus });
-      } else {
-        alert("Lỗi: " + (data.message || "Không thể cập nhật"));
-      }
-    } catch (error) {
-      alert("Lỗi hệ thống khi cập nhật!");
-    } finally {
-      setUpdatingStatus(false);
-    }
+      const res = await fetch('/api/admin/orders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: viewingOrder.id, status: newStatus }) });
+      const d = await res.json();
+      if (d.success || res.ok) {
+        setOrders(o => o.map(x => x.id === viewingOrder.id ? { ...x, trang_thai: newStatus } : x));
+        setViewingOrder((v: any) => ({ ...v, trang_thai: newStatus }));
+      } else alert('Lỗi: ' + (d.message || 'Không thể cập nhật'));
+    } catch { alert('Lỗi hệ thống!'); }
+    finally { setUpdatingStatus(false); }
   };
 
-  // --- HÀM GỬI BƯU TÁ ---
   const handleSendToCourier = async (orderId: number) => {
-    if (!confirm("Xác nhận gửi đơn này cho bên vận chuyển (GHTK)?")) return;
-    
+    if (!confirm('Xác nhận gửi đơn này cho GHTK?')) return;
     setIsPushing(true);
     try {
-      const partnerId = 1; 
-      const res = await fetch('/api/admin/shipping', {
+      const res = await fetch('/api/admin/shipping', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId, partnerId: 1 }) });
+      const d = await res.json();
+      if (d.success) { alert('Mã vận đơn: ' + d.data.ma_van_don); fetchOrders(); setViewingOrder(null); }
+      else alert('Lỗi: ' + d.message);
+    } catch { alert('Lỗi kết nối!'); }
+    finally { setIsPushing(false); }
+  };
+
+  const handleCreateGHNOrder = async (orderId: number) => {
+    if (!confirm(`Tạo vận đơn GHN cho đơn #${orderId}?`)) return;
+    setIsCreatingGHN(true);
+    try {
+      const res = await fetch('/api/ghn/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, partnerId })
+        body: JSON.stringify({ orderId }),
       });
-      
-      const result = await res.json();
-      if (result.success) {
-        alert("Đã gửi đơn cho bưu tá! Mã vận đơn: " + result.data.ma_van_don);
-        fetchOrders(); 
-        setViewingOrder(null); 
+      const d = await res.json();
+      if (d.success || d.order_code) {
+        alert(`✅ Tạo vận đơn thành công!\nMã vận đơn: ${d.order_code}`);
+        // Cập nhật trạng thái đơn → DANG_GIAO_HANG
+        await fetch('/api/admin/orders', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, status: 'DANG_GIAO_HANG' }),
+        });
+        fetchOrders();
+        setViewingOrder(null);
       } else {
-        alert("Lỗi: " + result.message);
+        alert('Lỗi: ' + (d.error || d.message || 'Không tạo được vận đơn'));
       }
-    } catch (error) {
-      alert("Lỗi kết nối API vận chuyển");
-    } finally {
-      setIsPushing(false);
-    }
+    } catch { alert('Lỗi kết nối!'); }
+    finally { setIsCreatingGHN(false); }
   };
 
-  // --- HÀM SỬA NGÀY DỰ KIẾN ---
-  const handleUpdateDate = async () => {
-    if (!editingDateValue) {
-      alert("Vui lòng chọn ngày dự kiến mới trước khi lưu!");
-      return;
-    }
-
+  const handleReturnAction = async (orderId: number, returnStatus: 'DA_DUYET' | 'TU_CHOI') => {
+    const label = returnStatus === 'DA_DUYET' ? 'CHẤP NHẬN' : 'TỪ CHỐI';
+    if (!confirm(`Bạn có chắc muốn ${label} yêu cầu đổi/trả đơn #${orderId}?`)) return;
+    setIsHandlingReturn(true);
     try {
-      const res = await fetch('/api/admin/shipping', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          shipmentId: viewingOrder.don_van_chuyen[0].id,
-          newDate: editingDateValue
-        })
-      });
-      const result = await res.json();
-      if (result.success) {
-        alert("Đã dời ngày giao dự kiến thành công!");
-        fetchOrders(); 
-        setIsEditingDate(false); 
-        setViewingOrder(null); 
-      } else {
-        alert("Lỗi từ server: " + result.message);
-      }
-    } catch (error) {
-      alert("Lỗi kết nối khi cập nhật ngày!");
-    }
+      const res = await fetch('/api/admin/orders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'HANDLE_RETURN', orderId, returnStatus }) });
+      const d = await res.json();
+      if (d.success) { fetchOrders(); setViewingOrder(null); }
+      else alert('Lỗi: ' + d.message);
+    } catch { alert('Lỗi kết nối!'); }
+    finally { setIsHandlingReturn(false); }
   };
 
-  const openDetailModal = (order: any) => {
-    setViewingOrder(order);
-    setNewStatus(order.trang_thai);
-    setIsEditingDate(false);
+  const handleUpdateDate = async () => {
+    if (!editingDateValue) return;
+    try {
+      const res = await fetch('/api/admin/shipping', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shipmentId: viewingOrder.don_van_chuyen[0].id, newDate: editingDateValue }) });
+      const d = await res.json();
+      if (d.success) { fetchOrders(); setIsEditingDate(false); setViewingOrder(null); }
+      else alert('Lỗi: ' + d.message);
+    } catch { alert('Lỗi kết nối!'); }
   };
 
   return (
-    <div className="w-full flex flex-col gap-8 bg-[#F4FCF0] p-4 md:p-6 min-h-screen">
-      
-      {/* --- PAGE HEADER --- */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-6">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight">Quản lý đơn hàng</h1>
-          <p className="text-gray-500 mt-1 font-medium">Theo dõi và quản lý các giao dịch từ khách hàng.</p>
+          <h1 className="text-2xl font-bold text-[#2C2C2A]">Quản lý đơn hàng</h1>
+          <p className="text-sm text-[#888780] mt-0.5">Theo dõi và xử lý tất cả đơn hàng từ khách hàng</p>
         </div>
-        
-        <div className="flex gap-2 h-12">
-          <div className="relative h-full flex items-center bg-white shadow-sm rounded-xl border border-gray-200 transition-all focus-within:ring-2 focus-within:ring-[#00873A] overflow-hidden">
-            <Calendar className="absolute left-4 text-gray-400 pointer-events-none" size={18} />
-            <input 
-              type="date" 
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="pl-12 pr-4 py-3 h-full bg-transparent font-bold text-sm text-gray-900 outline-none cursor-pointer w-[160px] relative z-10"
+        <button onClick={() => fetchOrders()} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+          <Search size={14} /> Làm mới
+        </button>
+      </div>
+
+      {/* ── Stat Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={ShoppingBag}  label="Tổng đơn hàng"   value={stats.total.toLocaleString()}                  accent="bg-[#1D9E75]" sub="tất cả trạng thái" />
+        <StatCard icon={DollarSign}   label="Doanh thu trang" value={fmt(stats.revenue)}                            accent="bg-blue-500"   sub="trang hiện tại" />
+        <StatCard icon={Clock}        label="Chờ xác nhận"    value={stats.pending}                                 accent="bg-amber-500"  sub="cần xử lý" />
+        <StatCard icon={Truck}        label="Đang giao"       value={stats.delivering}                              accent="bg-purple-500" sub="trên đường" />
+      </div>
+
+      {/* ── Filter + Search Bar ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+        {/* Search row */}
+        <div className="px-4 pt-4 pb-3 flex flex-col sm:flex-row gap-3 border-b border-gray-50">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={searchInput}
+              onChange={e => handleSearchChange(e.target.value)}
+              placeholder="Tìm theo mã đơn, tên khách, email..."
+              className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/10 transition-all"
+            />
+          </div>
+          <div className="relative flex items-center">
+            <Calendar size={15} className="absolute left-3 text-gray-400 pointer-events-none" />
+            <input
+              type="date" value={selectedDate}
+              onChange={e => setSelectedDate(e.target.value)}
+              className="pl-9 pr-8 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/10 transition-all cursor-pointer"
             />
             {selectedDate && (
-              <button 
-                onClick={() => setSelectedDate('')} 
-                className="absolute right-2 z-20 p-1 bg-gray-100 rounded text-rose-500 hover:bg-rose-100 transition-colors"
-              >
-                <X size={14} />
+              <button onClick={() => setSelectedDate('')} className="absolute right-2 p-0.5 text-gray-400 hover:text-rose-500 transition-colors">
+                <X size={13} />
               </button>
             )}
           </div>
         </div>
-      </div>
 
-      {/* --- FILTERS --- */}
-      <div className="flex flex-wrap items-center gap-2 md:gap-3">
-        {Object.keys(STATUS_MAP).map(statusKey => (
-          <FilterButton 
-            key={statusKey}
-            label={STATUS_MAP[statusKey]} 
-            active={activeFilter === statusKey} 
-            onClick={() => setActiveFilter(statusKey)}
-          />
-        ))}
-      </div>
+        {/* Filter tabs */}
+        <div className="flex overflow-x-auto px-4 custom-scrollbar">
+          {FILTERS.map(f => {
+            const cfg = STATUS_CONFIG[f.key];
+            const isActive = activeFilter === f.key;
+            return (
+              <button key={f.key} onClick={() => setActiveFilter(f.key)}
+                className={`shrink-0 flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  isActive ? 'border-[#1D9E75] text-[#1D9E75]' : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}>
+                {cfg && <span className={`w-1.5 h-1.5 rounded-full ${isActive ? cfg.dot : 'bg-gray-300'}`} />}
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
 
-      {/* --- TABLE DỮ LIỆU --- */}
-      <div className="bg-white rounded-[2rem] shadow-sm overflow-hidden border border-gray-100">
+        {/* ── Table ── */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+          <table className="w-full min-w-[900px]">
             <thead>
-              <tr className="bg-gray-50/50">
-                <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-gray-400">Mã ĐH</th>
-                <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-gray-400">Khách hàng</th>
-                <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-gray-400">Ngày đặt</th>
-                <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-gray-400 text-right">Tổng tiền</th>
-                <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-gray-400 text-center">Trạng thái</th>
-                <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-gray-400 text-right">Thao tác</th>
+              <tr className="border-t border-gray-50 bg-gray-50/60">
+                <th className="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Mã ĐH</th>
+                <th className="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Khách hàng</th>
+                <th className="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Địa chỉ giao</th>
+                <th className="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Ngày đặt</th>
+                <th className="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Thanh toán</th>
+                <th className="px-5 py-3 text-right text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Tổng tiền</th>
+                <th className="px-5 py-3 text-center text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Trạng thái</th>
+                <th className="px-5 py-3 text-center text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-20">
-                    <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#00873A] border-t-transparent mx-auto"></div>
-                  </td>
-                </tr>
+            <tbody className="divide-y divide-gray-50">
+              {loading ? (
+                <tr><td colSpan={8} className="py-16 text-center">
+                  <div className="w-7 h-7 border-2 border-[#1D9E75] border-t-transparent rounded-full animate-spin mx-auto" />
+                </td></tr>
               ) : orders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-16 text-gray-400 font-medium">
-                    Không tìm thấy đơn hàng nào.
-                  </td>
-                </tr>
-              ) : (
-                orders.map((order) => (
-                  <tr key={order.id} className="group hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-5 font-bold text-gray-900">#{order.id}</td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
-                          <img 
-                            className="w-full h-full object-cover" 
-                            src={order.nguoi_dung?.ho_so_nguoi_dung?.avatar || "https://placehold.co/100"} 
-                            alt="Avatar"
-                          />
+                <tr><td colSpan={8} className="py-16 text-center text-sm text-gray-400">
+                  <ShoppingBag size={32} className="mx-auto mb-3 text-gray-200" />
+                  Không có đơn hàng nào
+                </td></tr>
+              ) : orders.map(order => {
+                const addr = order.nguoi_dung?.ho_so_nguoi_dung?.dia_chi || order.dia_chi_giao_hang || '—';
+                const shortAddr = addr.length > 30 ? addr.slice(0, 30) + '…' : addr;
+                const hasReturn = order.yeu_cau_doi_tra?.length > 0;
+                return (
+                  <tr key={order.id} className="hover:bg-gray-50/60 transition-colors group">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#1D9E75] text-sm">#{order.id}</span>
+                        {hasReturn && (
+                          <span className="w-4 h-4 bg-purple-100 rounded-full flex items-center justify-center" title="Có yêu cầu đổi/trả">
+                            <RotateCcw size={9} className="text-purple-600" />
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-gray-400 mt-0.5">{order.chi_tiet_don_hang?.length || 0} sản phẩm</div>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
+                          <img className="w-full h-full object-cover"
+                            src={order.nguoi_dung?.ho_so_nguoi_dung?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(order.nguoi_dung?.ho_so_nguoi_dung?.ho_ten || 'U')}&background=1D9E75&color=fff&size=64`}
+                            alt="" onError={(e: any) => { e.target.src = `https://ui-avatars.com/api/?name=U&background=1D9E75&color=fff&size=64`; }} />
                         </div>
-                        <span className="font-semibold text-sm whitespace-nowrap">
-                          {order.nguoi_dung?.ho_so_nguoi_dung?.ho_ten || order.nguoi_dung?.email || `User #${order.ma_nguoi_dung}`}
-                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate max-w-[140px]">
+                            {order.nguoi_dung?.ho_so_nguoi_dung?.ho_ten || order.nguoi_dung?.email || `#${order.ma_nguoi_dung}`}
+                          </p>
+                          <p className="text-[11px] text-gray-400 truncate max-w-[140px]">{order.nguoi_dung?.email || ''}</p>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-sm text-gray-500 font-medium">{formatDate(order.ngay_tao)}</td>
-                    <td className="px-6 py-5 font-black text-sm text-right text-[#00873A]">{formatCurrency(order.tong_tien)}</td>
-                    <td className="px-6 py-5">
-                      <div className="flex justify-center">
-                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter whitespace-nowrap ${statusStyles[order.trang_thai] || 'bg-gray-100 text-gray-500'}`}>
-                          {STATUS_MAP[order.trang_thai] || order.trang_thai}
-                        </span>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-start gap-1.5 max-w-[160px]">
+                        <MapPin size={12} className="text-gray-300 mt-0.5 shrink-0" />
+                        <span className="text-xs text-gray-500 leading-relaxed">{shortAddr}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-right">
-                      <button 
-                        onClick={() => openDetailModal(order)}
-                        className="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 hover:bg-[#00873A] hover:text-white transition-all inline-flex items-center justify-center active:scale-90"
-                      >
-                        <Eye size={16} />
+                    <td className="px-5 py-3.5 text-sm text-gray-600 whitespace-nowrap">{fmtDate(order.ngay_tao)}</td>
+                    <td className="px-5 py-3.5">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">
+                        <CreditCard size={11} />
+                        {PAYMENT_LABEL[order.phuong_thuc_thanh_toan] || order.phuong_thuc_thanh_toan || 'COD'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <span className="font-bold text-sm text-[#1D9E75]">{fmt(order.tong_tien)}</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <StatusBadge status={order.trang_thai} />
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <button onClick={() => openModal(order)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#1D9E75] hover:text-[#1D9E75] transition-all group-hover:border-gray-300">
+                        <Eye size={13} /> Chi tiết
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })}
             </tbody>
           </table>
         </div>
-        
-        {/* --- PAGINATION UI --- */}
-        <Pagination 
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+
+        {/* Pagination */}
+        <div className="border-t border-gray-50 px-4 py-3 flex items-center justify-between">
+          <p className="text-xs text-gray-400">
+            Hiển thị {orders.length} / {totalOrders} đơn hàng
+          </p>
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        </div>
       </div>
 
-      {/* ========================================================================================= */}
-      {/* MEGA MODAL XEM CHI TIẾT ĐƠN HÀNG */}
-      {/* ========================================================================================= */}
+      {/* ══════════════════════════════════════════════
+          DRAWER CHI TIẾT ĐƠN HÀNG (slide từ phải)
+      ══════════════════════════════════════════════ */}
       <AnimatePresence>
         {viewingOrder && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6 md:p-8">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
-              animate={{ opacity: 1, scale: 1, y: 0 }} 
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#F8FAF9] w-full max-w-5xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]"
+          <div className="fixed inset-0 z-[100] flex">
+            {/* Backdrop */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="flex-1 bg-black/40 backdrop-blur-[2px]" onClick={() => setViewingOrder(null)} />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="w-full max-w-2xl bg-white shadow-2xl flex flex-col overflow-hidden"
             >
-              {/* HEADER MODAL */}
-              <div className="px-8 py-6 border-b border-gray-200 bg-white flex justify-between items-center z-10 relative">
-                <div>
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-                    Chi tiết Đơn hàng 
-                    <span className="text-[#00873A] bg-emerald-50 px-3 py-1 rounded-lg text-xl">#{viewingOrder.id}</span>
-                  </h3>
-                  <p className="text-sm font-medium text-gray-500 mt-1">Đã đặt lúc: {formatDate(viewingOrder.ngay_tao)}</p>
+              {/* ── Drawer Header ── */}
+              <div className="shrink-0 bg-white border-b border-gray-100">
+                <div className="flex items-start justify-between px-5 pt-5 pb-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="text-xs font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded">#{viewingOrder.id}</span>
+                      <StatusBadge status={viewingOrder.trang_thai} />
+                      {viewingOrder.yeu_cau_doi_tra?.length > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-600 rounded-full text-[10px] font-semibold border border-rose-100">
+                          <RotateCcw size={9} /> Yêu cầu đổi/trả
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1.5">Đặt lúc {fmtDate(viewingOrder.ngay_tao)}</p>
+                  </div>
+                  <button onClick={() => setViewingOrder(null)} className="ml-3 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 transition-colors shrink-0">
+                    <X size={15} />
+                  </button>
                 </div>
-                <button 
-                  onClick={() => setViewingOrder(null)} 
-                  className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-colors"
-                >
-                  <X size={24} />
-                </button>
+                <OrderTimeline order={viewingOrder} />
               </div>
 
-              {/* BODY MODAL */}
-              <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  
-                  {/* CỘT TRÁI: YÊU CẦU ĐỔI TRẢ + SẢN PHẨM */}
-                  <div className="lg:col-span-2 space-y-8">
+              {/* ── Drawer Body ── */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
 
-                    {/* 🚀 KHU VỰC 1: TỜ TRÌNH YÊU CẦU ĐỔI TRẢ */}
-                    {viewingOrder.yeu_cau_doi_tra && viewingOrder.yeu_cau_doi_tra.length > 0 && (
-                      <div className="bg-white rounded-[2rem] p-6 sm:p-8 border border-rose-200 shadow-[0_8px_30px_rgb(225,29,72,0.06)] relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-rose-50 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shadow-inner">
-                              <RefreshCcw size={28} strokeWidth={2.5} />
-                            </div>
-                            <div>
-                              <h4 className="text-xl font-black text-gray-900 tracking-tight">Yêu cầu Đổi / Trả hàng</h4>
-                              <p className="text-sm font-medium text-gray-500 mt-0.5">
-                                Tạo ngày: {formatDate(viewingOrder.yeu_cau_doi_tra[0].ngay_tao)}
-                              </p>
-                            </div>
-                          </div>
-                          <span className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 ${
-                            viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'CHO_DUYET' ? 'bg-orange-100 text-orange-700' :
-                            viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'DA_DUYET' ? 'bg-emerald-100 text-emerald-700' :
-                            'bg-gray-100 text-gray-600'
-                          }`}>
-                            <span className="relative flex h-2.5 w-2.5">
-                              {viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'CHO_DUYET' && (
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                              )}
-                              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                                viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'CHO_DUYET' ? 'bg-orange-500' : 'bg-current'
-                              }`}></span>
-                            </span>
-                            {viewingOrder.yeu_cau_doi_tra[0].trang_thai}
-                          </span>
-                        </div>
-
-                        <div className="bg-gray-50/80 rounded-2xl p-6 border border-gray-100 mb-6 relative z-10">
-                          <h5 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <AlertCircle size={16} className="text-rose-400" /> Lý do & Mô tả chi tiết
-                          </h5>
-                          <p className="text-sm font-bold text-gray-800 leading-relaxed bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                            {viewingOrder.yeu_cau_doi_tra[0].ly_do_hoan_tra || "Khách hàng không để lại mô tả chi tiết."}
-                          </p>
-
-                          {/* Lưới hình ảnh minh chứng */}
-                          {viewingOrder.yeu_cau_doi_tra[0].anh_minh_chung && (
-                            <div className="mt-6 pt-6 border-t border-gray-200">
-                              <h5 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Hình ảnh minh chứng từ khách</h5>
-                              <div className="flex flex-wrap gap-4">
-                                {(() => {
-                                  try {
-                                    const images = JSON.parse(viewingOrder.yeu_cau_doi_tra[0].anh_minh_chung);
-                                    if (images.length === 0) return <p className="text-sm text-gray-500 italic">Không có hình ảnh đính kèm</p>;
-                                    
-                                    return images.map((img: string, i: number) => (
-                                      <a 
-                                        key={i} 
-                                        href={img} 
-                                        target="_blank" 
-                                        rel="noreferrer" 
-                                        className="group relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-gray-200 shadow-sm hover:shadow-lg hover:border-rose-400 transition-all block"
-                                      >
-                                        <img 
-                                          src={img} 
-                                          alt={`Minh chứng ${i+1}`} 
-                                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                        />
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                          <Eye className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={24} />
-                                        </div>
-                                      </a>
-                                    ));
-                                  } catch (e) {
-                                    return <p className="text-sm text-gray-500 italic">Dữ liệu ảnh bị lỗi.</p>;
-                                  }
-                                })()}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Nút Action Duyệt / Từ chối Đổi trả */}
-                        {viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'CHO_DUYET' && (
-                          <div className="flex flex-col sm:flex-row gap-3 relative z-10">
-                            <button 
-                              onClick={() => handleReturnAction(viewingOrder.id, 'DA_DUYET')}
-                              disabled={isHandlingReturn}
-                              className="flex-1 bg-rose-600 text-white py-4 px-4 rounded-xl font-black text-sm shadow-lg shadow-rose-600/20 hover:bg-rose-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
-                            >
-                              <CheckCircle2 size={20} />
-                              {isHandlingReturn ? "Đang xử lý..." : "Chấp nhận Đổi / Trả"}
-                            </button>
-                            <button 
-                              onClick={() => handleReturnAction(viewingOrder.id, 'TU_CHOI')}
-                              disabled={isHandlingReturn}
-                              className="flex-1 bg-white text-gray-700 py-4 px-4 rounded-xl font-bold text-sm border-2 border-gray-200 hover:bg-gray-50 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
-                            >
-                              <X size={20} />
-                              {isHandlingReturn ? "Đang xử lý..." : "Từ chối yêu cầu"}
-                            </button>
-                          </div>
-                        )}
+                {/* Yêu cầu đổi/trả */}
+                {viewingOrder.yeu_cau_doi_tra?.length > 0 && (
+                  <div className="mx-5 mt-5 rounded-xl border border-rose-200 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-rose-50 border-b border-rose-100">
+                      <div className="flex items-center gap-2">
+                        <RotateCcw size={13} className="text-rose-500" />
+                        <span className="text-sm font-semibold text-rose-800">Yêu cầu đổi / trả</span>
                       </div>
-                    )}
-
-                    {/* KHU VỰC 2: DANH SÁCH SẢN PHẨM TRONG ĐƠN */}
-                    <div className="bg-white rounded-[2rem] p-6 sm:p-8 border border-gray-100 shadow-sm">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-emerald-50 text-[#00873A] rounded-xl flex items-center justify-center">
-                          <Package size={20} />
-                        </div>
-                        <h4 className="text-lg font-black text-gray-900 tracking-tight">Sản phẩm đã đặt</h4>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        {viewingOrder.chi_tiet_don_hang?.map((item: any, idx: number) => {
-                          const name = item.bien_the_san_pham?.san_pham?.ten_san_pham || `Sản phẩm #${item.ma_bien_the}`;
-                          const qty = Number(item.so_luong || 0);
-                          const price = Number(item.don_gia || 0);
-                          
-                          return (
-                            <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 border border-gray-100 hover:bg-gray-50 transition-colors">
-                              <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
-                                  <img 
-                                    src={item.bien_the_san_pham?.san_pham?.anh_chinh || "https://placehold.co/150"} 
-                                    alt="Product" 
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <div>
-                                  <h5 className="font-bold text-gray-900 text-base">{name}</h5>
-                                  <p className="text-sm font-medium text-gray-500 mt-1">Đơn giá: <span className="font-bold text-gray-700">{price.toLocaleString('vi-VN')}đ</span> x {qty}</p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-black text-[#00873A] text-lg">{(price * qty).toLocaleString('vi-VN')}đ</p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      <div className="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center">
-                        <span className="text-gray-500 font-bold">Tổng thanh toán</span>
-                        <span className="text-3xl font-black text-[#00873A]">{formatCurrency(viewingOrder.tong_tien)}</span>
-                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'CHO_DUYET' ? 'bg-amber-100 text-amber-700' :
+                        viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'DA_DUYET'  ? 'bg-emerald-100 text-emerald-700' :
+                        'bg-gray-100 text-gray-500'
+                      }`}>{viewingOrder.yeu_cau_doi_tra[0].trang_thai}</span>
                     </div>
-
-                  </div>
-
-                  {/* CỘT PHẢI: TRẠNG THÁI + KHÁCH HÀNG + VẬN CHUYỂN */}
-                  <div className="space-y-8">
-                    
-                    {/* KHU VỰC 3: CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG */}
-                    <div className="bg-[#00873A] rounded-[2rem] p-6 sm:p-8 shadow-xl shadow-emerald-900/10 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-                      <h4 className="text-white font-black text-lg tracking-tight mb-5 relative z-10 flex items-center gap-2">
-                        Cập nhật trạng thái
-                      </h4>
-                      
-                      <div className="space-y-4 relative z-10">
-                        <select 
-                          value={newStatus}
-                          onChange={(e) => setNewStatus(e.target.value)}
-                          className="w-full bg-white/90 backdrop-blur-md px-4 py-3.5 rounded-xl outline-none focus:ring-4 focus:ring-emerald-400/50 font-bold text-sm text-gray-900 border-none transition-all cursor-pointer appearance-none shadow-inner"
-                        >
-                          <option value="CHO_XAC_NHAN">⏳ Chờ xác nhận</option>
-                          <option value="DANG_GIAO_HANG">🚚 Đang giao hàng</option>
-                          <option value="DA_GIAO">✅ Đã giao thành công</option>
-                          <option value="YEU_CAU_DOI_TRA">🔄 Yêu cầu đổi/trả</option>
-                          <option value="DA_HUY">❌ Đã hủy</option>
-                        </select>
-
-                        <button 
-                          onClick={handleUpdateStatus}
-                          disabled={updatingStatus || newStatus === viewingOrder.trang_thai}
-                          className="w-full bg-white text-[#00873A] py-3.5 rounded-xl font-black flex items-center justify-center gap-2 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md active:scale-[0.98]"
-                        >
-                          {updatingStatus ? "Đang lưu..." : <><Save size={18}/> Lưu Thay Đổi</>}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* KHU VỰC 4: THÔNG TIN KHÁCH HÀNG */}
-                    <div className="bg-white rounded-[2rem] p-6 sm:p-8 border border-gray-100 shadow-sm">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                          <User size={20} />
-                        </div>
-                        <h4 className="text-lg font-black text-gray-900 tracking-tight">Khách hàng</h4>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
-                          <img 
-                            src={viewingOrder.nguoi_dung?.ho_so_nguoi_dung?.avatar || "https://placehold.co/100"} 
-                            alt="Avatar" 
-                            className="w-12 h-12 rounded-full border border-gray-200 object-cover bg-white"
-                          />
-                          <div>
-                            <p className="font-bold text-gray-900">{viewingOrder.nguoi_dung?.ho_so_nguoi_dung?.ho_ten || "Khách hàng"}</p>
-                            <p className="text-xs font-medium text-gray-500 mt-0.5">{viewingOrder.nguoi_dung?.email || "Không có email"}</p>
-                          </div>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-2xl">
-                          <p className="text-xs font-black uppercase text-gray-400 tracking-widest mb-1">Phương thức thanh toán</p>
-                          <p className="font-bold text-gray-900 flex items-center gap-2">
-                            <CreditCard size={16} className="text-gray-400" />
-                            {viewingOrder.phuong_thuc_thanh_toan?.toUpperCase() || 'COD'}
-                          </p>
-                        </div>
-                        {viewingOrder.ghi_chu && (
-                          <div className="p-4 bg-yellow-50 rounded-2xl border border-yellow-100">
-                            <p className="text-xs font-black uppercase text-yellow-600 tracking-widest mb-1">Ghi chú từ khách</p>
-                            <p className="font-semibold text-yellow-800 text-sm">{viewingOrder.ghi_chu}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* KHU VỰC 5: GIAO HÀNG VẬN CHUYỂN */}
-                    <div className="bg-white rounded-[2rem] p-6 sm:p-8 border border-gray-100 shadow-sm">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
-                          <Truck size={20} />
-                        </div>
-                        <h4 className="text-lg font-black text-gray-900 tracking-tight">Vận chuyển</h4>
-                      </div>
-
-                      {viewingOrder.don_van_chuyen?.length > 0 ? (
-                        <div className="space-y-4">
-                          <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                            <p className="text-xs font-black uppercase text-gray-400 tracking-widest mb-1">Mã vận đơn (GHTK)</p>
-                            <p className="font-bold text-gray-900 text-lg tracking-wide">{viewingOrder.don_van_chuyen[0].ma_van_don}</p>
-                          </div>
-                          
-                          <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                            <p className="text-xs font-black uppercase text-gray-400 tracking-widest mb-2">Ngày dự kiến giao</p>
-                            {isEditingDate ? (
-                              <div className="flex flex-col gap-3">
-                                <input 
-                                  type="date" 
-                                  value={editingDateValue}
-                                  onChange={(e) => setEditingDateValue(e.target.value)}
-                                  className="text-sm p-3 rounded-xl border border-purple-200 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 bg-white font-bold text-gray-700 w-full"
-                                />
-                                <div className="flex gap-2">
-                                  <button onClick={handleUpdateDate} className="flex-1 text-sm font-bold bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl transition-colors shadow-md">Lưu ngày</button>
-                                  <button onClick={() => setIsEditingDate(false)} className="flex-1 text-sm font-bold bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 py-2.5 rounded-xl transition-colors">Hủy</button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-between">
-                                <p className="font-bold text-gray-900 text-base">
-                                  {new Date(viewingOrder.don_van_chuyen[0].ngay_giao_du_kien).toLocaleDateString('vi-VN')}
-                                </p>
-                                <button 
-                                  onClick={() => setIsEditingDate(true)}
-                                  className="text-xs font-black bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-colors"
-                                >
-                                  ✏️ Đổi ngày
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                          <p className="text-sm font-medium text-gray-500 mb-4">Đơn hàng chưa được đẩy qua Giao Hàng Tiết Kiệm.</p>
-                          {viewingOrder.trang_thai === 'CHO_XAC_NHAN' && (
-                            <button 
-                              onClick={() => handleSendToCourier(viewingOrder.id)}
-                              disabled={isPushing}
-                              className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-[0.98] shadow-md shadow-blue-600/20"
-                            >
-                              <Truck size={18} />
-                              {isPushing ? "Đang gửi..." : "Gửi GHTK ngay"}
-                            </button>
-                          )}
+                    <div className="p-4 space-y-3 bg-white">
+                      <p className="text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100 leading-relaxed">
+                        {viewingOrder.yeu_cau_doi_tra[0].ly_do_hoan_tra || 'Không có mô tả'}
+                      </p>
+                      {viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'CHO_DUYET' && (
+                        <div className="flex gap-2">
+                          <button onClick={() => handleReturnAction(viewingOrder.id, 'DA_DUYET')} disabled={isHandlingReturn}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#1D9E75] text-white text-xs font-semibold rounded-lg hover:bg-[#158a63] disabled:opacity-50 transition-colors">
+                            <CheckCircle2 size={13} /> {isHandlingReturn ? 'Đang xử lý…' : 'Chấp nhận'}
+                          </button>
+                          <button onClick={() => handleReturnAction(viewingOrder.id, 'TU_CHOI')} disabled={isHandlingReturn}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white text-gray-600 text-xs font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                            <X size={13} /> Từ chối
+                          </button>
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
 
+                {/* Sản phẩm đã đặt */}
+                <section className="px-5 mt-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Sản phẩm đã đặt</p>
+                    <span className="text-xs text-gray-400">{viewingOrder.chi_tiet_don_hang?.length || 0} mặt hàng</span>
+                  </div>
+                  <div className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                    {viewingOrder.chi_tiet_don_hang?.map((item: any, idx: number) => {
+                      const name    = item.bien_the_san_pham?.san_pham?.ten_san_pham || `Sản phẩm #${item.ma_bien_the}`;
+                      const variant = item.bien_the_san_pham?.ten_bien_the || '';
+                      const unit    = item.bien_the_san_pham?.don_vi_tinh || '';
+                      const qty     = Number(item.so_luong || 0);
+                      const price   = Number(item.don_gia || 0);
+                      const img     = item.bien_the_san_pham?.san_pham?.anh_san_pham?.[0]?.duong_dan_anh;
+                      return (
+                        <div key={idx} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/50 transition-colors">
+                          <div className="w-11 h-11 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
+                            <img src={img || `https://placehold.co/80x80/f3f4f6/9ca3af?text=${encodeURIComponent(name[0] || 'P')}`}
+                              alt="" className="w-full h-full object-cover"
+                              onError={(e: any) => { e.target.src = `https://placehold.co/80x80/f3f4f6/9ca3af?text=P`; }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
+                            {(variant || unit) && (
+                              <p className="text-xs text-gray-400 mt-0.5">{[variant, unit].filter(Boolean).join(' · ')}</p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {price.toLocaleString('vi-VN')}đ
+                              <span className="text-gray-300 mx-1.5">×</span>
+                              {qty}
+                            </p>
+                          </div>
+                          <p className="text-sm font-bold text-gray-800 shrink-0">{(price * qty).toLocaleString('vi-VN')}đ</p>
+                        </div>
+                      );
+                    })}
+                    {/* Tổng */}
+                    <div className="bg-gray-50/60 px-4 py-3 space-y-1.5">
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Tạm tính</span>
+                        <span>{(Number(viewingOrder.tong_tien||0) - Number(viewingOrder.phi_van_chuyen||0)).toLocaleString('vi-VN')}đ</span>
+                      </div>
+                      {Number(viewingOrder.phi_van_chuyen||0) > 0 && (
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Phí vận chuyển</span>
+                          <span>{fmt(viewingOrder.phi_van_chuyen)}</span>
+                        </div>
+                      )}
+                      {Number(viewingOrder.giam_gia||0) > 0 && (
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Giảm giá</span>
+                          <span className="text-rose-600">−{fmt(viewingOrder.giam_gia)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-200 mt-1">
+                        <span className="text-sm font-semibold text-gray-700">Tổng thanh toán</span>
+                        <span className="text-lg font-bold text-[#1D9E75]">{fmt(viewingOrder.tong_tien)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Khách hàng */}
+                <section className="px-5 mt-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Khách hàng</p>
+                  <div className="rounded-xl border border-gray-100 overflow-hidden">
+                    {/* Avatar */}
+                    <div className="flex items-center gap-3 p-4 border-b border-gray-50">
+                      <img src={viewingOrder.nguoi_dung?.ho_so_nguoi_dung?.avatar ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(viewingOrder.nguoi_dung?.ho_so_nguoi_dung?.ho_ten||'K')}&background=1D9E75&color=fff&size=80`}
+                        alt="" className="w-10 h-10 rounded-full object-cover border-2 border-[#1D9E75]/20 shrink-0"
+                        onError={(e:any)=>{e.target.src=`https://ui-avatars.com/api/?name=K&background=1D9E75&color=fff&size=80`;}} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {viewingOrder.nguoi_dung?.ho_so_nguoi_dung?.ho_ten || 'Khách hàng'}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">{viewingOrder.nguoi_dung?.email || ''}</p>
+                      </div>
+                    </div>
+                    {/* Info rows */}
+                    <div className="divide-y divide-gray-50">
+                      {/* Thanh toán */}
+                      {(() => {
+                        const method = viewingOrder.giao_dich_thanh_toan?.[0]?.phuong_thuc_thanh_toan || 'COD';
+                        const payStatus = viewingOrder.giao_dich_thanh_toan?.[0]?.trang_thai;
+                        return (
+                          <div className="flex items-center justify-between px-4 py-2.5">
+                            <div className="flex items-center gap-2.5 text-xs text-gray-500">
+                              <CreditCard size={13} className="text-gray-300 shrink-0" />
+                              <div>
+                                <p className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">Thanh toán</p>
+                                <p className="font-semibold text-gray-800">{PAYMENT_LABEL[method] || method}</p>
+                              </div>
+                            </div>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                              payStatus === 'DA_THANH_TOAN' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                              payStatus === 'THANH_TOAN_THAT_BAI' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                              'bg-amber-50 text-amber-600 border border-amber-100'
+                            }`}>
+                              {!payStatus || payStatus === 'CHO_THANH_TOAN' ? 'Chờ TT' :
+                               payStatus === 'DA_THANH_TOAN' ? '✓ Đã TT' : '✗ Thất bại'}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                      {viewingOrder.nguoi_dung?.ho_so_nguoi_dung?.so_dien_thoai && (
+                        <div className="flex items-center gap-2.5 px-4 py-2.5">
+                          <Phone size={13} className="text-gray-300 shrink-0" />
+                          <div>
+                            <p className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">Điện thoại</p>
+                            <p className="text-xs font-semibold text-gray-800">{viewingOrder.nguoi_dung.ho_so_nguoi_dung.so_dien_thoai}</p>
+                          </div>
+                        </div>
+                      )}
+                      {(viewingOrder.dia_chi_giao_hang || viewingOrder.nguoi_dung?.ho_so_nguoi_dung?.dia_chi) && (
+                        <div className="flex items-start gap-2.5 px-4 py-2.5">
+                          <MapPin size={13} className="text-gray-300 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">Địa chỉ giao hàng</p>
+                            <p className="text-xs font-semibold text-gray-800 leading-relaxed">
+                              {viewingOrder.dia_chi_giao_hang || viewingOrder.nguoi_dung?.ho_so_nguoi_dung?.dia_chi}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {viewingOrder.ghi_chu && (
+                        <div className="px-4 py-2.5 bg-amber-50/50">
+                          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wide mb-0.5">Ghi chú</p>
+                          <p className="text-xs text-amber-800 leading-relaxed">{viewingOrder.ghi_chu}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+
+                {/* Vận chuyển */}
+                <section className="px-5 mt-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Vận chuyển GHN</p>
+                  <div className="rounded-xl border border-gray-100 overflow-hidden">
+                    {viewingOrder.don_van_chuyen?.some((s: any) => s.ma_van_don) ? (
+                      <div className="divide-y divide-gray-50">
+                        {(() => {
+                          const ship = viewingOrder.don_van_chuyen.find((s: any) => s.ma_van_don);
+                          return (
+                            <>
+                              <div className="flex items-center justify-between px-4 py-3">
+                                <div className="flex items-center gap-2.5">
+                                  <Package size={13} className="text-gray-300 shrink-0" />
+                                  <div>
+                                    <p className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">Mã vận đơn GHN</p>
+                                    <p className="text-xs font-bold text-gray-800 font-mono tracking-wide">{ship.ma_van_don}</p>
+                                  </div>
+                                </div>
+                                <a href={`https://donhang.ghn.vn/?order_code=${ship.ma_van_don}`} target="_blank" rel="noreferrer"
+                                  className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
+                                  Tra cứu <ExternalLink size={11} />
+                                </a>
+                              </div>
+                              <div className="flex items-center gap-2.5 px-4 py-2.5">
+                                <Truck size={13} className="text-gray-300 shrink-0" />
+                                <div>
+                                  <p className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">Trạng thái</p>
+                                  <p className="text-xs font-semibold text-gray-800 capitalize">{ship.trang_thai || '—'}</p>
+                                </div>
+                              </div>
+                              {ship.ngay_giao_du_kien && (
+                                <div className="px-4 py-2.5">
+                                  <div className="flex items-start gap-2.5">
+                                    <Calendar size={13} className="text-gray-300 shrink-0 mt-0.5" />
+                                    <div className="flex-1">
+                                      <p className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">Ngày giao dự kiến</p>
+                                      {isEditingDate ? (
+                                        <div className="mt-1.5 space-y-2">
+                                          <input type="date" value={editingDateValue} onChange={e => setEditingDateValue(e.target.value)}
+                                            className="w-full text-xs p-2 rounded-lg border border-gray-200 outline-none focus:border-[#1D9E75] bg-white" />
+                                          <div className="flex gap-1.5">
+                                            <button onClick={handleUpdateDate} className="flex-1 text-xs font-semibold bg-[#1D9E75] text-white py-1.5 rounded-lg hover:bg-[#158a63] transition-colors">Lưu</button>
+                                            <button onClick={() => setIsEditingDate(false)} className="flex-1 text-xs font-semibold bg-white text-gray-500 border border-gray-200 py-1.5 rounded-lg">Hủy</button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center justify-between mt-0.5">
+                                          <p className="text-xs font-semibold text-gray-800">
+                                            {new Date(ship.ngay_giao_du_kien).toLocaleDateString('vi-VN')}
+                                          </p>
+                                          <button onClick={() => { setIsEditingDate(true); setEditingDateValue(ship.ngay_giao_du_kien?.split('T')[0]||''); }}
+                                            className="text-[11px] font-semibold text-[#1D9E75] hover:underline">Đổi ngày</button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    ) : (
+                      <div className="p-4">
+                        {/* Thông tin địa chỉ giao hàng */}
+                        {viewingOrder.dia_chi_giao_hang ? (
+                          <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Địa chỉ giao hàng</p>
+                            <p className="text-xs font-semibold text-gray-800">{viewingOrder.ho_ten_nguoi_nhan} · {viewingOrder.sdt_nguoi_nhan}</p>
+                            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{viewingOrder.dia_chi_giao_hang}</p>
+                          </div>
+                        ) : (
+                          <div className="mb-3 flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                            <AlertCircle size={13} className="text-amber-500 shrink-0" />
+                            <p className="text-xs text-amber-700">Đơn hàng này chưa có địa chỉ GHN (tỉnh/quận/phường). Không thể tạo vận đơn tự động.</p>
+                          </div>
+                        )}
+                        {/* Nút tạo vận đơn GHN */}
+                        {['CHO_XAC_NHAN', 'DANG_GIAO_HANG'].includes(viewingOrder.trang_thai) && viewingOrder.dia_chi_giao_hang && (
+                          <button onClick={() => handleCreateGHNOrder(viewingOrder.id)} disabled={isCreatingGHN}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#e64b1b] text-white text-xs font-semibold rounded-lg hover:bg-[#c43d14] disabled:opacity-50 transition-colors">
+                            {isCreatingGHN ? (
+                              <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Đang tạo vận đơn...</>
+                            ) : (
+                              <><Truck size={13} /> Tạo vận đơn GHN</>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                {/* Footer actions */}
+                <div className="px-5 py-5 mt-2">
+                  <div className="rounded-xl border border-gray-100 overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50/60 border-b border-gray-100">
+                      <p className="text-xs font-semibold text-gray-500">Cập nhật trạng thái đơn hàng</p>
+                    </div>
+                    <div className="p-4 space-y-2.5 bg-white">
+                      <select value={newStatus} onChange={e => setNewStatus(e.target.value)}
+                        className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/10 bg-white font-medium text-gray-800 transition-all cursor-pointer">
+                        <option value="CHO_XAC_NHAN">⏳ Chờ xác nhận</option>
+                        <option value="DANG_GIAO_HANG">🚚 Đang giao hàng</option>
+                        <option value="DA_GIAO">✅ Đã giao thành công</option>
+                        <option value="YEU_CAU_DOI_TRA">🔄 Yêu cầu đổi/trả</option>
+                        <option value="DA_HUY">❌ Đã hủy</option>
+                      </select>
+                      <button onClick={handleUpdateStatus} disabled={updatingStatus || newStatus === viewingOrder.trang_thai}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#1D9E75] text-white text-sm font-semibold rounded-lg hover:bg-[#158a63] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                        {updatingStatus ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={14} />}
+                        Lưu thay đổi
+                      </button>
+                    </div>
                   </div>
                 </div>
+
               </div>
             </motion.div>
           </div>
@@ -687,17 +705,84 @@ export default function OrdersManagementContent() {
   );
 }
 
-function FilterButton({ label, active = false, onClick }: { label: string, active?: boolean, onClick?: () => void }) {
+// ── OrderTimeline ─────────────────────────────────────────────────────────
+const TIMELINE_STEPS = [
+  { key: 'CHO_XAC_NHAN',   label: 'Chờ xác nhận', icon: Clock },
+  { key: 'DANG_GIAO_HANG', label: 'Đang giao',     icon: Truck },
+  { key: 'DA_GIAO',        label: 'Hoàn thành',    icon: CheckCircle2 },
+];
+const CANCELLED_STEPS = [
+  { key: 'CHO_XAC_NHAN', label: 'Đặt hàng', icon: Clock },
+  { key: 'DA_HUY',        label: 'Đã hủy',   icon: Ban },
+];
+const RETURN_STEPS = [
+  { key: 'DA_GIAO',          label: 'Đã giao',  icon: CheckCircle2 },
+  { key: 'YEU_CAU_DOI_TRA',  label: 'Yêu cầu đổi/trả', icon: RotateCcw },
+];
+
+function OrderTimeline({ order }: { order: any }) {
+  const status = order.trang_thai;
+  const isCancelled = status === 'DA_HUY';
+  const isReturn    = status === 'YEU_CAU_DOI_TRA';
+  const steps = isCancelled ? CANCELLED_STEPS : isReturn ? RETURN_STEPS : TIMELINE_STEPS;
+
+  const normalOrder = ['CHO_XAC_NHAN', 'DANG_GIAO_HANG', 'DA_GIAO'];
+  const currentIdx = steps.findIndex(s => s.key === status);
+
+  const getStepState = (stepKey: string, stepIdx: number) => {
+    if (isCancelled || isReturn) {
+      return stepIdx <= currentIdx ? 'done' : 'pending';
+    }
+    const orderIdx = normalOrder.indexOf(status);
+    const sIdx     = normalOrder.indexOf(stepKey);
+    if (sIdx < orderIdx) return 'done';
+    if (sIdx === orderIdx) return 'active';
+    return 'pending';
+  };
+
+  const historyMap: Record<string, string> = {};
+  order.lich_su_don_hang?.forEach((h: any) => {
+    historyMap[h.trang_thai] = h.thoi_gian_doi;
+  });
+
   return (
-    <button 
-      onClick={onClick}
-      className={`px-5 py-2.5 rounded-full font-bold text-xs transition-all active:scale-95 bg-white ${
-        active 
-          ? 'text-[#00873A] border-2 border-[#00873A] shadow-sm' 
-          : 'text-gray-500 border border-gray-200 hover:bg-gray-50 hover:text-gray-900'
-      }`}
-    >
-      {label}
-    </button>
+    <div className="px-6 pb-4 flex items-center gap-0 overflow-x-auto custom-scrollbar">
+      {steps.map((step, idx) => {
+        const state = getStepState(step.key, idx);
+        const Icon  = step.icon;
+        const ts    = historyMap[step.key];
+        const isLast = idx === steps.length - 1;
+        return (
+          <div key={step.key} className="flex items-center flex-1 min-w-0">
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                state === 'done'   ? 'bg-[#1D9E75] border-[#1D9E75]' :
+                state === 'active' ? 'bg-white border-[#1D9E75]' :
+                isCancelled && step.key === 'DA_HUY' ? 'bg-rose-500 border-rose-500' :
+                'bg-white border-gray-200'
+              }`}>
+                <Icon size={14} className={
+                  state === 'done' ? 'text-white' :
+                  state === 'active' ? 'text-[#1D9E75]' :
+                  isCancelled && step.key === 'DA_HUY' ? 'text-white' :
+                  'text-gray-300'
+                } />
+              </div>
+              <div className="text-center">
+                <p className={`text-[11px] font-semibold whitespace-nowrap ${
+                  state === 'done' || state === 'active' ? 'text-gray-800' : 'text-gray-400'
+                }`}>{step.label}</p>
+                {ts && <p className="text-[10px] text-gray-400 whitespace-nowrap">{new Date(ts).toLocaleDateString('vi-VN')}</p>}
+              </div>
+            </div>
+            {!isLast && (
+              <div className={`flex-1 h-0.5 mx-2 rounded-full mb-5 ${
+                getStepState(steps[idx + 1].key, idx + 1) !== 'pending' ? 'bg-[#1D9E75]' : 'bg-gray-200'
+              }`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }

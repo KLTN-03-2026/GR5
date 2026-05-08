@@ -86,7 +86,7 @@ export default async function proxy(req: NextRequest) {
     }
     // STAFF thuần: giới hạn chỉ 2 chức năng theo bảng phân quyền
     if (isStaff && !isAdmin) {
-      const allowedPaths = ["/staff/warehouse", "/staff/map"];
+      const allowedPaths = ["/staff/warehouse", "/staff/map", "/staff/orders", "/staff/hr"];
       const isAllowed = allowedPaths.some((p) => pathname.startsWith(p)) || pathname === "/staff";
       if (!isAllowed) {
         return NextResponse.redirect(new URL("/403", nextUrl));

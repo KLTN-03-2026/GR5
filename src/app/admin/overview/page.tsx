@@ -183,7 +183,7 @@ export default function AdminOverviewPage() {
             </div>
           </div>
 
-          <div className="h-[260px]">
+          <div className="h-[260px] min-w-0 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={orderData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }} barGap={3}>
                 <CartesianGrid
@@ -219,7 +219,7 @@ export default function AdminOverviewPage() {
             <p className="text-[12px] text-slate-400 mt-0.5">Phân bổ khách hàng theo vùng</p>
           </div>
 
-          <div className="flex-1 min-h-[200px]">
+          <div className="flex-1 min-h-[200px] min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

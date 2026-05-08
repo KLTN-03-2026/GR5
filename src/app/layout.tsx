@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import "@/app/globals.css";
 import { CartProvider } from "@/lib/CartContext";
+import { SessionProvider } from "next-auth/react";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -24,7 +25,9 @@ export default function RootLayout({
   return (
     <html lang="vi" className={beVietnamPro.variable}>
       <body style={{ fontFamily: "var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif" }}>
-        <CartProvider>{children}</CartProvider>
+        <SessionProvider>
+          <CartProvider>{children}</CartProvider>
+        </SessionProvider>
       </body>
     </html>
   );

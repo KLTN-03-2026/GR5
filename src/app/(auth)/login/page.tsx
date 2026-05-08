@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, ScanFace, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -50,15 +50,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4 font-sans">
+    <div className="flex items-center justify-center w-full p-4 font-sans">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[450px] bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden border border-emerald-50"
+        className="w-full max-w-[420px] bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] overflow-hidden border border-[#e5e7eb]"
       >
-        <div className="p-10">
+        <div className="px-10 py-9">
           <header className="text-center mb-8">
-            <h1 className="text-[32px] font-black text-[#007A33] tracking-tight leading-none mb-4 uppercase italic">
+            <div className="text-[13px] font-medium text-[#16a34a] mb-2">
+              🌿 Verdant Harvest
+            </div>
+            <h1 className="text-2xl font-semibold text-[#111827] mb-4">
               Đăng nhập
             </h1>
             <p className="text-slate-500 text-sm font-medium">
@@ -69,7 +72,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mt-4 p-3 bg-red-50 text-red-500 text-xs font-bold rounded-xl border border-red-100 italic"
+                className="mt-4 p-3 bg-red-50 text-red-600 text-xs font-medium rounded-lg border border-red-100"
               >
                 ⚠ {error}
               </motion.div>
@@ -79,15 +82,15 @@ export default function LoginPage() {
           <form action={clientAction} className="space-y-6">
             {/* Email */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700 ml-1 uppercase tracking-widest">Email</label>
-              <div className="flex items-center bg-[#EAF2EA]/60 rounded-xl px-4 py-4 border border-transparent focus-within:border-[#007A33]/30 transition-all">
-                <Mail className="w-5 h-5 text-slate-400 mr-3" />
+              <label className="text-[13px] font-medium text-[#374151] ml-1">Email</label>
+              <div className="flex items-center bg-white rounded-lg px-3 h-11 border border-[#d1d5db] focus-within:border-[#16a34a] focus-within:shadow-[0_0_0_3px_rgba(22,163,74,0.12)] transition-all">
+                <Mail className="w-4 h-4 text-[#9ca3af] mr-2" />
                 <input
                   name="email"
                   type="email"
                   required
                   placeholder="admin@nongsan.vn"
-                  className="bg-transparent w-full outline-none text-sm font-bold text-[#0A1A17] placeholder:text-slate-300"
+                  className="bg-transparent w-full outline-none text-sm text-[#111827] placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -95,48 +98,52 @@ export default function LoginPage() {
             {/* Password */}
             <div className="space-y-2">
               <div className="flex justify-between items-center px-1">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-widest">Mật khẩu</label>
-                <Link href="/forgot-password" className="text-xs font-bold text-[#007A33] hover:underline">
+                <label className="text-[13px] font-medium text-[#374151]">Mật khẩu</label>
+                <Link href="/forgot-password" className="text-[13px] font-normal text-[#16a34a] hover:underline">
                   Quên mật khẩu?
                 </Link>
               </div>
-              <div className="flex items-center bg-[#EAF2EA]/60 rounded-xl px-4 py-4 border border-transparent focus-within:border-[#007A33]/30 transition-all">
-                <Lock className="w-5 h-5 text-slate-400 mr-3" />
+              <div className="flex items-center bg-white rounded-lg px-3 h-11 border border-[#d1d5db] focus-within:border-[#16a34a] focus-within:shadow-[0_0_0_3px_rgba(22,163,74,0.12)] transition-all">
+                <Lock className="w-4 h-4 text-[#9ca3af] mr-2" />
                 <input
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
                   placeholder="••••••••"
-                  className="bg-transparent w-full outline-none text-sm font-bold text-[#0A1A17] placeholder:text-slate-300"
+                  className="bg-transparent w-full outline-none text-sm text-[#111827] placeholder:text-slate-400"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-400 hover:text-[#007A33]">
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-[#9ca3af] hover:text-[#16a34a]">
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
             {/* Remember me */}
             <div className="flex items-center gap-2 px-1">
-              <input type="checkbox" id="remember" className="w-4 h-4 rounded border-slate-300 text-[#007A33]" />
-              <label htmlFor="remember" className="text-xs font-medium text-slate-500 cursor-pointer">Ghi nhớ đăng nhập</label>
+              <input
+                type="checkbox"
+                id="remember"
+                className="w-4 h-4 rounded border-[#d1d5db] text-[#16a34a] focus:ring-[#16a34a] focus:ring-offset-0 focus:ring-2"
+              />
+              <label htmlFor="remember" className="text-[13px] text-[#6b7280] cursor-pointer">Ghi nhớ đăng nhập</label>
             </div>
 
             <div className="space-y-4">
               <button
                 disabled={isPending}
                 type="submit"
-                className="w-full bg-[#007A33] text-white py-4 rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-[#006329] shadow-lg flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all active:scale-95"
+                className="w-full bg-[#16a34a] text-white h-11 rounded-lg font-medium text-[15px] hover:bg-[#15803d] flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
               >
-                {isPending ? <><Loader2 className="animate-spin" size={20} /> Đang kiểm tra...</> : "Đăng nhập ngay"}
+                {isPending ? <><Loader2 className="animate-spin" size={18} /> Đang kiểm tra...</> : "Đăng nhập"}
               </button>
 
               <button
                 type="button"
                 onClick={() => router.push("/login/face-id")}
-                className="w-full flex items-center justify-center gap-3 py-4 bg-[#F1FAF4] text-[#007A33] border-2 border-dashed border-[#007A33]/20 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-[#007A33] hover:text-white transition-all group"
+                className="w-full flex items-center justify-center gap-2 h-11 bg-white text-[#374151] border border-[#d1d5db] rounded-lg font-medium text-sm hover:border-[#16a34a] hover:text-[#16a34a] transition-all"
               >
-                <ScanFace size={18} className="group-hover:scale-110 transition-transform" />
-                Đăng nhập nhanh bằng FaceID
+                <ScanFace size={18} />
+                Đăng nhập bằng FaceID
               </button>
             </div>
           </form>
@@ -144,22 +151,22 @@ export default function LoginPage() {
           {/* Social Login */}
           <div className="mt-8">
             <div className="relative flex items-center justify-center mb-6">
-              <div className="border-t border-slate-100 w-full"></div>
-              <span className="bg-white px-4 text-[10px] font-black text-slate-300 uppercase tracking-widest absolute">
+              <div className="border-t border-[#e5e7eb] w-full"></div>
+              <span className="bg-white px-4 text-xs text-[#9ca3af] absolute">
                 Hoặc đăng nhập với
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={onGoogleLogin}
                 disabled={socialPending !== null}
-                className="flex items-center justify-center gap-2 py-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-all font-bold text-xs text-slate-600 disabled:opacity-60"
+                className="flex items-center justify-center gap-2 h-10 border border-[#e5e7eb] bg-white rounded-lg hover:border-[#d1d5db] hover:bg-[#f9fafb] transition-all font-medium text-[13px] text-[#374151] disabled:opacity-60"
               >
                 {socialPending === "google" ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-4 h-4" alt="google" />
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-[18px] h-[18px]" alt="google" />
                 )}
                 Google
               </button>
@@ -167,12 +174,12 @@ export default function LoginPage() {
                 type="button"
                 onClick={onFacebookLogin}
                 disabled={socialPending !== null}
-                className="flex items-center justify-center gap-2 py-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-all font-bold text-xs text-slate-600 disabled:opacity-60"
+                className="flex items-center justify-center gap-2 h-10 border border-[#e5e7eb] bg-white rounded-lg hover:border-[#d1d5db] hover:bg-[#f9fafb] transition-all font-medium text-[13px] text-[#374151] disabled:opacity-60"
               >
                 {socialPending === "facebook" ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
-                  <FaFacebookF size={16} className="text-[#1877F2]" />
+                  <FaFacebookF size={18} className="text-[#1877F2]" />
                 )}
                 Facebook
               </button>
@@ -180,10 +187,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="bg-[#F1FAF4] p-6 text-center border-t border-emerald-50">
-          <p className="text-xs font-medium text-slate-500">
+        <div className="bg-[#f9fafb] p-6 text-center border-t border-[#e5e7eb]">
+          <p className="text-sm text-[#6b7280]">
             Chưa có tài khoản?
-            <Link href="/register" className="text-[#007A33] font-bold ml-2 hover:underline">
+            <Link href="/register" className="text-[#16a34a] font-medium ml-2 hover:underline">
               Đăng ký ngay
             </Link>
           </p>

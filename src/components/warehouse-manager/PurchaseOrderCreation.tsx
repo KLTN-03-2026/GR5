@@ -247,6 +247,7 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
   const [reviewTarget, setReviewTarget] = useState<Phieu | null>(null);
   const [activeTab, setActiveTab] = useState<"form" | "list">("form");
   const [toast, setToast] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+  const [orderContext, setOrderContext] = useState<{ zone: string; day: string; ke: string; tang: string } | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -264,7 +265,20 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
     setTotalPages(d.meta?.totalPages || 1);
   }, [currentPage]);
 
-  useEffect(() => { loadPhieus(); }, [loadPhieus]);
+  useEffect(() => { 
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const z = sp.get("zone");
+      const d = sp.get("day");
+      const k = sp.get("ke");
+      const t = sp.get("tang");
+      if (z && d && k && t) {
+        setFormData(p => ({ ...p, vi_tri: { khu: z, day: d, ke: k, tang: t } }));
+        setOrderContext({ zone: z, day: d, ke: k, tang: t });
+      }
+    }
+    loadPhieus(); 
+  }, [loadPhieus]);
 
   // Real-time batch duplicate check (debounced 600ms)
   const batchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -410,6 +424,18 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
             </div>
           ) : (
             <div className="p-6 space-y-6">
+              {/* Context Banner */}
+              {orderContext && (
+                <div className="bg-[#f0fdf4] border-l-[3px] border-[#059669] rounded-md px-3.5 py-2.5 flex items-center justify-between">
+                  <div className="text-[#065f46] text-[13px] font-medium">
+                    Đang đặt hàng cho vị trí: {orderContext.zone} {">"} {orderContext.day} {">"} {orderContext.ke} {">"} {orderContext.tang}
+                  </div>
+                  <button onClick={() => setOrderContext(null)} className="text-[#065f46] opacity-70 hover:opacity-100 transition-opacity">
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
               {/* Block 1: Mã lô + kiểm tra trùng */}
               <section>
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">

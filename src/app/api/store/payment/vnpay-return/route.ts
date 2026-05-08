@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     }
 
     // === BƯỚC 1: VERIFY CHỮ KÝ VNPAY ===
-    const secretKey = process.env.VNPAY_SECRET_KEY || "GM2XYUP38PA43ASTS8YU4MD2AT22JL8N";
+    const secretKey = process.env.VNPAY_SECRET_KEY || "GM2XYUP38PA43ASTS8YU4MD2AT22JL8N"; // fallback = sandbox key
 
     // Xóa vnp_SecureHash và vnp_SecureHashType khỏi params trước khi tính lại hash
     delete vnpParams["vnp_SecureHash"];

@@ -6,28 +6,30 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   Warehouse,
-  Map,
+  ClipboardList,
+  UserCircle,
   LogOut,
   Layers,
 } from "lucide-react";
 
-/**
- * Bảng phân quyền STAFF:
- * ✅ Tạo phiếu nhập  → /staff/warehouse
- * ✅ Xem sơ đồ kho   → /staff/map
- */
 const menuItems = [
   {
-    name: "Tạo Phiếu Nhập",
+    name: "Quản Lý Kho",
     path: "/staff/warehouse",
     icon: Warehouse,
-    description: "Nhập hàng vào kho",
+    description: "Tồn kho · Nhập/Xuất · Cảnh báo",
   },
   {
-    name: "Sơ Đồ Kho",
-    path: "/staff/map",
-    icon: Map,
-    description: "Xem bố cục kho",
+    name: "Đơn Hàng",
+    path: "/staff/orders",
+    icon: ClipboardList,
+    description: "Xác nhận & xử lý đơn hàng",
+  },
+  {
+    name: "Cá Nhân",
+    path: "/staff/hr",
+    icon: UserCircle,
+    description: "Lịch ca · Nghỉ phép · FaceID",
   },
 ];
 
@@ -54,7 +56,7 @@ export default function StaffSidebar({ userEmail }: { userEmail?: string | null 
       {/* Role Badge */}
       <div className="mx-4 mb-4 px-3 py-2 bg-blue-600/10 border border-blue-500/20 rounded-lg">
         <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Quyền truy cập</p>
-        <p className="text-xs text-gray-300 mt-0.5">Nhân viên vận hành</p>
+        <p className="text-xs text-gray-300 mt-0.5">Kho · Đơn hàng · Cá nhân</p>
       </div>
 
       {/* Navigation Links */}

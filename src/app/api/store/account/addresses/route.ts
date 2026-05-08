@@ -28,9 +28,13 @@ export async function POST(req: Request) {
   if (!user)
     return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const { chi_tiet_dia_chi } = await req.json();
+  const {
+    chi_tiet_dia_chi,
+    ho_ten, so_dien_thoai,
+    tinh_thanh, quan_huyen, phuong_xa,
+    ma_tinh_ghn, ma_quan_huyen_ghn, ma_phuong_xa_ghn,
+  } = await req.json();
 
-  // Nếu chưa có địa chỉ nào thì cái đầu tiên là mặc định
   const count = await prisma.dia_chi_nguoi_dung.count({
     where: { ma_nguoi_dung: user.id },
   });
@@ -40,7 +44,15 @@ export async function POST(req: Request) {
       ma_nguoi_dung: user.id,
       chi_tiet_dia_chi,
       la_mac_dinh: count === 0,
-    },
+      ho_ten: ho_ten || null,
+      so_dien_thoai: so_dien_thoai || null,
+      tinh_thanh: tinh_thanh || null,
+      quan_huyen: quan_huyen || null,
+      phuong_xa: phuong_xa || null,
+      ma_tinh_ghn: ma_tinh_ghn ? Number(ma_tinh_ghn) : null,
+      ma_quan_huyen_ghn: ma_quan_huyen_ghn ? Number(ma_quan_huyen_ghn) : null,
+      ma_phuong_xa_ghn: ma_phuong_xa_ghn || null,
+    } as any,
   });
 
   return NextResponse.json(address);
@@ -52,7 +64,13 @@ export async function PUT(req: Request) {
   if (!session?.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, action, chi_tiet_dia_chi } = await req.json();
+  const {
+    id, action,
+    chi_tiet_dia_chi,
+    ho_ten, so_dien_thoai,
+    tinh_thanh, quan_huyen, phuong_xa,
+    ma_tinh_ghn, ma_quan_huyen_ghn, ma_phuong_xa_ghn,
+  } = await req.json();
 
   if (action === "set-default") {
     const user = await prisma.nguoi_dung.findUnique({
@@ -73,7 +91,17 @@ export async function PUT(req: Request) {
   if (action === "update") {
     await prisma.dia_chi_nguoi_dung.update({
       where: { id: Number(id) },
-      data: { chi_tiet_dia_chi },
+      data: {
+        chi_tiet_dia_chi,
+        ho_ten: ho_ten || null,
+        so_dien_thoai: so_dien_thoai || null,
+        tinh_thanh: tinh_thanh || null,
+        quan_huyen: quan_huyen || null,
+        phuong_xa: phuong_xa || null,
+        ma_tinh_ghn: ma_tinh_ghn ? Number(ma_tinh_ghn) : null,
+        ma_quan_huyen_ghn: ma_quan_huyen_ghn ? Number(ma_quan_huyen_ghn) : null,
+        ma_phuong_xa_ghn: ma_phuong_xa_ghn || null,
+      } as any,
     });
     return NextResponse.json({ success: true });
   }
@@ -84,8 +112,6 @@ export async function PUT(req: Request) {
 // [DELETE] Xóa địa chỉ
 export async function DELETE(req: Request) {
   const { id } = await req.json();
-  await prisma.dia_chi_nguoi_dung.delete({
-    where: { id: Number(id) },
-  });
+  await prisma.dia_chi_nguoi_dung.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
 }

@@ -1,10 +1,8 @@
 "use client";
-import { Sidebar } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Package,
   Clock,
   Truck,
   CheckCircle2,
@@ -23,6 +21,7 @@ import {
   Send,
   ShieldCheck,
 } from "lucide-react";
+import TrackingTimeline from "@/components/store/orders/TrackingTimeline";
 
 const TABS = [
   { id: "ALL", label: "Tất cả" },
@@ -157,44 +156,21 @@ export default function MyOrdersPage() {
   };
   const renderStatus = (status: string) => {
     const safeStatus = status?.toUpperCase() || "";
+    const base: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, padding: "3px 10px", borderRadius: 99, fontWeight: 500 };
     switch (safeStatus) {
       case "CHO_XAC_NHAN":
-        return (
-          <span className="flex items-center gap-1.5 text-orange-600 bg-orange-50 px-3 py-1 rounded-full text-xs font-bold">
-            <Clock className="w-3.5 h-3.5" /> Chờ xác nhận
-          </span>
-        );
+        return <span style={{ ...base, background: "#fef9c3", color: "#854d0e" }}><Clock size={12} /> Chờ xác nhận</span>;
       case "DANG_GIAO_HANG":
-        return (
-          <span className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-xs font-bold">
-            <Truck className="w-3.5 h-3.5" /> Đang giao hàng
-          </span>
-        );
+        return <span style={{ ...base, background: "#dbeafe", color: "#1e40af" }}><Truck size={12} /> Đang giao</span>;
       case "DA_GIAO":
       case "HOAN_THANH":
-        return (
-          <span className="flex items-center gap-1.5 text-[#007832] bg-[#EFF6EA] px-3 py-1 rounded-full text-xs font-bold">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Thành công
-          </span>
-        );
+        return <span style={{ ...base, background: "#dcfce7", color: "#15803d" }}><CheckCircle2 size={12} /> Đã giao</span>;
       case "DA_HUY":
-        return (
-          <span className="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-3 py-1 rounded-full text-xs font-bold">
-            <XCircle className="w-3.5 h-3.5" /> Đã hủy
-          </span>
-        );
+        return <span style={{ ...base, background: "#fee2e2", color: "#991b1b" }}><XCircle size={12} /> Đã hủy</span>;
       case "YEU_CAU_DOI_TRA":
-        return (
-          <span className="flex items-center gap-1.5 text-purple-600 bg-purple-50 px-3 py-1 rounded-full text-xs font-bold">
-            <RefreshCcw className="w-3.5 h-3.5" /> Chờ đổi trả
-          </span>
-        );
+        return <span style={{ ...base, background: "#f3e8ff", color: "#6b21a8" }}><RefreshCcw size={12} /> Chờ đổi trả</span>;
       default:
-        return (
-          <span className="flex items-center gap-1.5 text-gray-600 bg-gray-100 px-3 py-1 rounded-full text-xs font-bold">
-            <Clock className="w-3.5 h-3.5" /> {status}
-          </span>
-        );
+        return <span style={{ ...base, background: "#f3f4f6", color: "#374151" }}><Clock size={12} /> {status}</span>;
     }
   };
 
@@ -210,160 +186,141 @@ export default function MyOrdersPage() {
     });
   };
 
-  return (
-    <div className="bg-[#F4FCF0] min-h-screen pt-28 pb-20 relative">
-      <div className="max-w-5xl mx-auto px-4 md:px-6">
-        {/* Header Danh sách */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-[#007832]/10 rounded-2xl flex items-center justify-center text-[#007832]">
-            <Package className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-              Đơn hàng của tôi
-            </h1>
-            <p className="text-sm text-gray-500 font-medium mt-1">
-              Quản lý lịch sử mua sắm và đổi trả
-            </p>
-          </div>
-        </div>
+  const tabCounts: Record<string, number> = { ALL: orders.length };
+  TABS.slice(1).forEach((tab) => {
+    tabCounts[tab.id] = orders.filter((o) => o.trang_thai === tab.id).length;
+  });
 
-        {/* Tabs */}
-        <div className="bg-white rounded-2xl p-2 shadow-sm border border-gray-100 flex overflow-x-auto mb-8">
-          {TABS.map((tab) => (
+  return (
+    <div className="orders-page">
+      {/* Page title */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 600, color: "#111827", margin: 0, lineHeight: 1.3 }}>
+          Đơn hàng của tôi
+        </h1>
+        <p style={{ fontSize: 13, color: "#6b7280", margin: "4px 0 0", fontWeight: 400 }}>
+          Quản lý lịch sử mua sắm và đổi trả
+        </p>
+      </div>
+
+      {/* Tabs — underline style */}
+      <div className="orders-tabs">
+        {TABS.map((tab) => {
+          const count = tabCounts[tab.id] ?? 0;
+          const isActive = activeTab === tab.id;
+          return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-[120px] py-3 text-sm font-bold rounded-xl transition-all whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "bg-[#007832] text-white shadow-md"
-                  : "text-gray-500 hover:bg-gray-50"
-              }`}
+              className={`orders-tab${isActive ? " orders-tab--active" : ""}`}
             >
               {tab.label}
+              {count > 0 && tab.id !== "ALL" && (
+                <span className="orders-tab__badge">{count}</span>
+              )}
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        {/* List Đơn Hàng */}
-        <div className="space-y-6">
-          {isLoading ? (
-            <div className="text-center py-20">
-              <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#007832] border-t-transparent mx-auto mb-4"></div>
-            </div>
-          ) : filteredOrders.length === 0 ? (
-            <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 shadow-sm">
-              <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900">
-                Không tìm thấy đơn hàng
-              </h3>
-              <Link
-                href="/products"
-                className="bg-[#007832] text-white px-8 py-3 rounded-xl font-bold mt-4 inline-block hover:bg-emerald-800 transition-colors"
+      {/* Toolbar */}
+      <div className="orders-toolbar">
+        <span className="orders-toolbar__count">
+          Hiển thị {filteredOrders.length} đơn hàng
+        </span>
+        <select className="orders-toolbar__sort">
+          <option>Sắp xếp: Mới nhất</option>
+          <option>Sắp xếp: Cũ nhất</option>
+          <option>Giá trị cao nhất</option>
+        </select>
+      </div>
+
+      {/* List */}
+      <div>
+        {isLoading ? (
+          <div style={{ textAlign: "center", padding: "48px 0" }}>
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#16a34a] border-t-transparent mx-auto"></div>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="orders-empty">
+            <ShoppingBag size={48} color="#9ca3af" />
+            <h3 className="orders-empty__title">Không tìm thấy đơn hàng</h3>
+            <p className="orders-empty__sub">
+              Bạn chưa có đơn hàng nào. Hãy khám phá sản phẩm ngay!
+            </p>
+            <Link href="/products" className="orders-empty__btn">
+              Mua sắm ngay <span style={{ marginLeft: 6 }}>→</span>
+            </Link>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {filteredOrders.map((order) => (
+              <motion.div
+                key={order.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="order-card"
               >
-                Mua sắm ngay
-              </Link>
-            </div>
-          ) : (
-            <AnimatePresence>
-              {filteredOrders.map((order) => (
-                <motion.div
-                  key={order.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-[1.5rem] border border-gray-100 shadow-sm overflow-hidden mb-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="px-6 py-4 border-b border-gray-50 flex flex-wrap justify-between gap-4 bg-gray-50/50 items-center">
-                    <div className="flex items-center gap-3">
-                      <Store className="w-5 h-5 text-gray-400" />
-                      <span className="font-bold text-gray-900 text-lg tracking-tight">
-                        #{order.id}
-                      </span>
-                      <span className="text-sm text-gray-500 font-medium hidden sm:inline-block">
-                        | {formatDate(order.ngay_tao)}
-                      </span>
-                    </div>
-                    <div>{renderStatus(order.trang_thai)}</div>
+                {/* Card header */}
+                <div className="order-card__head">
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span className="order-card__id">#{String(order.id).padStart(5, "0")}</span>
+                    <span className="order-card__date">{formatDate(order.ngay_tao)}</span>
                   </div>
+                  <div>{renderStatus(order.trang_thai)}</div>
+                </div>
 
-                  <div className="px-6 py-2">
-                    {(order.chi_tiet_don_hang || [])
-                      .slice(0, 2)
-                      .map((item: any, idx: number) => {
-                        const qty = Number(item.so_luong || 0);
-                        const price = Number(item.don_gia || 0);
-                        const name =
-                          item.bien_the_san_pham?.san_pham?.ten_san_pham ||
-                          "Sản phẩm";
-                        const img =
-                          item.bien_the_san_pham?.san_pham?.anh_chinh ||
-                          "https://placehold.co/150";
+                {/* Products */}
+                <div className="order-card__body">
+                  {(order.chi_tiet_don_hang || []).slice(0, 2).map((item: any, idx: number) => {
+                    const qty = Number(item.so_luong || 0);
+                    const price = Number(item.don_gia || 0);
+                    const name = item.bien_the_san_pham?.san_pham?.ten_san_pham || "Sản phẩm";
+                    const img = item.bien_the_san_pham?.san_pham?.anh_chinh || "https://placehold.co/150";
+                    return (
+                      <div key={idx} className="order-card__product">
+                        <img src={img} alt={name} className="order-card__product-img" />
+                        <div className="order-card__product-info">
+                          <span className="order-card__product-name">{name}</span>
+                          <span className="order-card__product-qty">Số lượng: {qty}</span>
+                        </div>
+                        <span className="order-card__product-price">
+                          {(price * qty).toLocaleString("vi-VN")}đ
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                        return (
-                          <div
-                            key={idx}
-                            className="flex gap-4 py-4 border-b border-gray-50 last:border-0 items-center"
-                          >
-                            <img
-                              src={img}
-                              alt={name}
-                              className="w-16 h-16 rounded-xl object-cover border border-gray-100 bg-gray-50"
-                            />
-                            <div className="flex-1">
-                              <h4 className="font-bold text-gray-900 line-clamp-1">
-                                {name}
-                              </h4>
-                              <p className="text-xs text-gray-500 mt-1 font-medium">
-                                Số lượng: {qty}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <span className="font-black text-[#007832]">
-                                {(price * qty).toLocaleString("vi-VN")}đ
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
+                {/* Card footer */}
+                <div className="order-card__foot">
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 13, color: "#6b7280" }}>Tổng thanh toán:</span>
+                    <span className="order-card__total">
+                      {parseFloat(order.tong_tien?.toString() || "0").toLocaleString("vi-VN")}đ
+                    </span>
                   </div>
-
-                  <div className="px-6 py-5 bg-[#F9FAF8] flex flex-col md:flex-row justify-between gap-4 items-center">
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                      <span className="text-sm font-bold text-gray-500">
-                        Tổng thanh toán:
-                      </span>
-                      <span className="text-2xl font-black text-[#007832]">
-                        {parseFloat(
-                          order.tong_tien?.toString() || "0",
-                        ).toLocaleString("vi-VN")}
-                        đ
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2 w-full md:w-auto">
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="order-card__btn order-card__btn--ghost"
+                    >
+                      <Eye size={14} /> Chi tiết
+                    </button>
+                    {order.trang_thai === "DA_GIAO" && (
                       <button
-                        onClick={() => setSelectedOrder(order)}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                        onClick={() => setReturnOrder(order)}
+                        className="order-card__btn order-card__btn--danger"
                       >
-                        <Eye className="w-4 h-4" /> Chi tiết
+                        <RefreshCcw size={14} /> Hoàn trả
                       </button>
-
-                      {/* ĐIỀU KIỆN ĐỂ HIỂN THỊ NÚT ĐỔI TRẢ */}
-                      {order.trang_thai === "DA_GIAO" && (
-                        <button
-                          onClick={() => setReturnOrder(order)}
-                          className="flex-1 md:flex-none flex items-center justify-center gap-1.5 bg-rose-50 text-rose-600 px-5 py-2.5 rounded-xl font-bold hover:bg-rose-100 transition-colors"
-                        >
-                          <RefreshCcw className="w-4 h-4" /> Hoàn trả
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          )}
-        </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
       </div>
 
       {/* ========================================= */}
@@ -574,6 +531,17 @@ export default function MyOrdersPage() {
                         )}
                       </div>
                     </section>
+
+                    {/* Theo dõi vận chuyển GHN */}
+                    {selectedOrder.don_van_chuyen?.some((s: any) => s.ma_van_don) && (
+                      <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-bold text-gray-900 mb-4">Theo dõi vận chuyển</h3>
+                        <TrackingTimeline
+                          orderId={selectedOrder.id}
+                          orderCode={selectedOrder.don_van_chuyen.find((s: any) => s.ma_van_don)?.ma_van_don}
+                        />
+                      </section>
+                    )}
                   </div>
                 </div>
               </div>

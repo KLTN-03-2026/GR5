@@ -1,5 +1,1 @@
-import { redirect } from "next/navigation";
-
-export default function AccountOrdersPage() {
-  redirect("/orders");
-}
+export { default } from "@/app/(store)/orders/page";

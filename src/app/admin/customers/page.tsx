@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import React, { useState, useEffect } from "react";
 import {
   Users,
   UserPlus,
@@ -108,16 +107,13 @@ export default function CustomersPage() {
                 size={18}
               />
               <input
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleFilterClick()}
-                className="w-full bg-white border-none rounded-xl py-2.5 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-[#006b2c]/20"
-                placeholder="Tìm theo tên, email, sđt..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
+                className="w-full bg-white border-none rounded-xl py-2.5 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-[#006b2c]/20"
+                placeholder="Tìm theo tên, email, sđt..."
               />
             </div>
             <div className="flex gap-3">
@@ -224,7 +220,6 @@ export default function CustomersPage() {
       {/* Right Detail Panel */}
       <AnimatePresence>
         {isPanelOpen && selectedCustomer && (
-        {isPanelOpen && selectedCustomer && (
           <motion.aside
             initial={{ x: 380 }}
             animate={{ x: 0 }}
@@ -257,12 +252,12 @@ export default function CustomersPage() {
               <div className="grid grid-cols-2 gap-3">
                 <StatBox
                   label="Tổng chi tiêu"
-                  value={formatCurrency(selectedCustomer.tongChiTieu)}
+                  value={selectedCustomer.spent ?? "—"}
                   color="text-[#006b2c]"
                 />
                 <StatBox
                   label="Số đơn hàng"
-                  value={`${selectedCustomer.tongDon} đơn`}
+                  value={`${selectedCustomer.orders ?? 0} đơn`}
                 />
               </div>
             </div>

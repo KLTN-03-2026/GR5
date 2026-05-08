@@ -2,7 +2,7 @@ import React from "react";
 import StaffSidebar from "@/components/staff/layout/StaffSidebar";
 import StaffTopbar from "@/components/staff/layout/StaffTopbar";
 import { auth } from "@/lib/auth";
-import { isStaff } from "@/lib/rbac";
+import { isStaff, isThuKho } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 
 export const metadata = {
@@ -19,7 +19,7 @@ export default async function StaffLayout({
 
   // Double-check: middleware đã chặn rồi nhưng layout guard thêm lớp bảo vệ
   if (!session?.user) redirect("/login");
-  if (!isStaff(session.user)) redirect("/403");
+  if (!isStaff(session.user) && !isThuKho(session.user)) redirect("/403");
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">

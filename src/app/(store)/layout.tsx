@@ -18,7 +18,7 @@ export default async function StoreLayout({
         {/* 3. Truyền session vào Header */}
         <Header session={session} />
 
-        <main className="grow pt-24">{children}</main>
+        <main className="grow pt-24 flex flex-col w-full">{children}</main>
 
         <Chatbot />
         <Footer />

@@ -3,30 +3,33 @@ import prisma from "@/lib/prisma";
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const params = await context.params;
-    const reviewId = parseInt(params.id);
+    const { id } = await context.params;
+    const reviewId = parseInt(id);
     const body = await request.json();
 
-    // Giả sử bảng danh_gia_san_pham có cột trang_thai (VD: "HIEN_THI" hoặc "DA_AN")
-    // Nếu team sếp dùng cột boolean (VD: hien_thi: true/false) thì sếp sửa lại chỗ này nhé.
+    const data: any = {};
+    if (body.trang_thai    !== undefined) data.trang_thai   = body.trang_thai;
+    if (body.phan_hoi_admin !== undefined) {
+      data.phan_hoi_admin = body.phan_hoi_admin;
+      data.ngay_phan_hoi  = body.phan_hoi_admin ? new Date() : null;
+    }
+
     const updated = await prisma.danh_gia_san_pham.update({
       where: { id: reviewId },
-      data: { trang_thai: body.trang_thai } 
+      data,
     });
     return NextResponse.json(updated);
   } catch (error) {
-    return NextResponse.json({ error: "Lỗi cập nhật trạng thái" }, { status: 500 });
+    return NextResponse.json({ error: "Lỗi cập nhật" }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const params = await context.params;
-    const reviewId = parseInt(params.id);
-
-    await prisma.danh_gia_san_pham.delete({ where: { id: reviewId } });
+    const { id } = await context.params;
+    await prisma.danh_gia_san_pham.delete({ where: { id: parseInt(id) } });
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: "Lỗi khi xóa đánh giá" }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Lỗi khi xóa" }, { status: 500 });
   }
 }

@@ -43,11 +43,13 @@ const menuItems = [
     icon: FaPeopleCarry,
     description: "Nhân viên & phân ca",
     subItems: [
+      { name: "Tổng quan nhân sự", path: "/admin/hr" },
       { name: "Danh sách nhân viên", path: "/admin/hr/employees" },
       { name: "Phân ca làm việc", path: "/admin/hr/shifts" },
       { name: "Chấm công hôm nay", path: "/admin/hr/attendance" },
       { name: "Bảng lương", path: "/admin/hr/payroll" },
       { name: "Quản lý nghỉ phép", path: "/admin/hr/leave" },
+      { name: "Kanban giao việc", path: "/admin/hr/tasks" },
     ],
   },
 ];
@@ -91,7 +93,7 @@ export default function AdminSidebar() {
 
       {/* Role Badge */}
       <div className="mx-5 mb-2 mt-4">
-        <p className="text-[10px] text-[#94a3b8] uppercase tracking-widest">Quyền truy cập</p>
+        <p className="text-[10px] text-[#94a3b8] tracking-[0.06em]">Quyền truy cập</p>
       </div>
 
       {/* Navigation Links */}
@@ -177,7 +179,7 @@ export default function AdminSidebar() {
       </nav>
 
       {/* Footer Profile */}
-      <div className="p-4 mt-auto">
+      <div className="p-4 mt-auto border-t border-[#e5e7eb]/10 pt-3">
         <div className="bg-white/5 rounded-xl p-3 flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer border border-white/5">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold text-sm">
