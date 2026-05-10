@@ -43,6 +43,8 @@ interface KPI {
   dangGiao: number;
   choGiao: number;
   daGiao: number;
+  giaoThatBai?: number;
+  doiTra?: number;
   daHuy: number;
   tongDonHomNay: number;
   doanhThuHomNay: number;
@@ -51,11 +53,13 @@ interface KPI {
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 const ORDER_TABS = [
-  { id: "", label: "Tất cả", icon: ClipboardList, activeBg: "bg-[#F1EFE8]", activeText: "text-[#5F5E5A]", badgeBg: "bg-[#5F5E5A]" },
+  { id: "", label: "Tất cả", icon: ClipboardList, activeBg: "bg-[#F5F5F4]", activeText: "text-[#5F5E5A]", badgeBg: "bg-[#5F5E5A]" },
   { id: "CHO_XAC_NHAN", label: "Chờ xác nhận", icon: Clock, activeBg: "bg-[#FAEEDA]", activeText: "text-[#BA7517]", badgeBg: "bg-[#BA7517]" },
-  { id: "CHO_GIAO_HANG", label: "Chờ giao", icon: Package, activeBg: "bg-[#E6F1FB]", activeText: "text-[#185FA5]", badgeBg: "bg-[#185FA5]" },
-  { id: "DANG_GIAO_HANG", label: "Đang giao", icon: Truck, activeBg: "bg-[#F1EFE8]", activeText: "text-[#5F5E5A]", badgeBg: "bg-[#5F5E5A]" },
+  { id: "CHO_GIAO_HANG", label: "Chờ giao", icon: Package, activeBg: "bg-[#E8F5F0]", activeText: "text-[#1D9E75]", badgeBg: "bg-[#1D9E75]" },
+  { id: "DANG_GIAO_HANG", label: "Đang giao", icon: Truck, activeBg: "bg-[#E8F5F0]", activeText: "text-[#1D9E75]", badgeBg: "bg-[#1D9E75]" },
   { id: "DA_GIAO", label: "Đã giao", icon: PackageCheck, activeBg: "bg-[#EAF3DE]", activeText: "text-[#3B6D11]", badgeBg: "bg-[#3B6D11]" },
+  { id: "GIAO_THAT_BAI", label: "Giao thất bại", icon: AlertCircle, activeBg: "bg-[#FCEBEB]", activeText: "text-[#A32D2D]", badgeBg: "bg-[#A32D2D]" },
+  { id: "YEU_CAU_DOI_TRA", label: "Đổi trả", icon: RefreshCw, activeBg: "bg-[#FAEEDA]", activeText: "text-[#BA7517]", badgeBg: "bg-[#BA7517]" },
   { id: "DA_HUY", label: "Đã hủy", icon: XCircle, activeBg: "bg-[#FCEBEB]", activeText: "text-[#A32D2D]", badgeBg: "bg-[#A32D2D]" },
 ];
 
@@ -63,7 +67,7 @@ const ORDER_TABS = [
 const PAYMENT_METHOD_LABELS: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   COD:   { label: "Tiền mặt", icon: Banknote, color: "text-[#3B6D11]" },
   MOMO:  { label: "MoMo", icon: Wallet, color: "text-pink-600" },
-  VNPAY: { label: "VNPay", icon: CreditCard, color: "text-[#185FA5]" },
+  VNPAY: { label: "VNPay", icon: CreditCard, color: "text-[#1D9E75]" },
   BANK:  { label: "Chuyển khoản", icon: Building2, color: "text-purple-700" },
 };
 
@@ -75,9 +79,13 @@ const PAYMENT_STATUS_CONFIG: Record<string, { label: string; style: string }> = 
 
 const ORDER_STATUS_CONFIG: Record<string, { label: string; icon: string; style: string }> = {
   CHO_XAC_NHAN:    { label: "Chờ xác nhận", icon: "⏳", style: "bg-[#FAEEDA] text-[#BA7517] border border-[#BA7517]/30" },
-  CHO_GIAO_HANG:   { label: "Chờ giao", icon: "📦", style: "bg-[#E6F1FB] text-[#185FA5] border border-[#185FA5]/30" },
-  DANG_GIAO_HANG:  { label: "Đang giao", icon: "🚚", style: "bg-[#F1EFE8] text-[#5F5E5A] border border-[#5F5E5A]/30" },
+  DA_THANH_TOAN:   { label: "Đã thanh toán", icon: "💳", style: "bg-[#EAF3DE] text-[#3B6D11] border border-[#3B6D11]/30" },
+  CHO_GIAO_HANG:   { label: "Chờ giao", icon: "📦", style: "bg-[#E8F5F0] text-[#1D9E75] border border-[#1D9E75]/30" },
+  DANG_GIAO_HANG:  { label: "Đang giao", icon: "🚚", style: "bg-[#E8F5F0] text-[#1D9E75] border border-[#1D9E75]/30" },
   DA_GIAO:         { label: "Đã giao", icon: "✓", style: "bg-[#EAF3DE] text-[#3B6D11] border border-[#3B6D11]/30" },
+  GIAO_THAT_BAI:   { label: "Giao thất bại", icon: "!", style: "bg-[#FCEBEB] text-[#A32D2D] border border-[#A32D2D]/30" },
+  YEU_CAU_DOI_TRA: { label: "Yêu cầu đổi trả", icon: "↩", style: "bg-[#FAEEDA] text-[#BA7517] border border-[#BA7517]/30" },
+  DA_HOAN_TRA:     { label: "Đã hoàn trả", icon: "↺", style: "bg-[#F5F5F4] text-[#5F5E5A] border border-[#5F5E5A]/30" },
   DA_HUY:          { label: "Đã hủy", icon: "✕", style: "bg-[#FCEBEB] text-[#A32D2D] border border-[#A32D2D]/30" },
 };
 
@@ -236,6 +244,8 @@ export default function StaffOrdersPage() {
       case "CHO_GIAO_HANG": return kpi.choGiao;
       case "DANG_GIAO_HANG": return kpi.dangGiao;
       case "DA_GIAO": return kpi.daGiao;
+      case "GIAO_THAT_BAI": return kpi.giaoThatBai ?? 0;
+      case "YEU_CAU_DOI_TRA": return kpi.doiTra ?? 0;
       case "DA_HUY": return kpi.daHuy;
       default: return 0;
     }
@@ -249,7 +259,7 @@ export default function StaffOrdersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[20px] font-semibold text-gray-900 flex items-center gap-2">
-            <ClipboardList size={22} className="text-[#185FA5]" />
+            <ClipboardList size={22} className="text-[#1D9E75]" />
             Quản Lý Đơn Hàng
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -270,7 +280,7 @@ export default function StaffOrdersPage() {
             disabled={refreshing}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-[10px] hover:bg-gray-50 text-sm font-medium transition-colors shadow-sm"
           >
-            <RefreshCw size={15} className={refreshing ? "animate-spin text-[#185FA5]" : "text-gray-500"} />
+            <RefreshCw size={15} className={refreshing ? "animate-spin text-[#1D9E75]" : "text-gray-500"} />
             Làm mới
           </button>
         </div>
@@ -296,32 +306,32 @@ export default function StaffOrdersPage() {
 
         <button
           onClick={() => { setActiveTab(""); setPaymentFilter("BANK"); }}
-          className="bg-white rounded-[10px] border border-[#185FA5]/20 p-4 text-left hover:shadow-md transition-shadow"
+          className="bg-white rounded-[10px] border border-[#1D9E75]/20 p-4 text-left hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-medium text-gray-500 uppercase tracking-[0.06em]">Chờ xác nhận CK</span>
-            <div className="w-7 h-7 bg-[#E6F1FB] rounded-lg flex items-center justify-center">
-              <Building2 size={14} className="text-[#185FA5]" />
+            <div className="w-7 h-7 bg-[#E8F5F0] rounded-lg flex items-center justify-center">
+              <Building2 size={14} className="text-[#1D9E75]" />
             </div>
           </div>
           <p className="text-2xl font-semibold text-gray-900">{kpi.choXacNhanCK}</p>
-          <p className="text-[11px] text-[#185FA5] mt-1 flex items-center gap-1">
+          <p className="text-[11px] text-[#1D9E75] mt-1 flex items-center gap-1">
             <Bell size={10} /> chuyển khoản chờ duyệt
           </p>
         </button>
 
         <button
           onClick={() => setActiveTab("DANG_GIAO_HANG")}
-          className="bg-white rounded-[10px] border border-[#5F5E5A]/20 p-4 text-left hover:shadow-md transition-shadow"
+          className="bg-white rounded-[10px] border border-[#1D9E75]/20 p-4 text-left hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-medium text-gray-500 uppercase tracking-[0.06em]">Đang giao</span>
-            <div className="w-7 h-7 bg-[#F1EFE8] rounded-lg flex items-center justify-center">
-              <Truck size={14} className="text-[#5F5E5A]" />
+            <div className="w-7 h-7 bg-[#E8F5F0] rounded-lg flex items-center justify-center">
+              <Truck size={14} className="text-[#1D9E75]" />
             </div>
           </div>
           <p className="text-2xl font-semibold text-gray-900">{kpi.dangGiao}</p>
-          <p className="text-[11px] text-[#5F5E5A] mt-1 flex items-center gap-1">
+          <p className="text-[11px] text-[#1D9E75] mt-1 flex items-center gap-1">
             <Truck size={10} /> đơn trên đường
           </p>
         </button>
@@ -342,14 +352,14 @@ export default function StaffOrdersPage() {
 
       {/* ── Alert banner: chờ xác nhận CK ── */}
       {bankPendingOrders.length > 0 && (
-        <div className="bg-[#E6F1FB] border border-[#185FA5]/30 border-l-4 border-l-[#185FA5] rounded-[10px] p-4 flex items-start justify-between gap-3">
+        <div className="bg-[#E8F5F0] border border-[#1D9E75]/30 border-l-4 border-l-[#1D9E75] rounded-[10px] p-4 flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <AlertCircle className="text-[#185FA5] mt-0.5 shrink-0" size={18} />
+            <AlertCircle className="text-[#1D9E75] mt-0.5 shrink-0" size={18} />
             <div>
-              <h3 className="text-[#185FA5] font-semibold text-[14px]">
+              <h3 className="text-[#1D9E75] font-semibold text-[14px]">
                 Có {bankPendingOrders.length} đơn chờ xác nhận chuyển khoản
               </h3>
-              <p className="text-[12px] text-[#185FA5]/80 mt-0.5">
+              <p className="text-[12px] text-[#1D9E75]/80 mt-0.5">
                 Kiểm tra tài khoản ngân hàng và xác nhận các giao dịch khớp.
               </p>
             </div>
@@ -358,7 +368,7 @@ export default function StaffOrdersPage() {
             <button
               onClick={handleBulkConfirm}
               disabled={bulkLoading}
-              className="shrink-0 flex items-center gap-2 px-4 py-2 bg-[#185FA5] hover:bg-[#125087] text-white text-sm font-semibold rounded-lg transition-colors"
+              className="shrink-0 flex items-center gap-2 px-4 py-2 bg-[#1D9E75] hover:bg-[#158a63] text-white text-sm font-semibold rounded-lg transition-colors"
             >
               {bulkLoading ? <Loader2 size={13} className="animate-spin" /> : <CheckSquare size={13} />}
               Xác nhận {selectedIds.size} đơn
@@ -404,7 +414,7 @@ export default function StaffOrdersPage() {
               value={searchInput}
               onChange={(e) => handleSearchInput(e.target.value)}
               placeholder="Tìm theo mã đơn, tên khách, SĐT..."
-              className="w-full pl-9 pr-4 py-2 text-[14px] bg-[#F1EFE8] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#185FA5]/40 focus:border-[#185FA5]"
+              className="w-full pl-9 pr-4 py-2 text-[14px] bg-[#F5F5F4] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/40 focus:border-[#1D9E75]"
             />
             {searchInput && (
               <button onClick={() => { setSearchInput(""); setSearch(""); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -416,7 +426,7 @@ export default function StaffOrdersPage() {
           <select
             value={paymentFilter}
             onChange={(e) => setPaymentFilter(e.target.value)}
-            className="px-3 py-2 text-[14px] bg-[#F1EFE8] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#185FA5]/40"
+            className="px-3 py-2 text-[14px] bg-[#F5F5F4] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/40"
           >
             <option value="">Tất cả TT</option>
             <option value="COD">Tiền mặt (COD)</option>
@@ -431,21 +441,21 @@ export default function StaffOrdersPage() {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="px-2 py-2 text-[13px] bg-[#F1EFE8] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#185FA5]/40"
+              className="px-2 py-2 text-[13px] bg-[#F5F5F4] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/40"
             />
             <span className="text-gray-400 text-[12px]">→</span>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="px-2 py-2 text-[13px] bg-[#F1EFE8] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#185FA5]/40"
+              className="px-2 py-2 text-[13px] bg-[#F5F5F4] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/40"
             />
           </div>
 
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 text-[14px] bg-[#F1EFE8] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#185FA5]/40"
+            className="px-3 py-2 text-[14px] bg-[#F5F5F4] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/40"
           >
             <option value="newest">Mới nhất</option>
             <option value="oldest">Cũ nhất</option>
@@ -469,7 +479,7 @@ export default function StaffOrdersPage() {
         <div className="flex items-center gap-3 px-1">
           <button
             onClick={selectAllVisible}
-            className="flex items-center gap-1.5 text-[12px] text-[#185FA5] hover:text-[#185FA5]/80 font-medium"
+            className="flex items-center gap-1.5 text-[12px] text-[#1D9E75] hover:text-[#1D9E75]/80 font-medium"
           >
             {selectedIds.size === bankPendingOrders.length ? <CheckSquare size={14} /> : <Square size={14} />}
             {selectedIds.size === bankPendingOrders.length ? "Bỏ chọn tất cả" : `Chọn tất cả ${bankPendingOrders.length} đơn chờ CK`}
@@ -486,7 +496,7 @@ export default function StaffOrdersPage() {
         <div className={`bg-white rounded-[10px] shadow-sm border border-gray-100 overflow-hidden transition-all ${selectedOrder ? "w-[60%]" : "flex-1"}`}>
           {loading ? (
             <div className="flex items-center justify-center h-48">
-              <Loader2 className="animate-spin text-[#185FA5]" size={28} />
+              <Loader2 className="animate-spin text-[#1D9E75]" size={28} />
             </div>
           ) : orders.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-gray-400">
@@ -497,7 +507,7 @@ export default function StaffOrdersPage() {
             <>
               <div className="overflow-x-auto">
                 <table className="w-full text-[14px]">
-                  <thead className="bg-[#F1EFE8] text-gray-500 border-b border-gray-100">
+                  <thead className="bg-[#F5F5F4] text-gray-500 border-b border-gray-100">
                     <tr>
                       <th className="px-3 py-3 w-8"></th>
                       <th className="px-3 py-3 text-left"><span className="text-[11px] font-medium uppercase tracking-[0.06em]">Mã đơn</span></th>
@@ -524,14 +534,14 @@ export default function StaffOrdersPage() {
                           key={order.id}
                           onClick={() => setSelectedOrder(isSelected ? null : order)}
                           className={`cursor-pointer transition-colors ${
-                            isSelected ? "bg-[#E6F1FB] border-l-4 border-l-[#185FA5]" : "hover:bg-[#F1EFE8]"
+                            isSelected ? "bg-[#E8F5F0] border-l-4 border-l-[#1D9E75]" : "hover:bg-[#F5F5F4]"
                           }`}
                         >
                           <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                             {isBankPending ? (
                               <button onClick={() => toggleSelect(order.id)}>
                                 {selectedIds.has(order.id)
-                                  ? <CheckSquare size={15} className="text-[#185FA5]" />
+                                  ? <CheckSquare size={15} className="text-[#1D9E75]" />
                                   : <Square size={15} className="text-gray-300 hover:text-gray-500" />}
                               </button>
                             ) : null}
@@ -581,7 +591,7 @@ export default function StaffOrdersPage() {
 
                           <td className="px-3 py-3">
                             {order.maVanDon ? (
-                              <span className="text-[11px] font-mono text-[#185FA5] bg-[#E6F1FB] px-1.5 py-0.5 rounded">
+                              <span className="text-[11px] font-mono text-[#1D9E75] bg-[#E8F5F0] px-1.5 py-0.5 rounded">
                                 {order.maVanDon.slice(-8)}
                               </span>
                             ) : (
@@ -595,7 +605,7 @@ export default function StaffOrdersPage() {
                           </td>
 
                           <td className="px-3 py-3">
-                            <ChevronRight size={14} className={`transition-transform ${isSelected ? "rotate-90 text-[#185FA5]" : "text-gray-300"}`} />
+                            <ChevronRight size={14} className={`transition-transform ${isSelected ? "rotate-90 text-[#1D9E75]" : "text-gray-300"}`} />
                           </td>
                         </tr>
                       );
@@ -629,7 +639,7 @@ export default function StaffOrdersPage() {
                           key={pageNum}
                           onClick={() => setPage(pageNum)}
                           className={`w-7 h-7 rounded-lg text-[12px] font-medium ${
-                            page === pageNum ? "bg-[#185FA5] text-white" : "text-gray-500 hover:bg-gray-100"
+                            page === pageNum ? "bg-[#1D9E75] text-white" : "text-gray-500 hover:bg-gray-100"
                           }`}
                         >
                           {pageNum}
@@ -653,7 +663,7 @@ export default function StaffOrdersPage() {
         {/* Right — Quick Preview Panel */}
         {selectedOrder && (
           <div className="w-[40%] bg-white rounded-[10px] shadow-sm border border-gray-100 overflow-hidden flex flex-col sticky top-4">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-[#F1EFE8]">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-[#F5F5F4]">
               <div>
                 <h2 className="font-bold text-gray-900 font-mono text-[15px]">{selectedOrder.maHienThi}</h2>
                 <p className="text-[12px] text-gray-500">{selectedOrder.timeAgo}</p>
@@ -702,16 +712,16 @@ export default function StaffOrdersPage() {
 
               {/* Vận đơn */}
               {selectedOrder.maVanDon && (
-                <div className="bg-[#E6F1FB] border border-[#185FA5]/20 rounded-lg p-2.5">
+                <div className="bg-[#E8F5F0] border border-[#1D9E75]/20 rounded-lg p-2.5">
                   <p className="text-[11px] font-medium text-gray-400 uppercase tracking-[0.06em] mb-1">Mã vận đơn GHN</p>
-                  <p className="font-mono text-[13px] text-[#185FA5] font-semibold">{selectedOrder.maVanDon}</p>
+                  <p className="font-mono text-[13px] text-[#1D9E75] font-semibold">{selectedOrder.maVanDon}</p>
                 </div>
               )}
 
               {/* Sản phẩm */}
               <div>
                 <p className="text-[11px] font-medium text-gray-400 uppercase tracking-[0.06em] mb-1">Sản phẩm ({selectedOrder.itemCount})</p>
-                <p className="text-[13px] text-gray-700 bg-[#F1EFE8] rounded-lg p-2.5 leading-relaxed">{selectedOrder.products || "—"}</p>
+                <p className="text-[13px] text-gray-700 bg-[#F5F5F4] rounded-lg p-2.5 leading-relaxed">{selectedOrder.products || "—"}</p>
               </div>
 
               {/* Ghi chú */}
@@ -725,9 +735,17 @@ export default function StaffOrdersPage() {
               )}
 
               {/* Tổng tiền */}
-              <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                <span className="text-[13px] text-gray-500">Tổng cộng</span>
-                <span className="text-[16px] font-semibold text-gray-900 font-mono">{fmtCurrency(selectedOrder.total)}</span>
+              <div className="pt-2 border-t border-gray-100 space-y-1">
+                {selectedOrder.shippingFee > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] text-gray-400">Phí vận chuyển</span>
+                    <span className="text-[12px] text-gray-500 font-mono">{fmtCurrency(selectedOrder.shippingFee)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-[13px] text-gray-500">Tổng cộng</span>
+                  <span className="text-[16px] font-semibold text-gray-900 font-mono">{fmtCurrency(selectedOrder.total)}</span>
+                </div>
               </div>
 
               {/* Timeline mini */}

@@ -3,9 +3,18 @@
 import { signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
 import prisma from "@/lib/prisma";
+import { headers } from "next/headers";
+import { rateLimit } from "@/lib/rate-limit";
 
 // ── 1. Đăng nhập bằng Email + Password ──────────────────────────────────────
 export async function handleLogin(formData: FormData) {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") ?? "unknown";
+  const { success: allowed } = rateLimit(`login:${ip}`, 5, 60_000);
+  if (!allowed) {
+    return { error: "Bạn đã thử quá nhiều lần. Vui lòng đợi 1 phút." };
+  }
+
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 

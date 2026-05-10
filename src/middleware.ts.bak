@@ -1,0 +1,34 @@
+import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+
+export default auth((req) => {
+  const { pathname } = req.nextUrl;
+  const session = req.auth;
+
+  const protectedRoutes = [
+    { path: "/admin", roles: ["ADMIN"] },
+    { path: "/staff", roles: ["STAFF", "ADMIN"] },
+    { path: "/account", roles: ["CUSTOMER", "STAFF", "ADMIN"] },
+  ];
+
+  for (const route of protectedRoutes) {
+    if (pathname.startsWith(route.path)) {
+      if (!session?.user) {
+        const loginUrl = new URL("/login", req.url);
+        loginUrl.searchParams.set("callbackUrl", pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+
+      const userRoles = (session.user as any).roles as string[] | undefined;
+      if (!userRoles || !userRoles.some((r) => route.roles.includes(r))) {
+        return NextResponse.redirect(new URL("/", req.url));
+      }
+    }
+  }
+
+  return NextResponse.next();
+});
+
+export const config = {
+  matcher: ["/admin/:path*", "/staff/:path*", "/account/:path*"],
+};

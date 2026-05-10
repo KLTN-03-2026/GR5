@@ -69,18 +69,18 @@ interface OrderDetail {
   }[];
 }
 
-// ─── Design tokens (staff.md §2.1) ──────────────────────────────────────────
-// Green  #3B6D11 / bg #EAF3DE  — thành công, đủ hàng
-// Amber  #BA7517 / bg #FAEEDA  — cần hành động
-// Red    #A32D2D / bg #FCEBEB  — lỗi, cảnh báo
-// Blue   #185FA5 / bg #E6F1FB  — thông tin, CK
-// Gray   #5F5E5A / bg #F1EFE8  — trung tính
+// ─── Design tokens ──────────────────────────────────────────────────────────
+// Primary #1D9E75 / bg #E8F5F0 — accent, CTA, active
+// Green   #3B6D11 / bg #EAF3DE — thành công, đủ hàng
+// Amber   #BA7517 / bg #FAEEDA — cần hành động
+// Red     #A32D2D / bg #FCEBEB — lỗi, cảnh báo
+// Gray    #5F5E5A / bg #F5F5F4 — trung tính
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const PAYMENT_METHOD_INFO: Record<string, { label: string; icon: React.ElementType; color: string; bg: string }> = {
   COD:   { label: "Tiền mặt khi nhận hàng",  icon: Banknote,   color: "text-[#3B6D11]",  bg: "bg-[#EAF3DE]" },
   MOMO:  { label: "Ví MoMo",                  icon: Wallet,     color: "text-pink-700",    bg: "bg-pink-50"   },
-  VNPAY: { label: "VNPay",                    icon: CreditCard, color: "text-[#185FA5]",  bg: "bg-[#E6F1FB]" },
+  VNPAY: { label: "VNPay",                    icon: CreditCard, color: "text-[#1D9E75]",  bg: "bg-[#E8F5F0]" },
   BANK:  { label: "Chuyển khoản ngân hàng",   icon: Building2,  color: "text-purple-700",  bg: "bg-purple-50" },
 };
 
@@ -220,7 +220,7 @@ export default function StaffOrderDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-[#185FA5]" size={32} />
+        <Loader2 className="animate-spin text-[#1D9E75]" size={32} />
       </div>
     );
   }
@@ -229,7 +229,7 @@ export default function StaffOrderDetailPage() {
     return (
       <div className="text-center py-20">
         <p className="text-gray-500 mb-4">Không tìm thấy đơn hàng</p>
-        <Link href="/staff/orders" className="text-[#185FA5] underline text-sm">← Quay lại danh sách</Link>
+        <Link href="/staff/orders" className="text-[#1D9E75] underline text-sm">← Quay lại danh sách</Link>
       </div>
     );
   }
@@ -255,7 +255,7 @@ export default function StaffOrderDetailPage() {
       {/* ── Breadcrumb + Tab switcher (staff.md §3) ── */}
       <div className="flex items-center justify-between">
         <nav className="flex items-center gap-1 text-[14px] text-gray-500">
-          <Link href="/staff/orders" className="inline-flex items-center gap-1 hover:text-[#185FA5] transition-colors">
+          <Link href="/staff/orders" className="inline-flex items-center gap-1 hover:text-[#1D9E75] transition-colors">
             <ArrowLeft size={15} /> Đơn hàng
           </Link>
           <ChevronRight size={13} className="text-gray-300" />
@@ -276,9 +276,9 @@ export default function StaffOrderDetailPage() {
                     ? tab === "DOI_TRA"
                       ? "bg-[#FCEBEB] text-[#A32D2D]"
                       : tab === "THANH_TOAN"
-                      ? "bg-[#E6F1FB] text-[#185FA5]"
+                      ? "bg-[#E8F5F0] text-[#1D9E75]"
                       : "bg-[#EAF3DE] text-[#3B6D11]"
-                    : "text-gray-500 hover:bg-[#F1EFE8]"
+                    : "text-gray-500 hover:bg-[#F5F5F4]"
                 }`}
               >
                 {labels[tab]}
@@ -332,14 +332,14 @@ export default function StaffOrderDetailPage() {
               {/* Customer card */}
               <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
                 <h3 className="text-[15px] font-semibold text-gray-800 mb-3 flex items-center gap-1.5 border-b pb-2">
-                  <User size={15} className="text-[#185FA5]" /> Khách hàng
+                  <User size={15} className="text-[#1D9E75]" /> Khách hàng
                 </h3>
                 <div className="space-y-2">
                   <p className="font-semibold text-gray-900 text-[14px]">{order.customerName}</p>
                   {order.customerPhone && (
                     <div className="flex items-center gap-2 text-gray-600">
                       <Phone size={13} className="text-gray-400 shrink-0" />
-                      <a href={`tel:${order.customerPhone}`} className="hover:text-[#185FA5] text-[14px]">
+                      <a href={`tel:${order.customerPhone}`} className="hover:text-[#1D9E75] text-[14px]">
                         {order.customerPhone}
                       </a>
                     </div>
@@ -362,7 +362,7 @@ export default function StaffOrderDetailPage() {
               {/* Timeline (staff.md §5.2) */}
               <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
                 <h3 className="text-[15px] font-semibold text-gray-800 mb-3 flex items-center gap-1.5 border-b pb-2">
-                  <CalendarDays size={15} className="text-[#185FA5]" /> Tiến trình đơn
+                  <CalendarDays size={15} className="text-[#1D9E75]" /> Tiến trình đơn
                 </h3>
                 <div className="space-y-3">
                   {ORDER_STATUS_STEPS.map((step, idx) => {
@@ -380,11 +380,11 @@ export default function StaffOrderDetailPage() {
                         </div>
                         <div className="flex-1">
                           <p className={`text-[13px] font-semibold ${
-                            current ? "text-[#185FA5]" : done ? "text-gray-700" : "text-gray-400"
+                            current ? "text-[#1D9E75]" : done ? "text-gray-700" : "text-gray-400"
                           }`}>
                             {step.label}
                             {current && (
-                              <span className="ml-1.5 text-[10px] bg-[#E6F1FB] text-[#185FA5] px-1.5 py-0.5 rounded-full">
+                              <span className="ml-1.5 text-[10px] bg-[#E8F5F0] text-[#1D9E75] px-1.5 py-0.5 rounded-full">
                                 Hiện tại
                               </span>
                             )}
@@ -419,7 +419,7 @@ export default function StaffOrderDetailPage() {
               {order.shipping?.maVanDon ? (
                 <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
                   <h3 className="text-[15px] font-semibold text-gray-800 mb-3 flex items-center gap-1.5 border-b pb-2">
-                    <Truck size={15} className="text-[#185FA5]" /> Vận chuyển
+                    <Truck size={15} className="text-[#1D9E75]" /> Vận chuyển
                   </h3>
                   <div className="space-y-2">
                     {order.shipping.doiTac && (
@@ -431,7 +431,7 @@ export default function StaffOrderDetailPage() {
                     <div className="flex justify-between items-center text-[13px]">
                       <span className="text-gray-400">Mã vận đơn</span>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-[#185FA5] text-[12px]">{order.shipping.maVanDon}</span>
+                        <span className="font-mono text-[#1D9E75] text-[12px]">{order.shipping.maVanDon}</span>
                         <button
                           onClick={() => copyToClipboard(order.shipping!.maVanDon!, "mã vận đơn")}
                           className="text-gray-400 hover:text-gray-600"
@@ -453,7 +453,7 @@ export default function StaffOrderDetailPage() {
               ) : (
                 <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
                   <h3 className="text-[15px] font-semibold text-gray-800 mb-3 flex items-center gap-1.5 border-b pb-2">
-                    <Hash size={15} className="text-[#185FA5]" /> Thông tin đơn
+                    <Hash size={15} className="text-[#1D9E75]" /> Thông tin đơn
                   </h3>
                   <div className="space-y-2 text-[13px]">
                     <div className="flex justify-between">
@@ -478,7 +478,7 @@ export default function StaffOrderDetailPage() {
             {/* Product list (staff.md §5.3) */}
             <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
               <h3 className="text-[15px] font-semibold text-gray-800 mb-3 flex items-center gap-1.5 border-b pb-2">
-                <Package size={15} className="text-[#185FA5]" /> Danh sách sản phẩm ({order.items.length})
+                <Package size={15} className="text-[#1D9E75]" /> Danh sách sản phẩm ({order.items.length})
               </h3>
               <div className="space-y-2">
                 {order.items.map((item) => {
@@ -493,7 +493,7 @@ export default function StaffOrderDetailPage() {
                           ? "bg-[#FAEEDA] border-[#BA7517]/30"
                           : isScanned
                           ? "bg-[#EAF3DE] border-[#3B6D11]/30"
-                          : "bg-[#F1EFE8] border-gray-100"
+                          : "bg-[#F5F5F4] border-gray-100"
                       }`}
                     >
                       {/* Thumbnail */}
@@ -545,7 +545,7 @@ export default function StaffOrderDetailPage() {
                             className={`mt-1 flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border transition-colors ${
                               isScanned
                                 ? "bg-[#EAF3DE] text-[#3B6D11] border-[#3B6D11]/30"
-                                : "bg-white text-gray-500 border-gray-200 hover:border-[#185FA5]/40 hover:text-[#185FA5]"
+                                : "bg-white text-gray-500 border-gray-200 hover:border-[#1D9E75]/40 hover:text-[#1D9E75]"
                             }`}
                           >
                             {isScanned ? <CheckCircle size={10} /> : <QrCode size={10} />}
@@ -586,7 +586,7 @@ export default function StaffOrderDetailPage() {
               <h3 className="text-[15px] font-semibold text-gray-800 mb-4 border-b pb-2">Bảng điều khiển</h3>
 
               {/* Trạng thái hiện tại (staff.md §5.4) */}
-              <div className="mb-4 p-3 rounded-[10px] bg-[#F1EFE8]">
+              <div className="mb-4 p-3 rounded-[10px] bg-[#F5F5F4]">
                 <p className="text-[12px] font-medium text-gray-400 uppercase tracking-[0.06em] mb-1">Trạng thái hiện tại</p>
                 <p className="font-bold text-gray-900 font-mono text-[13px]">{order.maHienThi}</p>
                 <p className="text-[12px] text-gray-500 mt-1">
@@ -618,8 +618,8 @@ export default function StaffOrderDetailPage() {
               {/* ── Luồng CHO_XAC_NHAN (staff.md §5.4) ── */}
               {order.status === "CHO_XAC_NHAN" && (
                 <div className="space-y-2">
-                  <div className="bg-[#E6F1FB] border border-[#185FA5]/20 rounded-lg p-2.5 mb-3">
-                    <p className="text-[12px] text-[#185FA5]">
+                  <div className="bg-[#E8F5F0] border border-[#1D9E75]/20 rounded-lg p-2.5 mb-3">
+                    <p className="text-[12px] text-[#1D9E75]">
                       <strong>Bước tiếp theo:</strong> Kiểm tra thanh toán, tồn kho → xác nhận đơn
                     </p>
                   </div>
@@ -628,7 +628,7 @@ export default function StaffOrderDetailPage() {
                     /* Xác nhận CK trước */
                     <button
                       onClick={() => setActiveTab("THANH_TOAN")}
-                      className="w-full py-3 bg-[#185FA5] hover:bg-[#1250875] text-white font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-3 bg-[#1D9E75] hover:bg-[#1250875] text-white font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
                     >
                       <CreditCard size={15} /> Xác nhận thanh toán trước
                     </button>
@@ -670,14 +670,14 @@ export default function StaffOrderDetailPage() {
                   </div>
 
                   {/* Progress bar */}
-                  <div className="bg-[#F1EFE8] rounded-lg p-3">
+                  <div className="bg-[#F5F5F4] rounded-lg p-3">
                     <div className="flex justify-between text-[12px] text-gray-500 mb-1.5">
                       <span>Tiến độ nhặt hàng</span>
-                      <span className="font-semibold text-[#185FA5]">{scannedItems.size}/{order.items.length}</span>
+                      <span className="font-semibold text-[#1D9E75]">{scannedItems.size}/{order.items.length}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div
-                        className="bg-[#185FA5] h-1.5 rounded-full transition-all duration-300"
+                        className="bg-[#1D9E75] h-1.5 rounded-full transition-all duration-300"
                         style={{ width: `${order.items.length > 0 ? (scannedItems.size / order.items.length) * 100 : 0}%` }}
                       />
                     </div>
@@ -687,7 +687,7 @@ export default function StaffOrderDetailPage() {
                   <button
                     onClick={handleCreateGHN}
                     disabled={!allScanned || ghnLoading}
-                    className="w-full py-3 bg-[#185FA5] hover:bg-[#125087] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-[#1D9E75] hover:bg-[#125087] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
                   >
                     {ghnLoading ? <Loader2 size={15} className="animate-spin" /> : <Truck size={15} />}
                     {allScanned ? "Tạo vận đơn GHN" : `Nhặt đủ ${order.items.length} kiện để tiếp tục`}
@@ -702,7 +702,7 @@ export default function StaffOrderDetailPage() {
                         value={trackingInput}
                         onChange={(e) => setTrackingInput(e.target.value)}
                         placeholder="Mã vận đơn..."
-                        className="flex-1 px-3 py-2 text-[13px] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#185FA5]/40 focus:outline-none bg-[#F1EFE8]"
+                        className="flex-1 px-3 py-2 text-[13px] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1D9E75]/40 focus:outline-none bg-[#F5F5F4]"
                       />
                       <button
                         onClick={() => doAction("ADD_TRACKING", { maVanDon: trackingInput })}
@@ -719,8 +719,8 @@ export default function StaffOrderDetailPage() {
               {/* ── Luồng DANG_GIAO_HANG ── */}
               {order.status === "DANG_GIAO_HANG" && (
                 <div className="space-y-3">
-                  <div className="bg-[#F1EFE8] border border-[#5F5E5A]/20 rounded-lg p-2.5">
-                    <p className="text-[12px] text-[#5F5E5A]">
+                  <div className="bg-[#E8F5F0] border border-[#1D9E75]/20 rounded-lg p-2.5">
+                    <p className="text-[12px] text-[#1D9E75]">
                       <strong>Bước 3:</strong> Đơn đang trên đường giao. Xác nhận khi giao thành công.
                     </p>
                   </div>
@@ -767,7 +767,7 @@ export default function StaffOrderDetailPage() {
                     onChange={(e) => setNoteInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
                     placeholder="Thêm ghi chú..."
-                    className="flex-1 px-3 py-2 text-[13px] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#185FA5]/40 focus:outline-none bg-[#F1EFE8]"
+                    className="flex-1 px-3 py-2 text-[13px] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1D9E75]/40 focus:outline-none bg-[#F5F5F4]"
                   />
                   <button
                     onClick={handleAddNote}
@@ -789,7 +789,7 @@ export default function StaffOrderDetailPage() {
           {/* Left: Thông tin thanh toán */}
           <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
             <h2 className="text-[15px] font-semibold mb-4 flex items-center gap-2 text-gray-800 border-b pb-2">
-              <CreditCard size={16} className="text-[#185FA5]" /> Thông Tin Thanh Toán
+              <CreditCard size={16} className="text-[#1D9E75]" /> Thông Tin Thanh Toán
             </h2>
 
             {pmInfo && payment ? (
@@ -822,18 +822,18 @@ export default function StaffOrderDetailPage() {
                       { label: "Nội dung CK",    value: order.maHienThi,      copyable: true },
                       { label: "Số tiền",        value: fmtCurrency(payment.soTien), copyable: false },
                     ].map((row) => (
-                      <div key={row.label} className="flex justify-between items-center p-2.5 bg-[#F1EFE8] rounded-lg">
+                      <div key={row.label} className="flex justify-between items-center p-2.5 bg-[#F5F5F4] rounded-lg">
                         <div>
                           <p className="text-[11px] text-gray-400 uppercase tracking-[0.06em]">{row.label}</p>
                           <p className={`text-[14px] font-semibold mt-0.5 ${
-                            row.label === "Nội dung CK" ? "text-[#185FA5] font-mono" :
+                            row.label === "Nội dung CK" ? "text-[#1D9E75] font-mono" :
                             row.label === "Số tiền" ? "text-[#3B6D11] font-mono" : "text-gray-800"
                           }`}>
                             {row.value}
                           </p>
                         </div>
                         {row.copyable && (
-                          <button onClick={() => copyToClipboard(row.value, row.label)} className="text-gray-400 hover:text-[#185FA5] transition-colors ml-3">
+                          <button onClick={() => copyToClipboard(row.value, row.label)} className="text-gray-400 hover:text-[#1D9E75] transition-colors ml-3">
                             <Copy size={13} />
                           </button>
                         )}
@@ -855,9 +855,9 @@ export default function StaffOrderDetailPage() {
 
                 {/* VNPAY / MOMO transaction ID */}
                 {payment.maGiaoDich && (
-                  <div className="mt-4 p-3 bg-[#F1EFE8] rounded-lg">
+                  <div className="mt-4 p-3 bg-[#F5F5F4] rounded-lg">
                     <p className="text-[11px] text-gray-400 uppercase tracking-[0.06em]">Mã giao dịch</p>
-                    <p className="font-mono text-[13px] text-[#185FA5] mt-0.5">{payment.maGiaoDich}</p>
+                    <p className="font-mono text-[13px] text-[#1D9E75] mt-0.5">{payment.maGiaoDich}</p>
                   </div>
                 )}
 
@@ -930,7 +930,7 @@ export default function StaffOrderDetailPage() {
             )}
 
             {payment?.phuongThuc === "COD" && (
-              <div className="text-center py-10 bg-[#F1EFE8] rounded-[10px]">
+              <div className="text-center py-10 bg-[#F5F5F4] rounded-[10px]">
                 <Banknote size={40} className="text-[#5F5E5A] mx-auto mb-3" />
                 <p className="font-semibold text-[#5F5E5A] text-[15px]">Thanh toán khi nhận hàng</p>
                 <p className="text-[13px] text-[#5F5E5A]/70 mt-1">
@@ -965,7 +965,7 @@ export default function StaffOrderDetailPage() {
               <div key={req.id} className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <p className="text-[12px] font-medium text-gray-400 uppercase tracking-[0.06em] mb-2">Yêu cầu #{req.id}</p>
-                  <div className="bg-[#F1EFE8] border border-gray-200 rounded-[10px] p-4 space-y-2 text-[14px]">
+                  <div className="bg-[#F5F5F4] border border-gray-200 rounded-[10px] p-4 space-y-2 text-[14px]">
                     <div>
                       <span className="text-gray-400 text-[12px]">Loại:</span>
                       <span className="ml-2 font-semibold text-gray-800">{req.loaiYeuCau}</span>
@@ -996,7 +996,7 @@ export default function StaffOrderDetailPage() {
                   >
                     <CheckCircle size={15} /> Chấp nhận & Trình Admin hoàn tiền
                   </button>
-                  <div className="border border-gray-200 rounded-[10px] p-3 bg-[#F1EFE8]">
+                  <div className="border border-gray-200 rounded-[10px] p-3 bg-[#F5F5F4]">
                     <textarea
                       className="w-full text-[13px] border border-gray-300 rounded-lg p-2 mb-2 focus:outline-none focus:ring-1 focus:ring-[#A32D2D]/30 bg-white resize-none"
                       placeholder="Lý do từ chối (sẽ gửi thông báo đến khách)..."
@@ -1045,7 +1045,7 @@ export default function StaffOrderDetailPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCancelDialog(false)}
-                className="flex-1 py-2.5 bg-white border border-gray-200 hover:bg-[#F1EFE8] text-gray-700 font-semibold text-[14px] rounded-[10px] transition-colors"
+                className="flex-1 py-2.5 bg-white border border-gray-200 hover:bg-[#F5F5F4] text-gray-700 font-semibold text-[14px] rounded-[10px] transition-colors"
               >
                 Giữ đơn hàng
               </button>

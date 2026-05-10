@@ -1,16 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Save, Loader2, Pencil, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { updateProfile } from "@/app/actions/profile";
 import toast from "react-hot-toast";
+import { useUnsavedChanges } from "@/hooks/shared/useUnsavedChanges";
 
 export default function ProfileForm({ user }: { user: any }) {
   const [isPending, setIsPending] = useState(false);
   const [gender, setGender] = useState<string>(user?.gioi_tinh || "");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.anh_dai_dien || null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useUnsavedChanges(isDirty);
 
   async function handleGenderChange(value: string) {
     setGender(value);
@@ -25,7 +29,10 @@ export default function ProfileForm({ user }: { user: any }) {
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) setAvatarPreview(URL.createObjectURL(file));
+    if (file) {
+      setAvatarPreview(URL.createObjectURL(file));
+      setIsDirty(true);
+    }
   }
 
   async function handleSubmit(formData: FormData) {
@@ -34,6 +41,7 @@ export default function ProfileForm({ user }: { user: any }) {
     const res = await updateProfile(formData);
     if ("success" in res) {
       toast.success(res.success);
+      setIsDirty(false);
       if (res.anh_dai_dien) {
         window.dispatchEvent(new CustomEvent("update-avatar", { detail: res.anh_dai_dien }));
       }
@@ -168,6 +176,7 @@ export default function ProfileForm({ user }: { user: any }) {
                     defaultValue={user?.ho_ten || ""}
                     placeholder="Nhập họ và tên đầy đủ"
                     className="profile-input"
+                    onChange={() => setIsDirty(true)}
                   />
                 </div>
 
@@ -200,6 +209,7 @@ export default function ProfileForm({ user }: { user: any }) {
                     defaultValue={user?.so_dien_thoai || ""}
                     placeholder="09xx xxx xxx"
                     className="profile-input"
+                    onChange={() => setIsDirty(true)}
                   />
                 </div>
 
@@ -218,6 +228,7 @@ export default function ProfileForm({ user }: { user: any }) {
                         : ""
                     }
                     className="profile-input"
+                    onChange={() => setIsDirty(true)}
                   />
                 </div>
 

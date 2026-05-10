@@ -201,10 +201,14 @@ export default function ProductDetailClient({
     if (t === "plus" && quantity < 99) setQuantity(q => q + 1);
   };
 
+  const currentStock = selectedVariant?.ton_kho ?? product.bien_the?.reduce((s: number, bt: any) => s + (bt.ton_kho || 0), 0) ?? 0;
+
   const handleAddToCart = () => {
     if (hasVariants && !selectedVariant) return;
+    if (currentStock <= 0) { toast.error("Sản phẩm đã hết hàng"); return; }
     addToCart({
       id: product.id,
+      ma_bien_the: selectedVariant?.id || product.bien_the?.[0]?.id || product.id,
       ten_san_pham: product.ten_san_pham,
       gia_ban: selectedVariant?.gia_ban ?? product.gia_ban,
       anh_chinh: mainImage,
@@ -314,14 +318,38 @@ export default function ProductDetailClient({
             <div className="flex items-center gap-2"><Leaf className="w-4 h-4 text-emerald-600" /> Canh tác hữu cơ</div>
           </div>
 
+          {/* Trạng thái tồn kho */}
+          {(() => {
+            const tonKho = selectedVariant?.ton_kho ?? product.bien_the?.reduce((s: number, bt: any) => s + (bt.ton_kho || 0), 0) ?? 0;
+            if (tonKho <= 0) return (
+              <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-red-50 border border-red-200 rounded-lg w-max">
+                <AlertCircle className="w-4 h-4 text-red-500" />
+                <span className="text-sm font-bold text-red-600">Hết hàng</span>
+              </div>
+            );
+            if (tonKho <= 10) return (
+              <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg w-max">
+                <AlertCircle className="w-4 h-4 text-amber-500" />
+                <span className="text-sm font-bold text-amber-600">Chỉ còn {tonKho} sản phẩm</span>
+              </div>
+            );
+            return (
+              <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg w-max">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span className="text-sm font-bold text-emerald-700">Còn hàng</span>
+              </div>
+            );
+          })()}
+
           {hasVariants && (
             <div className="mb-6">
               <h3 className="font-bold text-xs uppercase tracking-widest text-gray-500 mb-3">Chọn phân loại</h3>
               <div className="flex flex-wrap gap-3">
                 {product.bien_the.map((bt: any) => (
                   <button key={bt.id} onClick={() => setSelectedVariant(bt)}
-                    className={`px-5 py-2 rounded-lg font-bold text-sm border transition-all ${selectedVariant?.id === bt.id ? "border-emerald-700 bg-[#E8F3EC] text-emerald-800" : "border-gray-200 text-gray-600 hover:border-emerald-300"}`}>
-                    {bt.don_vi_tinh || "Mặc định"}{bt.ten_bien_the ? ` · ${bt.ten_bien_the}` : ""}
+                    disabled={bt.ton_kho <= 0}
+                    className={`px-5 py-2 rounded-lg font-bold text-sm border transition-all ${selectedVariant?.id === bt.id ? "border-emerald-700 bg-[#E8F3EC] text-emerald-800" : bt.ton_kho <= 0 ? "border-gray-200 text-gray-300 cursor-not-allowed line-through" : "border-gray-200 text-gray-600 hover:border-emerald-300"}`}>
+                    {bt.don_vi_tinh || "Mặc định"}{bt.ten_bien_the ? ` · ${bt.ten_bien_the}` : ""}{bt.ton_kho <= 0 ? " (Hết)" : ""}
                   </button>
                 ))}
               </div>
@@ -334,9 +362,9 @@ export default function ProductDetailClient({
               <span className="font-bold text-gray-900">{quantity}</span>
               <button onClick={() => handleQuantity("plus")} className="w-10 h-10 flex items-center justify-center rounded text-gray-600 hover:bg-gray-200 transition-all"><Plus className="w-4 h-4" /></button>
             </div>
-            <button onClick={handleAddToCart}
-              className="flex-1 bg-[#065F46] hover:bg-emerald-800 text-white h-12 rounded-lg font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95">
-              <ShoppingCart className="w-4 h-4" /> Thêm vào giỏ hàng
+            <button onClick={handleAddToCart} disabled={currentStock <= 0}
+              className={`flex-1 h-12 rounded-lg font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 ${currentStock <= 0 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-[#065F46] hover:bg-emerald-800 text-white"}`}>
+              <ShoppingCart className="w-4 h-4" /> {currentStock <= 0 ? "Hết hàng" : "Thêm vào giỏ hàng"}
             </button>
             <button
               onClick={handleToggleFav}

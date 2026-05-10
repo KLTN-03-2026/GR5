@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import {
   CalendarDays, FileText, Send, Clock, AlertCircle, CheckCircle2,
   Loader2, X, KeyRound, ScanFace, ShieldCheck, Trash2, Eye, EyeOff,
-  UserCircle, Check, Coffee, Moon
+  UserCircle, Check, Coffee, Moon, ChevronLeft, ChevronRight
 } from "lucide-react";
 
 const FaceRegister = dynamic(() => import("@/components/FaceRegister"), { ssr: false });
@@ -27,22 +27,20 @@ interface DonXinNghi {
 }
 
 const LOAI_NGHI_LABEL: Record<string, string> = {
-  PHEP_NAM: "Nghỉ Phép Năm (Có Lương)",
+  PHEP_NAM: "Nghỉ Phép Năm",
   NGHI_BENH: "Nghỉ Bệnh",
   NGHI_KHONG_LUONG: "Nghỉ Không Lương",
   NGHI_LE: "Nghỉ Lễ",
-  VIEC_RIENG: "Nghỉ Việc Riêng",
+  VIEC_RIENG: "Việc Riêng",
 };
 
 const TRANG_THAI_CONFIG: Record<string, { label: string; cls: string }> = {
-  CHO_DUYET: { label: "Chờ duyệt", cls: "bg-amber-100 text-amber-700" },
-  DA_DUYET: { label: "Đã duyệt", cls: "bg-green-100 text-green-700" },
-  TU_CHOI: { label: "Từ chối", cls: "bg-red-100 text-red-700" },
+  CHO_DUYET: { label: "Chờ duyệt", cls: "bg-[#FAEEDA] text-[#BA7517] border border-[#BA7517]/30" },
+  DA_DUYET: { label: "Đã duyệt", cls: "bg-[#E8F5F0] text-[#1D9E75] border border-[#1D9E75]/30" },
+  TU_CHOI: { label: "Từ chối", cls: "bg-[#FCEBEB] text-[#A32D2D] border border-[#A32D2D]/30" },
 };
 
 export default function HRClient({ userId }: Props) {
-
-  // Leave form state
   const [form, setForm] = useState({
     loai_nghi: "PHEP_NAM",
     ngay_bat_dau: "",
@@ -54,18 +52,9 @@ export default function HRClient({ userId }: Props) {
   const [formSuccess, setFormSuccess] = useState(false);
   const [donList, setDonList] = useState<DonXinNghi[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-
-  // Week navigation
   const [weekOffset, setWeekOffset] = useState(0);
+  const [activeSection, setActiveSection] = useState<Section>("LICH_CA");
 
-  // Expand section
-  const [expandedSection, setExpandedSection] = useState<Section | null>(null);
-
-  const toggleSection = (section: Section) => {
-    setExpandedSection(expandedSection === section ? null : section);
-  };
-
-  // Password change state
   const [pwForm, setPwForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
@@ -74,7 +63,6 @@ export default function HRClient({ userId }: Props) {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // FaceID state
   const [hasFaceData, setHasFaceData] = useState<boolean | null>(null);
   const [faceLoading, setFaceLoading] = useState(false);
   const [showFaceScanner, setShowFaceScanner] = useState(false);
@@ -118,8 +106,8 @@ export default function HRClient({ userId }: Props) {
   }, []);
 
   useEffect(() => {
-    if (expandedSection === "FACE_ID") fetchFaceStatus();
-  }, [expandedSection, fetchFaceStatus]);
+    if (activeSection === "FACE_ID") fetchFaceStatus();
+  }, [activeSection, fetchFaceStatus]);
 
   const handleFaceSuccess = async (descriptor: number[]) => {
     setShowFaceScanner(false);
@@ -171,8 +159,8 @@ export default function HRClient({ userId }: Props) {
   }, [userId]);
 
   useEffect(() => {
-    if (expandedSection === "NGHI_PHEP" || expandedSection === "LICH_CA") fetchHistory();
-  }, [expandedSection, fetchHistory]);
+    if (activeSection === "NGHI_PHEP" || activeSection === "LICH_CA") fetchHistory();
+  }, [activeSection, fetchHistory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,7 +209,6 @@ export default function HRClient({ userId }: Props) {
   const calcDays = (start: string, end: string) =>
     Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1;
 
-  // Weekly schedule data
   const today = new Date();
   const dayOfWeek = today.getDay();
   const monday = new Date(today);
@@ -249,500 +236,415 @@ export default function HRClient({ userId }: Props) {
     return "upcoming";
   };
 
-  // Glass card base class
-  const glassCard = "backdrop-blur-xl bg-white/70 border border-white/40 rounded-2xl shadow-lg";
+  const NAV_ITEMS: { id: Section; label: string; icon: React.ElementType }[] = [
+    { id: "LICH_CA", label: "Lịch làm việc", icon: CalendarDays },
+    { id: "NGHI_PHEP", label: "Nghỉ phép", icon: FileText },
+    { id: "DOI_MAT_KHAU", label: "Đổi mật khẩu", icon: KeyRound },
+    { id: "FACE_ID", label: "FaceID", icon: ScanFace },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 -m-4 p-6 lg:p-8">
-      <div className="space-y-6 max-w-4xl mx-auto">
-          {/* Profile Card */}
-          <div className={`${glassCard} p-6`}>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                <UserCircle size={36} className="text-white" />
-              </div>
-              <div className="flex-1">
-                <h1 className="text-xl font-bold text-gray-800">Nhân Viên Kho</h1>
-                <p className="text-sm text-gray-500">Nhân viên · NôngSản Việt</p>
-              </div>
-              <div className="hidden sm:flex items-center gap-2 bg-blue-100/80 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                Đang hoạt động
-              </div>
-            </div>
-          </div>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-[20px] font-semibold text-gray-900 flex items-center gap-2">
+            <UserCircle size={22} className="text-[#1D9E75]" />
+            Hồ Sơ & Nhân Sự
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5">Quản lý lịch làm việc, nghỉ phép và tài khoản</p>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#E8F5F0] text-[#1D9E75] rounded-[8px] text-[12px] font-semibold border border-[#1D9E75]/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]"></span>
+          Đang hoạt động
+        </div>
+      </div>
 
-          {/* Quick Actions */}
-          <div className={`${glassCard} p-6`}>
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Thao Tác Nhanh</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <button
-                onClick={() => toggleSection("LICH_CA")}
-                className={`flex flex-col items-center gap-3 p-5 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border hover:shadow-md hover:scale-[1.02] transition-all ${expandedSection === "LICH_CA" ? "border-blue-400 ring-2 ring-blue-200" : "border-blue-200/50"}`}
-              >
-                <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center shadow-md">
-                  <CalendarDays size={22} className="text-white" />
-                </div>
-                <span className="text-sm font-semibold text-gray-700">Lịch Làm Việc</span>
-              </button>
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-[10px] border border-gray-100 shadow-sm p-1.5 flex gap-1">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeSection === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-[8px] text-[14px] font-medium transition-colors ${
+                isActive
+                  ? "bg-[#1D9E75] text-white shadow-sm"
+                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+              }`}
+            >
+              <Icon size={15} />
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
 
-              <button
-                onClick={() => toggleSection("NGHI_PHEP")}
-                className={`flex flex-col items-center gap-3 p-5 rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/5 border hover:shadow-md hover:scale-[1.02] transition-all ${expandedSection === "NGHI_PHEP" ? "border-green-400 ring-2 ring-green-200" : "border-green-200/50"}`}
-              >
-                <div className="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center shadow-md">
-                  <FileText size={22} className="text-white" />
-                </div>
-                <span className="text-sm font-semibold text-gray-700">Đơn Xin Nghỉ Phép</span>
-              </button>
-
-              <button
-                onClick={() => toggleSection("DOI_MAT_KHAU")}
-                className={`flex flex-col items-center gap-3 p-5 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border hover:shadow-md hover:scale-[1.02] transition-all ${expandedSection === "DOI_MAT_KHAU" ? "border-amber-400 ring-2 ring-amber-200" : "border-amber-200/50"}`}
-              >
-                <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center shadow-md">
-                  <KeyRound size={22} className="text-white" />
-                </div>
-                <span className="text-sm font-semibold text-gray-700">Đổi Mật Khẩu</span>
-              </button>
-
-              <button
-                onClick={() => toggleSection("FACE_ID")}
-                className={`flex flex-col items-center gap-3 p-5 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-600/5 border hover:shadow-md hover:scale-[1.02] transition-all ${expandedSection === "FACE_ID" ? "border-purple-400 ring-2 ring-purple-200" : "border-purple-200/50"}`}
-              >
-                <div className="w-12 h-12 rounded-xl bg-purple-500 flex items-center justify-center shadow-md">
-                  <ScanFace size={22} className="text-white" />
-                </div>
-                <span className="text-sm font-semibold text-gray-700">Đăng Nhập FaceID</span>
-              </button>
-            </div>
-          </div>
-
-          {/* ─── Expanded: Nghỉ Phép ─── */}
-          {expandedSection === "NGHI_PHEP" && (
-            <div className={`${glassCard} p-6`}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <FileText size={20} className="text-green-500" />
-                  Đơn Xin Nghỉ Phép
-                </h2>
-                <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  {formSuccess && (
-                    <div className="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm font-medium">
-                      <CheckCircle2 size={18} className="text-green-600 flex-shrink-0" />
-                      Đơn của bạn đã được gửi thành công!
-                    </div>
-                  )}
-                  {formError && (
-                    <div className="mb-4 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
-                      <AlertCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
-                      <span>{formError}</span>
-                      <button onClick={() => setFormError(null)} className="ml-auto"><X size={16} /></button>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Loại Nghỉ</label>
-                        <select
-                          value={form.loai_nghi}
-                          onChange={(e) => setForm({ ...form, loai_nghi: e.target.value })}
-                          className="w-full border border-gray-200 rounded-lg bg-white/80 p-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                        >
-                          <option value="PHEP_NAM">Nghỉ Phép Năm (Có Lương)</option>
-                          <option value="NGHI_BENH">Nghỉ Bệnh</option>
-                          <option value="NGHI_KHONG_LUONG">Nghỉ Không Lương</option>
-                          <option value="NGHI_LE">Nghỉ Lễ</option>
-                          <option value="VIEC_RIENG">Nghỉ Việc Riêng</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phép năm còn lại</label>
-                        <div className="w-full border border-green-200 rounded-lg bg-green-50/80 p-2.5 text-sm font-bold text-green-700 text-center">
-                          5 ngày
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Từ ngày <span className="text-red-500">*</span></label>
-                        <input
-                          type="date"
-                          required
-                          value={form.ngay_bat_dau}
-                          onChange={(e) => setForm({ ...form, ngay_bat_dau: e.target.value })}
-                          min={new Date().toISOString().split("T")[0]}
-                          className="w-full border border-gray-200 rounded-lg bg-white/80 p-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Đến ngày <span className="text-red-500">*</span></label>
-                        <input
-                          type="date"
-                          required
-                          value={form.ngay_ket_thuc}
-                          onChange={(e) => setForm({ ...form, ngay_ket_thuc: e.target.value })}
-                          min={form.ngay_bat_dau || new Date().toISOString().split("T")[0]}
-                          className="w-full border border-gray-200 rounded-lg bg-white/80 p-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    {form.ngay_bat_dau && form.ngay_ket_thuc && (
-                      <p className="text-xs text-green-600 font-medium">
-                        Tổng số ngày nghỉ: <strong>{calcDays(form.ngay_bat_dau, form.ngay_ket_thuc)} ngày</strong>
-                      </p>
-                    )}
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Lý do chi tiết</label>
-                      <textarea
-                        rows={3}
-                        value={form.ly_do}
-                        onChange={(e) => setForm({ ...form, ly_do: e.target.value })}
-                        className="w-full border border-gray-200 rounded-lg bg-white/80 p-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none placeholder:text-gray-400"
-                        placeholder="Trình bày lý do xin nghỉ..."
-                      />
-                    </div>
-
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        disabled={submitting}
-                        className="bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
-                      >
-                        {submitting ? <><Loader2 size={16} className="animate-spin" /> Đang gửi...</> : <><Send size={16} /> Gửi Đơn</>}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-gray-800 mb-3 text-sm">Lịch sử đơn nghỉ</h3>
-                  {loadingHistory ? (
-                    <div className="flex items-center justify-center py-6 text-gray-400 text-sm">
-                      <Loader2 size={18} className="animate-spin mr-2" /> Đang tải...
-                    </div>
-                  ) : donList.length === 0 ? (
-                    <p className="text-sm text-gray-400 text-center py-6">Chưa có đơn nào.</p>
-                  ) : (
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                      {donList.map((don) => {
-                        const cfg = TRANG_THAI_CONFIG[don.trang_thai] ?? { label: don.trang_thai, cls: "bg-gray-100 text-gray-600" };
-                        return (
-                          <div key={don.id} className="border border-gray-100 bg-white/60 p-3 rounded-lg text-sm">
-                            <p className="font-semibold text-gray-800 text-xs">{LOAI_NGHI_LABEL[don.loai_nghi] ?? don.loai_nghi}</p>
-                            <p className="text-gray-500 text-xs mt-0.5">
-                              {formatDate(don.ngay_bat_dau)} → {formatDate(don.ngay_ket_thuc)}
-                            </p>
-                            <span className={`inline-block mt-1 font-bold px-2 py-0.5 rounded text-[10px] ${cfg.cls}`}>
-                              {cfg.label}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ─── Expanded: Đổi Mật Khẩu ─── */}
-          {expandedSection === "DOI_MAT_KHAU" && (
-            <div className={`${glassCard} p-6`}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center shadow-md">
-                    <KeyRound size={18} className="text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-800">Đổi Mật Khẩu</h2>
-                    <p className="text-xs text-gray-400">Bảo vệ tài khoản với mật khẩu mạnh</p>
-                  </div>
-                </div>
-                <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
-              </div>
-
-              <div className="max-w-md">
-                {pwSuccess && (
-                  <div className="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm font-medium">
-                    <CheckCircle2 size={18} className="text-green-600" /> Đổi mật khẩu thành công!
-                  </div>
-                )}
-                {pwError && (
-                  <div className="mb-4 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">
-                    <AlertCircle size={18} className="text-red-500 mt-0.5" /> <span>{pwError}</span>
-                    <button onClick={() => setPwError(null)} className="ml-auto"><X size={14} /></button>
-                  </div>
-                )}
-
-                <form onSubmit={handleChangePassword} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu hiện tại</label>
-                    <div className="flex items-center border border-gray-200 rounded-lg bg-white/80 px-3 focus-within:ring-2 focus-within:ring-amber-500/30">
-                      <input type={showOld ? "text" : "password"} required value={pwForm.oldPassword} onChange={(e) => setPwForm({ ...pwForm, oldPassword: e.target.value })} placeholder="••••••••" className="flex-1 bg-transparent py-2.5 text-sm outline-none" />
-                      <button type="button" onClick={() => setShowOld(!showOld)} className="text-gray-400 hover:text-gray-600">{showOld ? <EyeOff size={16} /> : <Eye size={16} />}</button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới</label>
-                    <div className="flex items-center border border-gray-200 rounded-lg bg-white/80 px-3 focus-within:ring-2 focus-within:ring-amber-500/30">
-                      <input type={showNew ? "text" : "password"} required value={pwForm.newPassword} onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })} placeholder="Ít nhất 6 ký tự" className="flex-1 bg-transparent py-2.5 text-sm outline-none" />
-                      <button type="button" onClick={() => setShowNew(!showNew)} className="text-gray-400 hover:text-gray-600">{showNew ? <EyeOff size={16} /> : <Eye size={16} />}</button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu mới</label>
-                    <div className="flex items-center border border-gray-200 rounded-lg bg-white/80 px-3 focus-within:ring-2 focus-within:ring-amber-500/30">
-                      <input type={showConfirm ? "text" : "password"} required value={pwForm.confirmPassword} onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })} placeholder="Nhập lại" className="flex-1 bg-transparent py-2.5 text-sm outline-none" />
-                      <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-gray-400 hover:text-gray-600">{showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}</button>
-                    </div>
-                    {pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword && <p className="text-xs text-red-500 mt-1">Mật khẩu không khớp</p>}
-                  </div>
-                  <button type="submit" disabled={pwLoading} className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2">
-                    {pwLoading ? <><Loader2 size={16} className="animate-spin" /> Đang xử lý...</> : <><KeyRound size={16} /> Đổi Mật Khẩu</>}
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* ─── Expanded: FaceID ─── */}
-          {expandedSection === "FACE_ID" && (
-            <div className={`${glassCard} p-6`}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center shadow-md">
-                    <ScanFace size={18} className="text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-800">Đăng Nhập FaceID</h2>
-                    <p className="text-xs text-gray-400">Đăng nhập nhanh bằng nhận diện khuôn mặt</p>
-                  </div>
-                </div>
-                <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
-              </div>
-
-              <div className="max-w-md">
-                {faceMsg && (
-                  <div className={`mb-4 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium border ${faceMsg.type === "success" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
-                    {faceMsg.type === "success" ? <CheckCircle2 size={18} className="text-green-600" /> : <AlertCircle size={18} className="text-red-500" />}
-                    {faceMsg.text}
-                  </div>
-                )}
-
-                {hasFaceData === null ? (
-                  <div className="flex items-center justify-center py-6 text-gray-400"><Loader2 size={20} className="animate-spin mr-2" /> Đang kiểm tra...</div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className={`rounded-xl p-4 flex items-center gap-4 border ${hasFaceData ? "bg-emerald-50/80 border-emerald-200" : "bg-gray-50/80 border-gray-200"}`}>
-                      <div className={`p-3 rounded-full ${hasFaceData ? "bg-emerald-100" : "bg-gray-200"}`}>
-                        <ShieldCheck size={24} className={hasFaceData ? "text-emerald-600" : "text-gray-400"} />
-                      </div>
-                      <div>
-                        <p className={`font-bold text-sm ${hasFaceData ? "text-emerald-800" : "text-gray-600"}`}>
-                          {hasFaceData ? "Đã đăng ký FaceID" : "Chưa đăng ký FaceID"}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {hasFaceData ? "Đăng nhập nhanh bằng khuôn mặt đã sẵn sàng." : "Đăng ký để đăng nhập không cần mật khẩu."}
-                        </p>
-                      </div>
-                    </div>
-
-                    {showFaceScanner && (
-                      <FaceRegister onSuccess={handleFaceSuccess} onCancel={() => setShowFaceScanner(false)} />
-                    )}
-
-                    {!showFaceScanner && (
-                      <div className="flex flex-col gap-3">
-                        <button onClick={() => { setFaceMsg(null); setShowFaceScanner(true); }} disabled={faceLoading} className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2">
-                          {faceLoading ? <><Loader2 size={16} className="animate-spin" /> Đang lưu...</> : <><ScanFace size={16} /> {hasFaceData ? "Cập nhật FaceID" : "Đăng ký khuôn mặt"}</>}
-                        </button>
-                        {hasFaceData && (
-                          <button onClick={handleDeleteFace} disabled={faceLoading} className="w-full bg-red-50 hover:bg-red-100 disabled:opacity-60 text-red-600 font-bold py-3 rounded-xl text-sm border border-red-200 flex items-center justify-center gap-2">
-                            <Trash2 size={16} /> Xóa dữ liệu FaceID
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ─── Expanded: Lịch Làm Việc ─── */}
-          {expandedSection === "LICH_CA" && (
-            <div className={`${glassCard} p-6`}>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <CalendarDays size={20} className="text-blue-500" />
-                  {weekOffset === 0 ? "Lịch Tuần Này" : weekOffset === -1 ? "Tuần Trước" : weekOffset === 1 ? "Tuần Sau" : `Tuần (${weekOffset > 0 ? "+" : ""}${weekOffset})`}
-                </h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setWeekOffset(weekOffset - 1)}
-                    className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-white/60 rounded-lg transition-colors"
-                  >
-                    ← Trước
-                  </button>
-                  {weekOffset !== 0 && (
-                    <button
-                      onClick={() => setWeekOffset(0)}
-                      className="px-3 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-lg shadow-sm"
-                    >
-                      Hôm nay
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setWeekOffset(weekOffset + 1)}
-                    className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-white/60 rounded-lg transition-colors"
-                  >
-                    Sau →
-                  </button>
-                  <button onClick={() => setExpandedSection(null)} className="ml-2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
-                </div>
-              </div>
-
-              <p className="text-xs text-gray-400 mb-4">
-                {monday.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })} - {weekDays[6].toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })}
+      {/* ─── Section: Lịch Làm Việc ─── */}
+      {activeSection === "LICH_CA" && (
+        <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-[15px] font-semibold text-gray-800">
+                {weekOffset === 0 ? "Lịch tuần này" : weekOffset === -1 ? "Tuần trước" : weekOffset === 1 ? "Tuần sau" : `Tuần (${weekOffset > 0 ? "+" : ""}${weekOffset})`}
+              </h2>
+              <p className="text-[12px] text-gray-400 mt-0.5">
+                {monday.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })} — {weekDays[6].toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })}
               </p>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setWeekOffset(weekOffset - 1)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+                <ChevronLeft size={16} />
+              </button>
+              {weekOffset !== 0 && (
+                <button onClick={() => setWeekOffset(0)} className="px-3 py-1.5 text-[12px] font-medium bg-[#1D9E75] text-white rounded-lg">
+                  Hôm nay
+                </button>
+              )}
+              <button onClick={() => setWeekOffset(weekOffset + 1)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {weekDays.slice(0, 5).map((d, idx) => {
-                  const leaveForDay = donList.find((don) => {
-                    const start = new Date(don.ngay_bat_dau);
-                    const end = new Date(don.ngay_ket_thuc);
-                    start.setHours(0, 0, 0, 0);
-                    end.setHours(23, 59, 59, 999);
-                    const check = new Date(d);
-                    check.setHours(12, 0, 0, 0);
-                    return check >= start && check <= end;
-                  });
+          {/* Week grid */}
+          <div className="grid grid-cols-7 gap-2">
+            {weekDays.map((d, idx) => {
+              const leaveForDay = donList.find((don) => {
+                const start = new Date(don.ngay_bat_dau);
+                const end = new Date(don.ngay_ket_thuc);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                const check = new Date(d);
+                check.setHours(12, 0, 0, 0);
+                return check >= start && check <= end;
+              });
 
-                  const isLeaveApproved = leaveForDay?.trang_thai === "DA_DUYET";
-                  const isLeavePending = leaveForDay?.trang_thai === "CHO_DUYET";
-                  const isLeaveRejected = leaveForDay?.trang_thai === "TU_CHOI";
+              const isLeaveApproved = leaveForDay?.trang_thai === "DA_DUYET";
+              const isLeavePending = leaveForDay?.trang_thai === "CHO_DUYET";
+              const status = getDayStatus(d, idx);
+              const isWeekend = idx >= 5;
 
-                  const status = getDayStatus(d, idx);
-                  const borderColor = isLeaveApproved ? "border-red-200 bg-red-50/50"
-                    : isLeavePending ? "border-amber-200 bg-amber-50/50"
-                    : status === "completed" ? "border-green-200 bg-green-50/50"
-                    : status === "today" ? "border-blue-300 bg-blue-50/50 ring-2 ring-blue-200"
-                    : "border-gray-200 bg-white/50";
+              let borderCls = "border-gray-100";
+              let bgCls = "bg-white";
+              if (isLeaveApproved) { borderCls = "border-[#A32D2D]/20"; bgCls = "bg-[#FCEBEB]/50"; }
+              else if (isLeavePending) { borderCls = "border-[#BA7517]/20"; bgCls = "bg-[#FAEEDA]/50"; }
+              else if (status === "today") { borderCls = "border-[#1D9E75]"; bgCls = "bg-[#E8F5F0]/50"; }
+              else if (status === "completed") { borderCls = "border-[#1D9E75]/20"; bgCls = "bg-[#E8F5F0]/30"; }
+              else if (isWeekend) { bgCls = "bg-gray-50"; }
 
+              return (
+                <div key={idx} className={`rounded-[8px] border p-3 ${borderCls} ${bgCls} min-h-[120px]`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-semibold text-gray-400 uppercase">{dayLabels[idx]}</span>
+                    <span className={`text-[13px] font-bold ${
+                      status === "today" ? "text-[#1D9E75]" : "text-gray-700"
+                    }`}>
+                      {d.getDate()}/{d.getMonth() + 1}
+                    </span>
+                  </div>
+
+                  {isWeekend ? (
+                    <p className="text-[11px] text-gray-400 text-center mt-4">Nghỉ</p>
+                  ) : isLeaveApproved ? (
+                    <div className="mt-2">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#A32D2D] text-white">OFF</span>
+                      <p className="text-[11px] text-[#A32D2D] mt-1.5">{LOAI_NGHI_LABEL[leaveForDay!.loai_nghi] ?? "Nghỉ"}</p>
+                    </div>
+                  ) : isLeavePending ? (
+                    <div className="mt-2">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#BA7517] text-white">Chờ duyệt</span>
+                      <p className="text-[11px] text-[#BA7517] mt-1.5">{LOAI_NGHI_LABEL[leaveForDay!.loai_nghi] ?? ""}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 mt-1">
+                      <div className="flex items-center gap-1.5">
+                        <Coffee size={10} className="text-gray-400" />
+                        <span className="text-[11px] text-gray-600">06:00–14:00</span>
+                      </div>
+                      {status === "completed" && <p className="text-[10px] text-[#1D9E75] font-medium pl-4">05:55</p>}
+                      {status === "today" && <p className="text-[10px] text-[#1D9E75] font-medium pl-4">Đang làm</p>}
+                      <div className="flex items-center gap-1.5">
+                        <Moon size={10} className="text-gray-400" />
+                        <span className="text-[11px] text-gray-600">14:00–22:00</span>
+                      </div>
+                      {status === "completed" && <p className="text-[10px] text-[#1D9E75] font-medium pl-4">13:50</p>}
+                    </div>
+                  )}
+
+                  {!isWeekend && !leaveForDay && status === "completed" && (
+                    <div className="mt-2 flex justify-end">
+                      <div className="w-4 h-4 rounded-full bg-[#1D9E75] flex items-center justify-center">
+                        <Check size={10} className="text-white" strokeWidth={3} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 flex items-center gap-3 px-3 py-2.5 bg-[#F5F5F4] rounded-[8px] text-[12px] text-gray-500">
+            <Clock size={14} className="text-gray-400 shrink-0" />
+            Chấm công tự động bằng Facial Recognition tại cửa kho. Ngày nghỉ đã duyệt hiển thị OFF.
+          </div>
+        </div>
+      )}
+
+      {/* ─── Section: Nghỉ Phép ─── */}
+      {activeSection === "NGHI_PHEP" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Form */}
+          <div className="lg:col-span-2 bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
+            <h2 className="text-[15px] font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">Gửi đơn xin nghỉ</h2>
+
+            {formSuccess && (
+              <div className="mb-4 flex items-center gap-2 bg-[#E8F5F0] border border-[#1D9E75]/20 text-[#1D9E75] rounded-[8px] px-4 py-3 text-[13px] font-medium">
+                <CheckCircle2 size={16} /> Đơn đã được gửi thành công!
+              </div>
+            )}
+            {formError && (
+              <div className="mb-4 flex items-start gap-2 bg-[#FCEBEB] border border-[#A32D2D]/20 text-[#A32D2D] rounded-[8px] px-4 py-3 text-[13px]">
+                <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                <span className="flex-1">{formError}</span>
+                <button onClick={() => setFormError(null)}><X size={14} /></button>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-medium text-gray-500 uppercase tracking-[0.04em] mb-1.5">Loại nghỉ</label>
+                  <select
+                    value={form.loai_nghi}
+                    onChange={(e) => setForm({ ...form, loai_nghi: e.target.value })}
+                    className="w-full border border-gray-200 rounded-[8px] bg-white p-2.5 text-[14px] focus:ring-2 focus:ring-[#1D9E75]/30 focus:border-[#1D9E75] outline-none"
+                  >
+                    <option value="PHEP_NAM">Nghỉ Phép Năm (Có Lương)</option>
+                    <option value="NGHI_BENH">Nghỉ Bệnh</option>
+                    <option value="NGHI_KHONG_LUONG">Nghỉ Không Lương</option>
+                    <option value="NGHI_LE">Nghỉ Lễ</option>
+                    <option value="VIEC_RIENG">Nghỉ Việc Riêng</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[12px] font-medium text-gray-500 uppercase tracking-[0.04em] mb-1.5">Phép năm còn lại</label>
+                  <div className="border border-[#1D9E75]/20 rounded-[8px] bg-[#E8F5F0] p-2.5 text-[14px] font-bold text-[#1D9E75] text-center">
+                    5 ngày
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-medium text-gray-500 uppercase tracking-[0.04em] mb-1.5">Từ ngày <span className="text-[#A32D2D]">*</span></label>
+                  <input
+                    type="date"
+                    required
+                    value={form.ngay_bat_dau}
+                    onChange={(e) => setForm({ ...form, ngay_bat_dau: e.target.value })}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full border border-gray-200 rounded-[8px] bg-white p-2.5 text-[14px] focus:ring-2 focus:ring-[#1D9E75]/30 focus:border-[#1D9E75] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-medium text-gray-500 uppercase tracking-[0.04em] mb-1.5">Đến ngày <span className="text-[#A32D2D]">*</span></label>
+                  <input
+                    type="date"
+                    required
+                    value={form.ngay_ket_thuc}
+                    onChange={(e) => setForm({ ...form, ngay_ket_thuc: e.target.value })}
+                    min={form.ngay_bat_dau || new Date().toISOString().split("T")[0]}
+                    className="w-full border border-gray-200 rounded-[8px] bg-white p-2.5 text-[14px] focus:ring-2 focus:ring-[#1D9E75]/30 focus:border-[#1D9E75] outline-none"
+                  />
+                </div>
+              </div>
+
+              {form.ngay_bat_dau && form.ngay_ket_thuc && (
+                <p className="text-[12px] text-[#1D9E75] font-medium">
+                  Tổng: {calcDays(form.ngay_bat_dau, form.ngay_ket_thuc)} ngày
+                </p>
+              )}
+
+              <div>
+                <label className="block text-[12px] font-medium text-gray-500 uppercase tracking-[0.04em] mb-1.5">Lý do</label>
+                <textarea
+                  rows={3}
+                  value={form.ly_do}
+                  onChange={(e) => setForm({ ...form, ly_do: e.target.value })}
+                  className="w-full border border-gray-200 rounded-[8px] bg-white p-2.5 text-[14px] focus:ring-2 focus:ring-[#1D9E75]/30 focus:border-[#1D9E75] outline-none resize-none placeholder:text-gray-400"
+                  placeholder="Trình bày lý do xin nghỉ..."
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-[#1D9E75] hover:bg-[#158a63] disabled:bg-gray-300 text-white px-5 py-2.5 rounded-[8px] text-[14px] font-semibold flex items-center gap-2 transition-colors"
+                >
+                  {submitting ? <><Loader2 size={15} className="animate-spin" /> Đang gửi...</> : <><Send size={15} /> Gửi đơn</>}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* History */}
+          <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
+            <h3 className="text-[15px] font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-100">Lịch sử đơn nghỉ</h3>
+            {loadingHistory ? (
+              <div className="flex items-center justify-center py-8 text-gray-400 text-[13px]">
+                <Loader2 size={16} className="animate-spin mr-2" /> Đang tải...
+              </div>
+            ) : donList.length === 0 ? (
+              <p className="text-[13px] text-gray-400 text-center py-8">Chưa có đơn nào.</p>
+            ) : (
+              <div className="space-y-2 max-h-[360px] overflow-y-auto">
+                {donList.map((don) => {
+                  const cfg = TRANG_THAI_CONFIG[don.trang_thai] ?? { label: don.trang_thai, cls: "bg-gray-100 text-gray-600" };
                   return (
-                    <div key={idx} className={`rounded-xl border p-4 ${borderColor} transition-all`}>
-                      <div className="flex items-center justify-between mb-3">
+                    <div key={don.id} className="border border-gray-100 bg-[#F5F5F4] p-3 rounded-[8px]">
+                      <div className="flex items-start justify-between gap-2">
                         <div>
-                          <span className="text-xs font-bold text-gray-400 uppercase">{dayLabels[idx]}</span>
-                          <p className="text-lg font-bold text-gray-800">
-                            {d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })}
+                          <p className="font-semibold text-gray-800 text-[13px]">{LOAI_NGHI_LABEL[don.loai_nghi] ?? don.loai_nghi}</p>
+                          <p className="text-gray-500 text-[12px] mt-0.5">
+                            {formatDate(don.ngay_bat_dau)} → {formatDate(don.ngay_ket_thuc)}
                           </p>
                         </div>
-                        {isLeaveApproved && (
-                          <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">OFF</span>
-                        )}
-                        {isLeavePending && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">Chờ duyệt</span>
-                        )}
-                        {isLeaveRejected && (
-                          <span className="px-2 py-0.5 rounded-full bg-gray-400 text-white text-[10px] font-bold">Từ chối</span>
-                        )}
-                        {!leaveForDay && status === "completed" && (
-                          <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
-                            <Check size={14} className="text-white" strokeWidth={3} />
-                          </div>
-                        )}
-                        {!leaveForDay && status === "today" && (
-                          <span className="px-2 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-bold uppercase">
-                            Hôm nay
-                          </span>
-                        )}
+                        <span className={`shrink-0 font-semibold px-2 py-0.5 rounded text-[10px] ${cfg.cls}`}>
+                          {cfg.label}
+                        </span>
                       </div>
-
-                      {isLeaveApproved ? (
-                        <div className="text-center py-3">
-                          <p className="text-red-600 font-bold text-sm">Nghỉ phép</p>
-                          <p className="text-[11px] text-red-400 mt-1">{LOAI_NGHI_LABEL[leaveForDay.loai_nghi] ?? leaveForDay.loai_nghi}</p>
-                        </div>
-                      ) : isLeavePending ? (
-                        <div className="text-center py-3">
-                          <p className="text-amber-600 font-bold text-sm">Đang chờ duyệt</p>
-                          <p className="text-[11px] text-amber-400 mt-1">{LOAI_NGHI_LABEL[leaveForDay.loai_nghi] ?? leaveForDay.loai_nghi}</p>
-                        </div>
-                      ) : isLeaveRejected ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-xs">
-                            <Coffee size={12} className="text-orange-500" />
-                            <span className="font-medium text-gray-700">Ca Sáng</span>
-                            <span className="ml-auto text-gray-400">06:00 - 14:00</span>
-                          </div>
-                          <p className="text-[11px] text-gray-400 pl-5 line-through">Đơn nghỉ bị từ chối</p>
-                        </div>
-                      ) : status === "off" ? (
-                        <div className="text-center py-4 text-gray-400 text-sm">Nghỉ</div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-xs">
-                            <Coffee size={12} className="text-orange-500" />
-                            <span className="font-medium text-gray-700">Ca Sáng</span>
-                            <span className="ml-auto text-gray-400">06:00 - 14:00</span>
-                          </div>
-                          {status === "completed" && (
-                            <p className="text-[11px] text-green-600 font-medium pl-5">Check-in: 05:55</p>
-                          )}
-                          {status === "today" && (
-                            <p className="text-[11px] text-blue-600 font-medium pl-5">Đang làm việc</p>
-                          )}
-                          <div className="flex items-center gap-2 text-xs mt-1">
-                            <Moon size={12} className="text-indigo-500" />
-                            <span className="font-medium text-gray-700">Ca Chiều</span>
-                            <span className="ml-auto text-gray-400">14:00 - 22:00</span>
-                          </div>
-                          {status === "completed" && (
-                            <p className="text-[11px] text-green-600 font-medium pl-5">Check-in: 13:50</p>
-                          )}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
-
-                {/* Weekend cards */}
-                {weekDays.slice(5).map((d, idx) => (
-                  <div key={idx + 5} className="rounded-xl border border-gray-200 bg-gray-50/50 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <span className="text-xs font-bold text-gray-400 uppercase">{dayLabels[idx + 5]}</span>
-                        <p className="text-lg font-bold text-gray-800">
-                          {d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-center py-2 text-gray-400 text-sm">Nghỉ (OFF)</div>
-                  </div>
-                ))}
               </div>
+            )}
+          </div>
+        </div>
+      )}
 
-              {/* Policy footer */}
-              <div className="mt-5 bg-gradient-to-r from-blue-600/90 to-indigo-600/90 rounded-xl p-4 text-white flex items-center gap-4">
-                <Clock size={32} className="opacity-40 flex-shrink-0" />
-                <p className="text-sm text-white/80">
-                  Chấm công tự động bằng Facial Recognition tại cửa kho. Ngày có đơn nghỉ đã duyệt sẽ hiển thị OFF.
-                </p>
-              </div>
+      {/* ─── Section: Đổi Mật Khẩu ─── */}
+      {activeSection === "DOI_MAT_KHAU" && (
+        <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5 max-w-lg">
+          <h2 className="text-[15px] font-semibold text-gray-800 mb-1">Đổi mật khẩu</h2>
+          <p className="text-[12px] text-gray-400 mb-4 pb-3 border-b border-gray-100">Bảo vệ tài khoản với mật khẩu mạnh</p>
+
+          {pwSuccess && (
+            <div className="mb-4 flex items-center gap-2 bg-[#E8F5F0] border border-[#1D9E75]/20 text-[#1D9E75] rounded-[8px] px-4 py-3 text-[13px] font-medium">
+              <CheckCircle2 size={16} /> Đổi mật khẩu thành công!
+            </div>
+          )}
+          {pwError && (
+            <div className="mb-4 flex items-start gap-2 bg-[#FCEBEB] border border-[#A32D2D]/20 text-[#A32D2D] rounded-[8px] px-4 py-3 text-[13px]">
+              <AlertCircle size={16} className="mt-0.5" /> <span className="flex-1">{pwError}</span>
+              <button onClick={() => setPwError(null)}><X size={14} /></button>
             </div>
           )}
 
-      </div>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <label className="block text-[12px] font-medium text-gray-500 uppercase tracking-[0.04em] mb-1.5">Mật khẩu hiện tại</label>
+              <div className="flex items-center border border-gray-200 rounded-[8px] bg-white px-3 focus-within:ring-2 focus-within:ring-[#1D9E75]/30 focus-within:border-[#1D9E75]">
+                <input type={showOld ? "text" : "password"} required value={pwForm.oldPassword} onChange={(e) => setPwForm({ ...pwForm, oldPassword: e.target.value })} placeholder="••••••••" className="flex-1 bg-transparent py-2.5 text-[14px] outline-none" />
+                <button type="button" onClick={() => setShowOld(!showOld)} className="text-gray-400 hover:text-gray-600">{showOld ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-gray-500 uppercase tracking-[0.04em] mb-1.5">Mật khẩu mới</label>
+              <div className="flex items-center border border-gray-200 rounded-[8px] bg-white px-3 focus-within:ring-2 focus-within:ring-[#1D9E75]/30 focus-within:border-[#1D9E75]">
+                <input type={showNew ? "text" : "password"} required value={pwForm.newPassword} onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })} placeholder="Ít nhất 6 ký tự" className="flex-1 bg-transparent py-2.5 text-[14px] outline-none" />
+                <button type="button" onClick={() => setShowNew(!showNew)} className="text-gray-400 hover:text-gray-600">{showNew ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-gray-500 uppercase tracking-[0.04em] mb-1.5">Xác nhận mật khẩu mới</label>
+              <div className="flex items-center border border-gray-200 rounded-[8px] bg-white px-3 focus-within:ring-2 focus-within:ring-[#1D9E75]/30 focus-within:border-[#1D9E75]">
+                <input type={showConfirm ? "text" : "password"} required value={pwForm.confirmPassword} onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })} placeholder="Nhập lại" className="flex-1 bg-transparent py-2.5 text-[14px] outline-none" />
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-gray-400 hover:text-gray-600">{showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+              </div>
+              {pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword && (
+                <p className="text-[11px] text-[#A32D2D] mt-1">Mật khẩu không khớp</p>
+              )}
+            </div>
+            <button type="submit" disabled={pwLoading} className="w-full bg-[#1D9E75] hover:bg-[#158a63] disabled:bg-gray-300 text-white font-semibold py-2.5 rounded-[8px] text-[14px] flex items-center justify-center gap-2 transition-colors">
+              {pwLoading ? <><Loader2 size={15} className="animate-spin" /> Đang xử lý...</> : <><KeyRound size={15} /> Đổi mật khẩu</>}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* ─── Section: FaceID ─── */}
+      {activeSection === "FACE_ID" && (
+        <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5 max-w-lg">
+          <h2 className="text-[15px] font-semibold text-gray-800 mb-1">Đăng nhập FaceID</h2>
+          <p className="text-[12px] text-gray-400 mb-4 pb-3 border-b border-gray-100">Đăng nhập nhanh bằng nhận diện khuôn mặt</p>
+
+          {faceMsg && (
+            <div className={`mb-4 flex items-center gap-2 rounded-[8px] px-4 py-3 text-[13px] font-medium border ${
+              faceMsg.type === "success"
+                ? "bg-[#E8F5F0] border-[#1D9E75]/20 text-[#1D9E75]"
+                : "bg-[#FCEBEB] border-[#A32D2D]/20 text-[#A32D2D]"
+            }`}>
+              {faceMsg.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              {faceMsg.text}
+            </div>
+          )}
+
+          {hasFaceData === null ? (
+            <div className="flex items-center justify-center py-8 text-gray-400 text-[13px]">
+              <Loader2 size={16} className="animate-spin mr-2" /> Đang kiểm tra...
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className={`rounded-[8px] p-4 flex items-center gap-3 border ${
+                hasFaceData ? "bg-[#E8F5F0] border-[#1D9E75]/20" : "bg-[#F5F5F4] border-gray-200"
+              }`}>
+                <div className={`w-10 h-10 rounded-[8px] flex items-center justify-center ${
+                  hasFaceData ? "bg-[#1D9E75]/10" : "bg-gray-200"
+                }`}>
+                  <ShieldCheck size={20} className={hasFaceData ? "text-[#1D9E75]" : "text-gray-400"} />
+                </div>
+                <div>
+                  <p className={`font-semibold text-[14px] ${hasFaceData ? "text-[#1D9E75]" : "text-gray-600"}`}>
+                    {hasFaceData ? "Đã đăng ký FaceID" : "Chưa đăng ký FaceID"}
+                  </p>
+                  <p className="text-[12px] text-gray-400 mt-0.5">
+                    {hasFaceData ? "Đăng nhập bằng khuôn mặt đã sẵn sàng." : "Đăng ký để đăng nhập không cần mật khẩu."}
+                  </p>
+                </div>
+              </div>
+
+              {showFaceScanner && (
+                <FaceRegister onSuccess={handleFaceSuccess} onCancel={() => setShowFaceScanner(false)} />
+              )}
+
+              {!showFaceScanner && (
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => { setFaceMsg(null); setShowFaceScanner(true); }}
+                    disabled={faceLoading}
+                    className="w-full bg-[#1D9E75] hover:bg-[#158a63] disabled:bg-gray-300 text-white font-semibold py-2.5 rounded-[8px] text-[14px] flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {faceLoading ? <><Loader2 size={15} className="animate-spin" /> Đang lưu...</> : <><ScanFace size={15} /> {hasFaceData ? "Cập nhật FaceID" : "Đăng ký khuôn mặt"}</>}
+                  </button>
+                  {hasFaceData && (
+                    <button
+                      onClick={handleDeleteFace}
+                      disabled={faceLoading}
+                      className="w-full bg-white border border-[#A32D2D]/30 hover:bg-[#FCEBEB] disabled:opacity-50 text-[#A32D2D] font-semibold py-2.5 rounded-[8px] text-[14px] flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Trash2 size={15} /> Xóa dữ liệu FaceID
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
+import { signOut } from "next-auth/react";
 import {
   KeyRound, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, X,
   ShieldCheck, ScanFace, Trash2,
@@ -41,6 +42,9 @@ export default function SecurityPage() {
       if (!data.success) throw new Error(data.message);
       setPwSuccess(true);
       setForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      if (data.forceLogout) {
+        setTimeout(() => signOut({ callbackUrl: "/login" }), 2000);
+      }
     } catch (err: any) {
       setPwError(err.message ?? "Đã xảy ra lỗi");
     } finally {
@@ -146,7 +150,7 @@ export default function SecurityPage() {
               {/* Alert messages */}
               {pwSuccess && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="sec-alert sec-alert--success">
-                  <CheckCircle2 size={16} /> Đổi mật khẩu thành công!
+                  <CheckCircle2 size={16} /> Đổi mật khẩu thành công! Bạn sẽ được đăng xuất trong giây lát...
                 </motion.div>
               )}
               {pwError && (

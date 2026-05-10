@@ -1779,3 +1779,8 @@
 .animate-fade-in-up {
   animation: fade-in-up 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

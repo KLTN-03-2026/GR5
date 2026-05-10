@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs"; // Cài lệnh: npm install bcryptjs
+import bcrypt from "bcryptjs";
+import { validatePassword } from "@/lib/password-validation";
 
 export async function POST(req: Request) {
   try {
@@ -9,6 +10,14 @@ export async function POST(req: Request) {
     if (!email || !password) {
       return NextResponse.json(
         { message: "Thiếu thông tin cần thiết!" },
+        { status: 400 },
+      );
+    }
+
+    const pwCheck = validatePassword(password);
+    if (!pwCheck.valid) {
+      return NextResponse.json(
+        { message: pwCheck.message },
         { status: 400 },
       );
     }

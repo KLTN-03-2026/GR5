@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
+import { rateLimit } from "@/lib/rate-limit";
 
 const FACE_LOGIN_SECRET = process.env.AUTH_SECRET + "_face";
 
@@ -16,6 +17,15 @@ function euclideanDistance(a: number[], b: number[]): number {
 
 // POST – So sánh descriptor với DB, trả về short-lived token nếu khớp
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  const { success: allowed } = rateLimit(`face-login:${ip}`, 5, 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { success: false, message: "Bạn đã thử quá nhiều lần. Vui lòng đợi 1 phút." },
+      { status: 429 },
+    );
+  }
+
   const { descriptor } = await req.json();
   if (!descriptor || !Array.isArray(descriptor)) {
     return NextResponse.json({ success: false, message: "Dữ liệu khuôn mặt không hợp lệ" }, { status: 400 });

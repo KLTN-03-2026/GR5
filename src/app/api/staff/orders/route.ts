@@ -128,6 +128,8 @@ export async function GET(request: NextRequest) {
         prisma.don_hang.count({ where: { trang_thai: "CHO_GIAO_HANG" } }),
         prisma.don_hang.count({ where: { trang_thai: "DA_GIAO" } }),
         prisma.don_hang.count({ where: { trang_thai: "DA_HUY" } }),
+        prisma.don_hang.count({ where: { trang_thai: "GIAO_THAT_BAI" } }),
+        prisma.don_hang.count({ where: { trang_thai: "YEU_CAU_DOI_TRA" } }),
       ]),
       // Today's stats
       Promise.all([
@@ -186,11 +188,14 @@ export async function GET(request: NextRequest) {
         timeAgo,
         ngayTao: order.ngay_tao,
         isUrgent,
-        timeline: order.lich_su_don_hang,
+        timeline: order.lich_su_don_hang.map((h) => ({
+          trangThai: h.trang_thai,
+          thoiGian: h.thoi_gian_doi,
+        })),
       };
     });
 
-    const [choXacNhan, choXacNhanCK, dangGiao, choGiao, daGiao, daHuy] = kpiCounts;
+    const [choXacNhan, choXacNhanCK, dangGiao, choGiao, daGiao, daHuy, giaoThatBai, doiTra] = kpiCounts;
     const [tongDonHomNay, doanhThuHomNay, daGiaoHomNay] = todayStats;
 
     return NextResponse.json({
@@ -203,6 +208,8 @@ export async function GET(request: NextRequest) {
         choGiao,
         daGiao,
         daHuy,
+        giaoThatBai,
+        doiTra,
         tongDonHomNay,
         doanhThuHomNay: Number(doanhThuHomNay._sum.tong_tien || 0),
         daGiaoHomNay,

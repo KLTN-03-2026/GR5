@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
@@ -32,6 +33,7 @@ const TABS = [
 ];
 
 export default function MyOrdersPage() {
+  const { data: session } = useSession();
   const [orders, setOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("ALL");
   const [isLoading, setIsLoading] = useState(true);
@@ -78,23 +80,27 @@ export default function MyOrdersPage() {
   };
 
   useEffect(() => {
+    if (!session?.user) {
+      setIsLoading(false);
+      return;
+    }
     const fetchMyOrders = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch("/api/store/orders?userId=1");
+        const res = await fetch(`/api/store/orders`);
         if (res.ok) {
           const data = await res.json();
           const ordersData = Array.isArray(data) ? data : data.orders || [];
           setOrders(ordersData);
         }
       } catch (error) {
-        console.error("❌ Lỗi tải đơn hàng:", error);
+        console.error("Lỗi tải đơn hàng:", error);
       } finally {
         setIsLoading(false);
       }
     };
     fetchMyOrders();
-  }, []);
+  }, [session]);
 
   const filteredOrders = orders.filter((order) =>
     activeTab === "ALL" ? true : order.trang_thai === activeTab,
@@ -307,6 +313,27 @@ export default function MyOrdersPage() {
                     >
                       <Eye size={14} /> Chi tiết
                     </button>
+                    {order.trang_thai === "CHO_XAC_NHAN" && (
+                      <button
+                        onClick={async () => {
+                          if (!confirm("Bạn có chắc muốn hủy đơn hàng này?")) return;
+                          const res = await fetch("/api/store/orders", {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ orderId: order.id, action: "CANCEL" }),
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            setOrders(orders.map(o => o.id === order.id ? { ...o, trang_thai: "DA_HUY" } : o));
+                          } else {
+                            alert("Lỗi: " + data.message);
+                          }
+                        }}
+                        className="order-card__btn order-card__btn--danger"
+                      >
+                        <XCircle size={14} /> Hủy đơn
+                      </button>
+                    )}
                     {order.trang_thai === "DA_GIAO" && (
                       <button
                         onClick={() => setReturnOrder(order)}
@@ -497,7 +524,7 @@ export default function MyOrdersPage() {
                           label="Tạm tính"
                           value={`${parseFloat(selectedOrder.tong_tien?.toString() || "0").toLocaleString("vi-VN")}đ`}
                         />
-                        <SummaryItem label="Phí giao hàng" value="0đ" />
+                        <SummaryItem label="Phí giao hàng" value={`${parseFloat(selectedOrder.phi_van_chuyen?.toString() || "0").toLocaleString("vi-VN")}đ`} />
                         <div className="pt-6 mt-6 border-t border-white/20 flex justify-between items-center">
                           <span className="text-lg font-bold">Tổng cộng</span>
                           <span className="text-3xl font-black tracking-tight">

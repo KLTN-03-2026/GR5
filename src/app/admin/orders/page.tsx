@@ -80,6 +80,7 @@ export default function OrdersPage() {
   const [isPushing, setIsPushing]           = useState(false);
   const [isHandlingReturn, setIsHandlingReturn] = useState(false);
   const [isCreatingGHN, setIsCreatingGHN]   = useState(false);
+  const [isCancellingGHN, setIsCancellingGHN] = useState(false);
   const [isEditingDate, setIsEditingDate]   = useState(false);
   const [editingDateValue, setEditingDateValue] = useState('');
 
@@ -180,6 +181,27 @@ export default function OrdersPage() {
       }
     } catch { alert('Lỗi kết nối!'); }
     finally { setIsCreatingGHN(false); }
+  };
+
+  const handleCancelGHN = async (orderId: number) => {
+    if (!confirm(`Hủy vận đơn GHN cho đơn #${orderId}?`)) return;
+    setIsCancellingGHN(true);
+    try {
+      const res = await fetch('/api/ghn/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        alert('✅ Đã hủy vận đơn GHN thành công!');
+        fetchOrders();
+        setViewingOrder(null);
+      } else {
+        alert('Lỗi: ' + (d.message || 'Không hủy được vận đơn'));
+      }
+    } catch { alert('Lỗi kết nối!'); }
+    finally { setIsCancellingGHN(false); }
   };
 
   const handleReturnAction = async (orderId: number, returnStatus: 'DA_DUYET' | 'TU_CHOI') => {
@@ -597,10 +619,18 @@ export default function OrdersPage() {
                                     <p className="text-xs font-bold text-gray-800 font-mono tracking-wide">{ship.ma_van_don}</p>
                                   </div>
                                 </div>
-                                <a href={`https://donhang.ghn.vn/?order_code=${ship.ma_van_don}`} target="_blank" rel="noreferrer"
-                                  className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
-                                  Tra cứu <ExternalLink size={11} />
-                                </a>
+                                <div className="flex items-center gap-3">
+                                  <a href={`https://donhang.ghn.vn/?order_code=${ship.ma_van_don}`} target="_blank" rel="noreferrer"
+                                    className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
+                                    Tra cứu <ExternalLink size={11} />
+                                  </a>
+                                  {ship.trang_thai !== 'cancel' && ship.trang_thai !== 'delivered' && (
+                                    <button onClick={() => handleCancelGHN(viewingOrder.id)} disabled={isCancellingGHN}
+                                      className="flex items-center gap-1 text-xs font-semibold text-rose-600 hover:underline disabled:opacity-50">
+                                      <Ban size={11} /> {isCancellingGHN ? 'Đang hủy...' : 'Hủy vận đơn'}
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                               <div className="flex items-center gap-2.5 px-4 py-2.5">
                                 <Truck size={13} className="text-gray-300 shrink-0" />

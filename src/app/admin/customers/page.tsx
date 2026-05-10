@@ -1,294 +1,371 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  Users,
-  UserPlus,
-  RefreshCw,
-  Search,
-  Download,
-  Eye,
-  X,
-} from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Pagination from "@/components/ui/Pagination";
 
+interface Customer {
+  id: number;
+  ten: string;
+  email: string;
+  sdt: string | null;
+  avatar: string | null;
+  gioi_tinh: string | null;
+  ngay_tao: string;
+  trang_thai: number;
+  tinh_thanh: string | null;
+  quan_huyen: string | null;
+  tong_don: number;
+  don_giao: number;
+  tong_chi_tieu: number;
+  don_cuoi: string | null;
+}
+
+interface Stats {
+  total: number;
+  newThisMonth: number;
+  repeatRate: number;
+}
+
+function formatCurrency(value: number): string {
+  if (value >= 1_000_000) return (value / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (value >= 1_000) return Math.round(value / 1_000) + "K";
+  return value.toLocaleString("vi-VN");
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function getInitials(name: string): string {
+  return name.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase();
+}
+
+function getAvatarColor(id: number): string {
+  const colors = ["bg-emerald-100 text-emerald-700", "bg-blue-100 text-blue-700", "bg-purple-100 text-purple-700", "bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700", "bg-cyan-100 text-cyan-700"];
+  return colors[id % colors.length];
+}
+
+function getSegment(customer: Customer): { label: string; color: string } {
+  if (customer.tong_chi_tieu >= 1000000) return { label: "VIP", color: "bg-amber-50 text-amber-700 border-amber-200" };
+  if (customer.tong_don >= 3) return { label: "Trung thành", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  return { label: "Mới", color: "bg-blue-50 text-blue-700 border-blue-200" };
+}
+
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [stats, setStats] = useState<Stats>({ total: 0, newThisMonth: 0, repeatRate: 0 });
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Pagination & Filtering
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const itemsPerPage = 15;
+  const [sortBy, setSortBy] = useState("newest");
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: itemsPerPage.toString(),
-        search: searchQuery
+        limit: "15",
+        search: searchQuery,
+        sort: sortBy,
       });
-      const res = await fetch(`/api/admin/customers?${params.toString()}`);
+      const res = await fetch(`/api/admin/customers?${params}`);
       if (res.ok) {
-        const data = await res.json();
-        setCustomers(data.data || []);
-        setTotalPages(data.meta?.totalPages || 1);
-        if (!selectedCustomer && data.data?.length > 0) {
-          setSelectedCustomer(data.data[0]);
-        }
+        const json = await res.json();
+        setCustomers(json.data || []);
+        setTotalPages(json.meta?.totalPages || 1);
+        setStats(json.stats || { total: 0, newThisMonth: 0, repeatRate: 0 });
       }
     } catch (error) {
       console.error("Lỗi fetch khách hàng:", error);
-    } finally { 
+    } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, searchQuery, sortBy]);
 
   useEffect(() => {
-    fetchCustomers();
-  }, [currentPage, searchQuery]);
+    const timer = setTimeout(fetchCustomers, searchQuery ? 300 : 0);
+    return () => clearTimeout(timer);
+  }, [fetchCustomers]);
+
+  const openPanel = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsPanelOpen(true);
+  };
 
   return (
-    <div className="relative">
-      <div
-        className={`transition-all duration-300 ${isPanelOpen ? "mr-[380px]" : ""}`}
-      >
-        <div className="space-y-8">
-          {/* Page Title */}
-          <div className="flex justify-between items-end">
+    <div className="relative max-w-[1440px] mx-auto">
+      <div className={`transition-all duration-300 ${isPanelOpen ? "mr-[400px]" : ""}`}>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h2 className="text-3xl font-extrabold text-[#171d16] tracking-tight">
-                Quản lý khách hàng
-              </h2>
-              <p className="text-[#6e7b6c] mt-1">
-                Cơ sở dữ liệu người dùng và lịch sử mua hàng.
-              </p>
+              <h1 className="text-xl font-semibold text-slate-900">Quản lý khách hàng</h1>
+              <p className="text-sm text-slate-500 mt-0.5">Theo dõi và quản lý cơ sở khách hàng</p>
             </div>
-            <button className="bg-gradient-to-br from-[#006b2c] to-[#00873a] text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-lg shadow-green-900/10 hover:opacity-90">
-              <Download size={18} /> Xuất danh sách
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+              Xuất Excel
             </button>
           </div>
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <KPICard
-              icon={<Users className="text-[#006b2c]" size={20} />}
-              label="Tổng khách hàng"
-              value={isLoading ? "..." : customers.length}
-              trend="Hiện tại"
-              color="bg-green-50"
-            />
-            <KPICard
-              icon={<UserPlus className="text-[#515f74]" size={20} />}
-              label="Khách hàng mới"
-              value="58"
-              trend="Tháng này"
-              color="bg-slate-50"
-            />
-            <KPICard
-              icon={<RefreshCw className="text-[#a72d51]" size={20} />}
-              label="Tỷ lệ mua lại"
-              value="64%"
-              trend="Ổn định"
-              color="bg-rose-50"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                </div>
+                <span className="text-xs font-medium text-slate-500">Tổng khách hàng</span>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{isLoading ? "..." : stats.total}</p>
+            </div>
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" /></svg>
+                </div>
+                <span className="text-xs font-medium text-slate-500">Mới tháng này</span>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{isLoading ? "..." : stats.newThisMonth}</p>
+            </div>
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                </div>
+                <span className="text-xs font-medium text-slate-500">Tỷ lệ mua lại</span>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{isLoading ? "..." : `${stats.repeatRate}%`}</p>
+            </div>
           </div>
 
           {/* Filters */}
-          <div className="bg-[#eff6ea] p-4 rounded-2xl flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[240px] relative">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6e7b6c]"
-                size={18}
-              />
-              <input
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full bg-white border-none rounded-xl py-2.5 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-[#006b2c]/20"
-                placeholder="Tìm theo tên, email, sđt..."
-              />
-            </div>
-            <div className="flex gap-3">
-              <select className="bg-white rounded-xl px-4 py-2.5 text-sm font-medium outline-none">
-                <option value="">Tất cả phân khúc</option>
-                <option value="VIP">VIP</option>
-                <option value="Loyal">Loyal</option>
-                <option value="Mới">Mới</option>
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex-1 relative">
+                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                <input
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                  className="w-full h-10 bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 text-sm outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 transition-all"
+                  placeholder="Tìm theo tên, email, số điện thoại..."
+                />
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
+                className="h-10 bg-slate-50 border border-slate-200 rounded-lg px-3 text-sm outline-none focus:border-emerald-300 min-w-[160px]"
+              >
+                <option value="newest">Mới nhất</option>
+                <option value="spent">Chi tiêu cao nhất</option>
               </select>
             </div>
           </div>
 
           {/* Table */}
-          <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-[#bdcaba]/20">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-[#eff6ea]/50 border-b border-[#bdcaba]/20">
-                  <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest">
-                    Khách hàng
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest">
-                    Liên hệ
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest text-center">
-                    Tổng đơn
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest text-right">
-                    Tổng chi tiêu
-                  </th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-[#6e7b6c] uppercase tracking-widest text-center">
-                    Hành động
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#bdcaba]/10">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-20">
-                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#006b2c] border-t-transparent mx-auto"></div>
-                    </td>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/50">
+                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Khách hàng</th>
+                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Liên hệ</th>
+                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Khu vực</th>
+                    <th className="text-center px-5 py-3.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Đơn hàng</th>
+                    <th className="text-right px-5 py-3.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Chi tiêu</th>
+                    <th className="text-center px-5 py-3.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Phân khúc</th>
+                    <th className="text-right px-5 py-3.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Đơn gần nhất</th>
                   </tr>
-                ) : customers.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-16 text-gray-400 font-medium">
-                      Không tìm thấy khách hàng nào.
-                    </td>
-                  </tr>
-                ) : (
-                  customers.map((customer) => (
-                    <tr
-                      key={customer.id}
-                      onClick={() => {
-                        setSelectedCustomer(customer);
-                        setIsPanelOpen(true);
-                      }}
-                      className="hover:bg-[#eff6ea]/30 cursor-pointer"
-                    >
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700 overflow-hidden">
-                            <img src={customer.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-sm">{customer.name}</p>
-                            <p className="text-[10px] text-[#6e7b6c]">
-                              ID: #{customer.id}
-                            </p>
-                          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {isLoading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="px-5 py-4"><div className="flex items-center gap-3"><div className="w-9 h-9 rounded-full bg-slate-100" /><div className="space-y-1.5"><div className="h-3 w-24 bg-slate-100 rounded" /><div className="h-2.5 w-16 bg-slate-50 rounded" /></div></div></td>
+                        <td className="px-5 py-4"><div className="space-y-1.5"><div className="h-3 w-28 bg-slate-100 rounded" /><div className="h-2.5 w-20 bg-slate-50 rounded" /></div></td>
+                        <td className="px-5 py-4"><div className="h-3 w-16 bg-slate-100 rounded" /></td>
+                        <td className="px-5 py-4 text-center"><div className="h-3 w-6 bg-slate-100 rounded mx-auto" /></td>
+                        <td className="px-5 py-4 text-right"><div className="h-3 w-16 bg-slate-100 rounded ml-auto" /></td>
+                        <td className="px-5 py-4 text-center"><div className="h-5 w-14 bg-slate-100 rounded-full mx-auto" /></td>
+                        <td className="px-5 py-4 text-right"><div className="h-3 w-20 bg-slate-100 rounded ml-auto" /></td>
+                      </tr>
+                    ))
+                  ) : customers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-16">
+                        <div className="flex flex-col items-center gap-2">
+                          <svg className="w-12 h-12 text-slate-200" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                          <p className="text-sm text-slate-400">Không tìm thấy khách hàng nào</p>
                         </div>
                       </td>
-                      <td className="px-6 py-5">
-                        <p className="text-xs font-medium">{customer.phone}</p>
-                        <p className="text-[11px] text-[#6e7b6c]">
-                          {customer.email}
-                        </p>
-                      </td>
-                      <td className="px-6 py-5 text-center font-bold text-sm">
-                        {customer.orders}
-                      </td>
-                      <td className="px-6 py-5 font-bold text-sm text-[#006b2c]">
-                        {customer.spent}
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <button className="p-2 hover:bg-green-50 rounded-lg text-green-600">
-                          <Eye size={16} />
-                        </button>
-                      </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-            
-            {/* Pagination Component */}
-            <Pagination 
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+                  ) : (
+                    customers.map((customer) => {
+                      const segment = getSegment(customer);
+                      return (
+                        <tr
+                          key={customer.id}
+                          onClick={() => openPanel(customer)}
+                          className="hover:bg-slate-50/80 cursor-pointer transition-colors group"
+                        >
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${getAvatarColor(customer.id)}`}>
+                                {customer.avatar ? (
+                                  <img src={customer.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                                ) : (
+                                  getInitials(customer.ten)
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-slate-800 truncate">{customer.ten}</p>
+                                <p className="text-[11px] text-slate-400">ID: #{customer.id}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="text-xs text-slate-700">{customer.email}</p>
+                            <p className="text-[11px] text-slate-400">{customer.sdt || "—"}</p>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <p className="text-xs text-slate-600">{customer.tinh_thanh || "—"}</p>
+                          </td>
+                          <td className="px-5 py-3.5 text-center">
+                            <span className="text-sm font-semibold text-slate-700">{customer.tong_don}</span>
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <span className="text-sm font-semibold text-emerald-600">{formatCurrency(customer.tong_chi_tieu)}đ</span>
+                          </td>
+                          <td className="px-5 py-3.5 text-center">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${segment.color}`}>
+                              {segment.label}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <span className="text-xs text-slate-500">{formatDate(customer.don_cuoi)}</span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="border-t border-slate-100">
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Right Detail Panel */}
+      {/* Detail Side Panel */}
       <AnimatePresence>
         {isPanelOpen && selectedCustomer && (
-          <motion.aside
-            initial={{ x: 380 }}
-            animate={{ x: 0 }}
-            exit={{ x: 380 }}
-            className="w-[380px] h-screen fixed right-0 top-0 bg-white border-l border-slate-100 flex flex-col shadow-2xl z-[60]"
-          >
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-[#eff6ea]/30">
-              <h4 className="font-bold text-lg text-[#171d16]">
-                Chi tiết khách hàng
-              </h4>
-              <button
-                onClick={() => setIsPanelOpen(false)}
-                className="text-slate-400 hover:text-red-500 bg-white p-1 rounded-full shadow-sm"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 space-y-6 overflow-y-auto">
-              <div className="text-center space-y-2">
-                <div className="w-24 h-24 rounded-3xl bg-green-50 mx-auto flex items-center justify-center text-3xl font-black text-green-600 overflow-hidden">
-                  <img src={selectedCustomer.avatar} alt="Avatar" className="w-full h-full object-cover" />
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/5 z-[55] lg:hidden"
+              onClick={() => setIsPanelOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: 420 }}
+              animate={{ x: 0 }}
+              exit={{ x: 420 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="w-[400px] h-screen fixed right-0 top-0 bg-white border-l border-slate-200 flex flex-col shadow-2xl z-[60]"
+            >
+              {/* Panel Header */}
+              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h4 className="text-sm font-semibold text-slate-800">Chi tiết khách hàng</h4>
+                <button
+                  onClick={() => setIsPanelOpen(false)}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              {/* Panel Content */}
+              <div className="flex-1 overflow-y-auto">
+                {/* Profile */}
+                <div className="px-6 py-6 text-center border-b border-slate-100">
+                  <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center text-xl font-bold mb-3 ${getAvatarColor(selectedCustomer.id)}`}>
+                    {selectedCustomer.avatar ? (
+                      <img src={selectedCustomer.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      getInitials(selectedCustomer.ten)
+                    )}
+                  </div>
+                  <h5 className="text-base font-semibold text-slate-900">{selectedCustomer.ten}</h5>
+                  <p className="text-xs text-slate-500 mt-0.5">{selectedCustomer.email}</p>
+                  <div className="mt-2">
+                    {(() => { const seg = getSegment(selectedCustomer); return (
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${seg.color}`}>{seg.label}</span>
+                    ); })()}
+                  </div>
                 </div>
-                <h5 className="text-xl font-black text-[#171d16]">
-                  {selectedCustomer.ten}
-                </h5>
-                <p className="text-sm text-gray-500">
-                  {selectedCustomer.email}
-                </p>
+
+                {/* Stats Grid */}
+                <div className="px-6 py-5 border-b border-slate-100">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-emerald-50 rounded-xl p-3.5">
+                      <p className="text-[10px] font-medium text-emerald-600 uppercase tracking-wider">Tổng chi tiêu</p>
+                      <p className="text-lg font-bold text-emerald-700 mt-1">{formatCurrency(selectedCustomer.tong_chi_tieu)}đ</p>
+                    </div>
+                    <div className="bg-blue-50 rounded-xl p-3.5">
+                      <p className="text-[10px] font-medium text-blue-600 uppercase tracking-wider">Tổng đơn hàng</p>
+                      <p className="text-lg font-bold text-blue-700 mt-1">{selectedCustomer.tong_don} đơn</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-xl p-3.5">
+                      <p className="text-[10px] font-medium text-purple-600 uppercase tracking-wider">Đã giao</p>
+                      <p className="text-lg font-bold text-purple-700 mt-1">{selectedCustomer.don_giao} đơn</p>
+                    </div>
+                    <div className="bg-amber-50 rounded-xl p-3.5">
+                      <p className="text-[10px] font-medium text-amber-600 uppercase tracking-wider">TB/đơn</p>
+                      <p className="text-lg font-bold text-amber-700 mt-1">
+                        {selectedCustomer.tong_don > 0 ? formatCurrency(Math.round(selectedCustomer.tong_chi_tieu / selectedCustomer.tong_don)) + "đ" : "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details List */}
+                <div className="px-6 py-5">
+                  <h6 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Thông tin</h6>
+                  <div className="space-y-3">
+                    <DetailRow label="Số điện thoại" value={selectedCustomer.sdt || "Chưa cập nhật"} />
+                    <DetailRow label="Giới tính" value={selectedCustomer.gioi_tinh || "—"} />
+                    <DetailRow label="Khu vực" value={selectedCustomer.tinh_thanh ? `${selectedCustomer.quan_huyen || ""}, ${selectedCustomer.tinh_thanh}` : "—"} />
+                    <DetailRow label="Ngày tham gia" value={formatDate(selectedCustomer.ngay_tao)} />
+                    <DetailRow label="Đơn gần nhất" value={formatDate(selectedCustomer.don_cuoi)} />
+                    <DetailRow label="Trạng thái" value={selectedCustomer.trang_thai === 1 ? "Hoạt động" : "Bị khóa"} valueColor={selectedCustomer.trang_thai === 1 ? "text-emerald-600" : "text-red-500"} />
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <StatBox
-                  label="Tổng chi tiêu"
-                  value={selectedCustomer.spent ?? "—"}
-                  color="text-[#006b2c]"
-                />
-                <StatBox
-                  label="Số đơn hàng"
-                  value={`${selectedCustomer.orders ?? 0} đơn`}
-                />
-              </div>
-            </div>
-          </motion.aside>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
     </div>
   );
 }
 
-// Sub-components
-function KPICard({ icon, label, value, trend, color }: any) {
+function DetailRow({ label, value, valueColor = "text-slate-700" }: { label: string; value: string; valueColor?: string }) {
   return (
-    <div className="bg-white p-6 rounded-xl border border-[#bdcaba]/10 hover:shadow-md transition-all">
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-2 ${color} rounded-lg`}>{icon}</div>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-600">
-          {trend}
-        </span>
-      </div>
-      <p className="text-[10px] font-bold text-[#6e7b6c] uppercase">{label}</p>
-      <h3 className="text-3xl font-bold mt-1 text-[#171d16]">{value}</h3>
-    </div>
-  );
-}
-
-function StatBox({ label, value, color = "text-[#171d16]" }: any) {
-  return (
-    <div className="bg-[#eff6ea] p-4 rounded-2xl">
-      <p className="text-[10px] font-bold text-[#6e7b6c] uppercase">{label}</p>
-      <p className={`text-lg font-black mt-1 ${color}`}>{value}</p>
+    <div className="flex items-center justify-between py-1.5">
+      <span className="text-xs text-slate-500">{label}</span>
+      <span className={`text-xs font-medium ${valueColor}`}>{value}</span>
     </div>
   );
 }

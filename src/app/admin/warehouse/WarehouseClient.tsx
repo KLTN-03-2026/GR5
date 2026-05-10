@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   LayoutGrid,
   Download,
@@ -26,6 +27,9 @@ export default function WarehouseClient({
   importHistoryData,
   zonesRaw,
 }: any) {
+  const { data: session } = useSession();
+  const userRoles = (session?.user as any)?.roles as string[] | undefined;
+  const isAdmin = userRoles?.includes("ADMIN") ?? false;
   const [activeTab, setActiveTab] = useState("map");
 
   return (
@@ -85,6 +89,7 @@ export default function WarehouseClient({
             statsData={statsData}
             inventoryData={inventoryData}
             zonesRaw={zonesRaw}
+            canManageZones={isAdmin}
           />
         </div>
         <div className={activeTab === "import" ? "block" : "hidden"}>

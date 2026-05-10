@@ -16,7 +16,6 @@ const routeTitles: Record<string, string> = {
   "/admin/content": "Nội dung",
   "/admin/promotions": "Khuyến mãi",
   "/admin/reviews": "Bình luận",
-  "/admin/settings": "Cài đặt",
   "/admin/hr": "Nhân sự",
   "/admin/hr/employees": "Danh sách nhân viên",
   "/admin/hr/shifts": "Phân ca làm việc",

@@ -56,6 +56,7 @@ export default function ProductDetail({
 
     addToCart({
       id: product.id,
+      ma_bien_the: selectedVariant?.id || product.bien_the?.[0]?.id || product.id,
       ten_san_pham: product.ten_san_pham,
       gia_ban: finalPrice,
       anh_chinh: mainImage,

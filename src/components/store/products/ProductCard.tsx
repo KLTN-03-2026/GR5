@@ -14,6 +14,7 @@ interface ProductData {
   anh_chinh: string;
   gia_ban: number;
   gia_goc: number | null;
+  ma_bien_the: number | null;
   danh_gia: number;
   luot_danh_gia: number;
 }
@@ -39,6 +40,7 @@ export default function ProductCard({ product }: { product: ProductData }) {
     // Thêm vào giỏ ngay lập tức (không chờ animation)
     addToCart({
       id: product.id,
+      ma_bien_the: product.ma_bien_the || product.id,
       ten_san_pham: product.ten_san_pham,
       anh_chinh: product.anh_chinh,
       gia_ban: product.gia_ban,

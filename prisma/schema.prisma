@@ -987,3 +987,32 @@ model ma_otp {
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
+
+model tinh_thanh {
+  id            Int          @id
+  ten           String       @db.VarChar(100)
+  loai          String?      @db.VarChar(30)
+  ma_dien_thoai Int?
+  quan_huyen    quan_huyen[]
+}
+
+model quan_huyen {
+  id         Int        @id
+  ten        String     @db.VarChar(100)
+  loai       String?    @db.VarChar(30)
+  ma_tinh    Int
+  tinh_thanh tinh_thanh @relation(fields: [ma_tinh], references: [id], onDelete: Cascade)
+  phuong_xa  phuong_xa[]
+
+  @@index([ma_tinh])
+}
+
+model phuong_xa {
+  id            Int        @id
+  ten           String     @db.VarChar(100)
+  loai          String?    @db.VarChar(30)
+  ma_quan_huyen Int
+  quan_huyen    quan_huyen @relation(fields: [ma_quan_huyen], references: [id], onDelete: Cascade)
+
+  @@index([ma_quan_huyen])
+}

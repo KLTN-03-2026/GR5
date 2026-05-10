@@ -1,11 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export interface CartItem {
   id: string | number;
+  ma_bien_the: number;
   ten_san_pham: string;
   gia_ban: number;
   anh_chinh: string;
@@ -30,24 +30,49 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
-  const router = useRouter();
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = localStorage.getItem("verdant_cart_guest");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const mergedRef = useRef(false);
 
-  // Key localStorage theo email user
   const cartKey = session?.user?.email
     ? `verdant_cart_${session.user.email}`
-    : null;
+    : "verdant_cart_guest";
 
-  // Load giỏ hàng chỉ khi session đã xác định (không còn loading)
+  // Khi session resolve: load cart đúng key + merge guest nếu cần
   useEffect(() => {
     if (status === "loading") return;
-    if (!cartKey) {
-      setCart([]);
-      return;
-    }
     try {
       const saved = localStorage.getItem(cartKey);
-      setCart(saved ? JSON.parse(saved) : []);
+      let loadedCart: CartItem[] = saved ? JSON.parse(saved) : [];
+
+      if (session?.user?.email && !mergedRef.current) {
+        mergedRef.current = true;
+        const guestData = localStorage.getItem("verdant_cart_guest");
+        if (guestData) {
+          const guestCart: CartItem[] = JSON.parse(guestData);
+          for (const gItem of guestCart) {
+            const idx = loadedCart.findIndex(
+              (c) => c.id === gItem.id && c.phan_loai === gItem.phan_loai,
+            );
+            if (idx >= 0) {
+              loadedCart[idx].so_luong += gItem.so_luong;
+            } else {
+              loadedCart = [...loadedCart, gItem];
+            }
+          }
+          localStorage.removeItem("verdant_cart_guest");
+          localStorage.setItem(cartKey, JSON.stringify(loadedCart));
+        }
+      }
+
+      setCart(loadedCart);
     } catch {
       setCart([]);
     }
@@ -62,10 +87,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = (newItem: CartItem) => {
     if (status === "loading") return;
-    if (status === "unauthenticated") {
-      router.push("/login");
-      return;
-    }
     const existingIndex = cart.findIndex(
       (item) => item.id === newItem.id && item.phan_loai === newItem.phan_loai,
     );
