@@ -15,7 +15,6 @@ import {
   Layers,
   CreditCard,
   FileText,
-  Settings,
   LogOut,
   Warehouse,
   MessageCircleMore,
@@ -36,7 +35,6 @@ const menuItems = [
   { name: "Nội dung", path: "/admin/content", icon: FileText, description: "Quản lý bài viết" },
   { name: "Khuyến mãi", path: "/admin/promotions", icon: Gift, description: "Chương trình ưu đãi" },
   { name: "Bình luận", path: "/admin/reviews", icon: MessageCircleMore, description: "Đánh giá từ khách" },
-  { name: "Cài đặt", path: "/admin/settings", icon: Settings, description: "Cấu hình hệ thống" },
   {
     name: "Nhân sự",
     path: "/admin/hr",

@@ -10,6 +10,7 @@ import {
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCart } from "@/lib/CartContext";
 
 const BANK_INFO = {
@@ -105,31 +106,33 @@ function AddressForm({ onAddressChange }: {
   // Load địa chỉ đã lưu khi có session
   useEffect(() => {
     if (!session?.user) return;
-    fetch('/api/store/account/addresses')
-      .then(r => r.json())
-      .then((data: any[]) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setSavedAddresses(data);
-          // Chọn mặc định sẵn
-          const def = data.find(a => a.la_mac_dinh) || data[0];
-          if (def.ma_quan_huyen_ghn && def.ma_phuong_xa_ghn) {
-            setSelectedSavedId(def.id);
-            setUseNewForm(false);
+    (async () => {
+      try {
+        const res = await fetch('/api/store/account/addresses');
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) { setUseNewForm(true); return; }
+
+        setSavedAddresses(data);
+        const def = data.find((a: any) => a.la_mac_dinh) || data[0];
+        if (def.tinh_thanh && def.quan_huyen && def.phuong_xa) {
+          setSelectedSavedId(def.id);
+          setUseNewForm(false);
+          const codes = await resolveGhnCodes(def);
+          if (codes) {
             onAddressChange({
               ho_ten: def.ho_ten || '', so_dien_thoai: def.so_dien_thoai || '',
               chi_tiet: def.chi_tiet_dia_chi || '',
               tinh_thanh: def.tinh_thanh || '', quan_huyen: def.quan_huyen || '', phuong_xa: def.phuong_xa || '',
-              ma_tinh: def.ma_tinh_ghn, ma_quan_huyen: def.ma_quan_huyen_ghn, ma_phuong_xa: def.ma_phuong_xa_ghn,
+              ma_tinh: codes.ma_tinh, ma_quan_huyen: codes.ma_quan_huyen, ma_phuong_xa: codes.ma_phuong_xa,
             });
           } else {
-            // Địa chỉ cũ không có GHN → dùng form mới
             setUseNewForm(true);
           }
         } else {
           setUseNewForm(true);
         }
-      })
-      .catch(() => setUseNewForm(true));
+      } catch { setUseNewForm(true); }
+    })();
   }, [session]);
 
   // Load tỉnh khi mở form mới
@@ -178,15 +181,53 @@ function AddressForm({ onAddressChange }: {
     }
   }, [hoTen, sdt, diaChi, selectedProvince, selectedDistrict, selectedWard, useNewForm]);
 
-  const selectSaved = (addr: any) => {
+  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim()
+    .replace(/thành phố |tỉnh |quận |huyện |phường |xã |thị trấn |thị xã /g, '');
+
+  const resolveGhnCodes = async (addr: any) => {
+    try {
+      const provRes = await fetch('/api/ghn/master-data?type=province').then(r => r.json());
+      const prov = provRes.find((p: any) =>
+        normalize(p.ProvinceName) === normalize(addr.tinh_thanh) ||
+        p.ProvinceName === addr.tinh_thanh
+      );
+      if (!prov) return null;
+
+      const distRes = await fetch(`/api/ghn/master-data?type=district&province_id=${prov.ProvinceID}`).then(r => r.json());
+      const dist = distRes.find((d: any) =>
+        normalize(d.DistrictName) === normalize(addr.quan_huyen) ||
+        d.DistrictName === addr.quan_huyen
+      );
+      if (!dist) return null;
+
+      const wardRes = await fetch(`/api/ghn/master-data?type=ward&district_id=${dist.DistrictID}`).then(r => r.json());
+      const ward = wardRes.find((w: any) =>
+        normalize(w.WardName) === normalize(addr.phuong_xa) ||
+        w.WardName === addr.phuong_xa
+      );
+      if (!ward) return null;
+
+      return { ma_tinh: prov.ProvinceID, ma_quan_huyen: dist.DistrictID, ma_phuong_xa: ward.WardCode };
+    } catch {
+      return null;
+    }
+  };
+
+  const selectSaved = async (addr: any) => {
     setSelectedSavedId(addr.id);
     setUseNewForm(false);
-    onAddressChange({
-      ho_ten: addr.ho_ten || '', so_dien_thoai: addr.so_dien_thoai || '',
-      chi_tiet: addr.chi_tiet_dia_chi || '',
-      tinh_thanh: addr.tinh_thanh || '', quan_huyen: addr.quan_huyen || '', phuong_xa: addr.phuong_xa || '',
-      ma_tinh: addr.ma_tinh_ghn, ma_quan_huyen: addr.ma_quan_huyen_ghn, ma_phuong_xa: addr.ma_phuong_xa_ghn,
-    });
+
+    const codes = await resolveGhnCodes(addr);
+    if (codes) {
+      onAddressChange({
+        ho_ten: addr.ho_ten || '', so_dien_thoai: addr.so_dien_thoai || '',
+        chi_tiet: addr.chi_tiet_dia_chi || '',
+        tinh_thanh: addr.tinh_thanh || '', quan_huyen: addr.quan_huyen || '', phuong_xa: addr.phuong_xa || '',
+        ma_tinh: codes.ma_tinh, ma_quan_huyen: codes.ma_quan_huyen, ma_phuong_xa: codes.ma_phuong_xa,
+      });
+    } else {
+      onAddressChange(null);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -324,7 +365,14 @@ export default function CheckoutPage() {
   const [expectedDate, setExpectedDate] = useState<string>('');
 
   const { cart, clearCart } = useCart() as any;
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
 
   const subTotal = cart.reduce((acc: number, item: any) => acc + item.gia_ban * item.so_luong, 0);
   const total = subTotal + shippingFee;
@@ -373,26 +421,23 @@ export default function CheckoutPage() {
       if (cart.length === 0) throw new Error("Giỏ hàng của bạn đang trống!");
       if (!deliveryAddress) throw new Error("Vui lòng nhập địa chỉ giao hàng!");
 
-      const userId = (session?.user as any)?.id || 1;
       const fullAddress = `${deliveryAddress.chi_tiet}, ${deliveryAddress.phuong_xa}, ${deliveryAddress.quan_huyen}, ${deliveryAddress.tinh_thanh}`;
 
       const createOrderRes = await fetch('/api/store/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ma_nguoi_dung: userId,
           phuong_thuc_thanh_toan: paymentMethod.toUpperCase() === 'COD' ? 'COD' : paymentMethod === 'bank_transfer' ? 'BANK' : paymentMethod.toUpperCase(),
           ghi_chu: note,
-          tong_tien: total,
           phi_van_chuyen: shippingFee,
           items: cart,
-          // Địa chỉ giao hàng snapshot
           ho_ten_nguoi_nhan: deliveryAddress.ho_ten,
           sdt_nguoi_nhan: deliveryAddress.so_dien_thoai,
           dia_chi_giao_hang: fullAddress,
           ma_tinh_ghn: deliveryAddress.ma_tinh,
           ma_quan_huyen_ghn: deliveryAddress.ma_quan_huyen,
           ma_phuong_xa_ghn: deliveryAddress.ma_phuong_xa,
+          idempotency_key: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
         })
       });
 

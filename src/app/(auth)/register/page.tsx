@@ -164,8 +164,20 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    if (form.password.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+    if (form.password.length < 8) {
+      setError("Mật khẩu phải có ít nhất 8 ký tự.");
+      return;
+    }
+    if (!/[A-Z]/.test(form.password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 chữ hoa.");
+      return;
+    }
+    if (!/[0-9]/.test(form.password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 chữ số.");
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt.");
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -175,13 +187,11 @@ export default function RegisterPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch("/api/auth/send-register-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ho_ten: form.ho_ten,
           email: form.email,
-          password: form.password,
         }),
       });
 
@@ -207,13 +217,11 @@ export default function RegisterPage() {
     setOtpError(false);
     setSubmitting(true);
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch("/api/auth/send-register-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ho_ten: form.ho_ten,
           email: form.email,
-          password: form.password,
         }),
       });
       const json = await res.json();
@@ -232,10 +240,15 @@ export default function RegisterPage() {
     setOtpError(false);
     setVerifying(true);
     try {
-      const res = await fetch("/api/auth/verify-email", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, otp }),
+        body: JSON.stringify({
+          ho_ten: form.ho_ten,
+          email: form.email,
+          password: form.password,
+          otp,
+        }),
       });
 
       const json = await res.json();
@@ -481,7 +494,7 @@ export default function RegisterPage() {
                         type={showPassword ? "text" : "password"}
                         value={form.password}
                         onChange={onChange}
-                        placeholder="Tối thiểu 6 ký tự"
+                        placeholder="Tối thiểu 8 ký tự (chữ hoa + số + đặc biệt)"
                         required
                         className="bg-transparent w-full outline-none text-sm text-[#111827] placeholder:text-slate-400"
                       />

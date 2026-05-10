@@ -10,14 +10,15 @@ export default function OrderDetailsClientPage({ params }: { params: Promise<{ i
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // 1. Lấy dữ liệu thật từ Database
   useEffect(() => {
     fetch(`/api/store/orders/${id}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) setOrder(data.order);
+        else setOrder(null);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, [id]);
 
   if (loading) return <div className="p-20 text-center text-[#007832] font-bold">Đang tải hành trình đơn hàng...</div>;
@@ -108,15 +109,15 @@ export default function OrderDetailsClientPage({ params }: { params: Promise<{ i
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Người nhận</label>
-                <p className="text-lg font-bold text-gray-800">{order.nguoi_dung?.ho_so_nguoi_dung?.ho_ten}</p>
+                <p className="text-lg font-bold text-gray-800">{order.ho_ten_nguoi_nhan || order.nguoi_dung?.ho_so_nguoi_dung?.ho_ten || "—"}</p>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Số điện thoại</label>
-                <p className="text-lg font-bold text-gray-800">{order.nguoi_dung?.ho_so_nguoi_dung?.so_dien_thoai}</p>
+                <p className="text-lg font-bold text-gray-800">{order.sdt_nguoi_nhan || order.nguoi_dung?.ho_so_nguoi_dung?.so_dien_thoai || "—"}</p>
               </div>
               <div className="md:col-span-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Địa chỉ nhận hàng</label>
-                <p className="text-lg font-bold text-gray-800 leading-relaxed">{order.nguoi_dung?.dia_chi_nguoi_dung[0]?.chi_tiet_dia_chi}</p>
+                <p className="text-lg font-bold text-gray-800 leading-relaxed">{order.dia_chi_giao_hang || order.nguoi_dung?.dia_chi_nguoi_dung?.[0]?.chi_tiet_dia_chi || "—"}</p>
               </div>
             </div>
           </section>
@@ -135,8 +136,11 @@ export default function OrderDetailsClientPage({ params }: { params: Promise<{ i
                       {item.so_luong}x
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 text-lg">{item.bien_the_san_pham.ten_bien_the}</p>
-                      <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Đơn giá: {Number(item.don_gia).toLocaleString()}đ</p>
+                      <p className="font-bold text-gray-900 text-lg">{item.bien_the_san_pham?.san_pham?.ten_san_pham || item.bien_the_san_pham?.ten_bien_the || "Sản phẩm"}</p>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                        {item.bien_the_san_pham?.ten_bien_the && <span>{item.bien_the_san_pham.ten_bien_the} · </span>}
+                        Đơn giá: {Number(item.don_gia).toLocaleString()}đ
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -175,20 +179,31 @@ export default function OrderDetailsClientPage({ params }: { params: Promise<{ i
           <section className="bg-white rounded-[2rem] p-8 border border-emerald-50 shadow-sm">
             <h3 className="text-lg font-black text-gray-900 mb-8 uppercase tracking-widest">Hành trình đơn</h3>
             <div className="relative space-y-10 pl-6 border-l-2 border-emerald-100 ml-2">
-              {/* Bước cuối (Trạng thái hiện tại) */}
-              <div className="relative">
-                <div className="absolute -left-[33px] top-1 w-5 h-5 bg-[#007832] rounded-full border-4 border-white ring-4 ring-emerald-50"></div>
-                <p className="font-black text-gray-950 text-base">Trạng thái: {order.trang_thai.replace(/_/g, ' ')}</p>
-                <p className="text-[10px] text-gray-400 font-black uppercase mt-1">Cập nhật: {new Date(order.ngay_cap_nhat).toLocaleString('vi-VN')}</p>
-                <p className="mt-2 text-xs text-gray-500 italic leading-relaxed">Hệ thống Verdant Harvest đang xử lý đơn hàng của bạn.</p>
-              </div>
-              
-              {/* Bước đầu (Lúc đặt hàng) */}
-              <div className="relative opacity-50">
-                <div className="absolute -left-[31px] top-1 w-4 h-4 bg-gray-300 rounded-full border-4 border-white"></div>
-                <p className="font-bold text-gray-600">Đơn hàng được khởi tạo</p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase">{new Date(order.ngay_tao).toLocaleString('vi-VN')}</p>
-              </div>
+              {order.lich_su_don_hang && order.lich_su_don_hang.length > 0 ? (
+                [...order.lich_su_don_hang].reverse().map((ls: any, idx: number) => (
+                  <div key={ls.id || idx} className={`relative ${idx > 0 ? "opacity-50" : ""}`}>
+                    <div className={`absolute -left-[${idx === 0 ? "33" : "31"}px] top-1 w-${idx === 0 ? "5" : "4"} h-${idx === 0 ? "5" : "4"} ${idx === 0 ? "bg-[#007832] ring-4 ring-emerald-50" : "bg-gray-300"} rounded-full border-4 border-white`}></div>
+                    <p className={`font-${idx === 0 ? "black text-gray-950 text-base" : "bold text-gray-600"}`}>
+                      {ls.trang_thai?.replace(/_/g, ' ')}
+                    </p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">
+                      {new Date(ls.thoi_gian_doi).toLocaleString('vi-VN')}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="relative">
+                    <div className="absolute -left-[33px] top-1 w-5 h-5 bg-[#007832] rounded-full border-4 border-white ring-4 ring-emerald-50"></div>
+                    <p className="font-black text-gray-950 text-base">Trạng thái: {order.trang_thai?.replace(/_/g, ' ')}</p>
+                  </div>
+                  <div className="relative opacity-50">
+                    <div className="absolute -left-[31px] top-1 w-4 h-4 bg-gray-300 rounded-full border-4 border-white"></div>
+                    <p className="font-bold text-gray-600">Đơn hàng được khởi tạo</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase">{new Date(order.ngay_tao).toLocaleString('vi-VN')}</p>
+                  </div>
+                </>
+              )}
             </div>
           </section>
 

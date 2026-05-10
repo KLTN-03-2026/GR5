@@ -50,11 +50,12 @@ const StatCard = ({ icon: Icon, label, value, color, bg }: any) => (
 );
 
 // ─── Main Component ───────────────────────────────────────
-export default function WarehouseMap({ mapData, statsData, inventoryData, zonesRaw: initialZones }: {
+export default function WarehouseMap({ mapData, statsData, inventoryData, zonesRaw: initialZones, canManageZones = true }: {
   mapData?: any[];
   statsData?: any;
   inventoryData?: any[];
   zonesRaw?: Zone[];
+  canManageZones?: boolean;
 }) {
   // Drill-down state: null = zone level, string = selected zone name
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
@@ -364,10 +365,12 @@ export default function WarehouseMap({ mapData, statsData, inventoryData, zonesR
           </div>
         </div>
 
-        {/* ── ZONE MANAGER (CRUD) ── */}
-        <div className="sticky top-6 h-[600px]">
-          <ZoneManager zones={zones} onRefresh={refreshZones} />
-        </div>
+        {/* ── ZONE MANAGER (CRUD) — Chỉ admin ── */}
+        {canManageZones && (
+          <div className="sticky top-6 h-[600px]">
+            <ZoneManager zones={zones} onRefresh={refreshZones} />
+          </div>
+        )}
       </div>
 
       {/* Bảng tồn kho chi tiết */}

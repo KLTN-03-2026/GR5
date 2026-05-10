@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
 const GHN_BASE = process.env.GHN_BASE_URL || "https://dev-online-gateway.ghn.vn/shiip/public-api";
-const GHN_TOKEN = process.env.GHN_TOKEN || "";
-const GHN_SHOP_ID = process.env.GHN_SHOP_ID || "";
-
-// District ID của kho hàng (shop) — cấu hình trong .env nếu cần
+const GHN_TOKEN = process.env.GHN_TOKEN!;
+const GHN_SHOP_ID = process.env.GHN_SHOP_ID!;
 const FROM_DISTRICT_ID = Number(process.env.GHN_FROM_DISTRICT_ID || 1542);
 
 export async function POST(req: Request) {
@@ -34,16 +32,16 @@ export async function POST(req: Request) {
 
     const data = await res.json();
 
-    if (data.code !== 200) {
-      return NextResponse.json({ error: data.message || "GHN lỗi" }, { status: 400 });
+    if (data.code === 200) {
+      return NextResponse.json({
+        fee: data.data?.total || 0,
+        service_fee: data.data?.service_fee || 0,
+        insurance_fee: data.data?.insurance_fee || 0,
+        expected_delivery_time: data.data?.expected_delivery_time,
+      });
     }
 
-    return NextResponse.json({
-      fee: data.data?.total || 0,
-      service_fee: data.data?.service_fee || 0,
-      insurance_fee: data.data?.insurance_fee || 0,
-      expected_delivery_time: data.data?.expected_delivery_time,
-    });
+    return NextResponse.json({ error: data.message || "GHN API lỗi" }, { status: 502 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

@@ -10,7 +10,12 @@ export default async function StoreLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth(); // <--- 2. Lấy session ở đây
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // Cookie cũ bị corrupt → bỏ qua, coi như chưa login
+  }
 
   return (
     <CartProvider>

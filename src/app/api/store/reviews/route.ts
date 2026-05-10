@@ -88,13 +88,13 @@ export async function POST(req: Request) {
   });
   if (!user) return NextResponse.json({ error: "Không tìm thấy tài khoản" }, { status: 404 });
 
-  // Kiểm tra đã mua sản phẩm này chưa (đơn HOAN_THANH)
+  // Kiểm tra đã mua sản phẩm này chưa (đơn DA_GIAO hoặc HOAN_THANH)
   const daMua = await prisma.chi_tiet_don_hang.findFirst({
     where: {
       bien_the_san_pham: { ma_san_pham },
       don_hang: {
         ma_nguoi_dung: user.id,
-        trang_thai: "HOAN_THANH",
+        trang_thai: { in: ["DA_GIAO", "HOAN_THANH"] },
       },
     },
   });

@@ -1,60 +1,85 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { error } from "console";
+
+const PHONE_REGEX = /^0\d{9,10}$/;
 
 export async function POST(req: Request) {
   try {
-    // 1. Lấy session bằng hàm auth() mới
     const session = await auth();
 
     if (!session || !session.user) {
       return NextResponse.json(
-        { error: "Đăng nhập trước tiên " },
+        { error: "Đăng nhập trước tiên" },
         { status: 401 },
       );
     }
 
-    // 2. Lấy ID người dùng (Ở v5 thường nằm trực tiếp trong session.user.id)
     const userId = session.user.id;
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Không tìm thấy ID người dùng!" },
+        { error: "Không tìm thấy ID người dùng" },
         { status: 400 },
       );
     }
 
-    // 3. Lấy dữ liệu từ body
     const body = await req.json();
-    const { ho_ten, so_dien_thoai } = body;
+    const { ho_ten, so_dien_thoai, gioi_tinh, ngay_sinh } = body;
 
-    // 4. Cập nhật vào bảng hồ sơ
+    if (so_dien_thoai && !PHONE_REGEX.test(so_dien_thoai)) {
+      return NextResponse.json(
+        { error: "Số điện thoại không hợp lệ (10-11 số, bắt đầu bằng 0)" },
+        { status: 400 },
+      );
+    }
+
+    if (ngay_sinh) {
+      const birthDate = new Date(ngay_sinh);
+      const now = new Date();
+      if (isNaN(birthDate.getTime()) || birthDate > now) {
+        return NextResponse.json(
+          { error: "Ngày sinh không hợp lệ" },
+          { status: 400 },
+        );
+      }
+      const age = now.getFullYear() - birthDate.getFullYear();
+      if (age > 120 || age < 10) {
+        return NextResponse.json(
+          { error: "Ngày sinh không hợp lệ" },
+          { status: 400 },
+        );
+      }
+    }
+
+    const updateData: any = {
+      ho_ten: ho_ten || undefined,
+      so_dien_thoai: so_dien_thoai || undefined,
+    };
+    if (gioi_tinh !== undefined) updateData.gioi_tinh = gioi_tinh;
+    if (ngay_sinh) updateData.ngay_sinh = new Date(ngay_sinh);
+
     const updatedProfile = await prisma.ho_so_nguoi_dung.update({
       where: {
         ma_nguoi_dung: Number(userId),
       },
-      data: {
-        ho_ten: ho_ten,
-        so_dien_thoai: so_dien_thoai,
-      },
+      data: updateData,
     });
 
     return NextResponse.json({
-      success: "Lưu thành công rồi nhé!",
+      success: "Lưu thành công!",
       data: updatedProfile,
     });
   } catch (error: any) {
     console.error("Lỗi API Profile:", error);
 
-    // Lỗi P2025 là không tìm thấy bản ghi (User chưa có dòng nào bên bảng hồ sơ)
     if (error.code === "P2025") {
       return NextResponse.json(
-        { error: "Mày chưa có dòng hồ sơ nào bên bảng ho_so_nguoi_dung cả!" },
+        { error: "Chưa có hồ sơ. Vui lòng liên hệ admin." },
         { status: 404 },
       );
     }
 
-    return NextResponse.json({ error: "Lỗi hệ thống rồi!" }, { status: 500 });
+    return NextResponse.json({ error: "Lỗi hệ thống" }, { status: 500 });
   }
 }

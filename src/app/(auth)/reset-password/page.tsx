@@ -33,7 +33,7 @@ function ResetPasswordContent() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Chúc mừng Phú! Mật khẩu đã được đổi thành công.");
+        alert("Mật khẩu của bạn đã được đổi thành công.");
         router.push("/login");
       } else {
         alert(data.message || "Có lỗi xảy ra, thử lại sau nhé!");

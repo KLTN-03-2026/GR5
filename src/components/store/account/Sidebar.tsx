@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   LayoutDashboard, Package, User, MapPin, Heart,
   KeyRound, LogOut, Leaf, ChevronRight, ShieldCheck,
-  Star, ShoppingBag,
+  Star, ShoppingBag, Bell,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -60,6 +60,15 @@ const NAV_ITEMS = [
     iconColor: "#e11d48",
   },
   {
+    id: "notifications",
+    name: "Thông báo",
+    icon: Bell,
+    path: "/account/notifications",
+    exact: false,
+    iconBg: "#fef3c7",
+    iconColor: "#d97706",
+  },
+  {
     id: "security",
     name: "Bảo mật",
     icon: KeyRound,
@@ -90,7 +99,7 @@ export default function Sidebar({ user }: { user: any }) {
   useEffect(() => {
     Promise.all([
       userId
-        ? fetch(`/api/store/orders?userId=${userId}`).then(r => r.ok ? r.json() : [])
+        ? fetch(`/api/store/orders`).then(r => r.ok ? r.json() : [])
         : Promise.resolve([]),
       fetch("/api/store/account/favorites?page=1&limit=1").then(r => r.ok ? r.json() : null),
     ]).then(([ord, fav]) => {

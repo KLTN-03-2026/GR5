@@ -2,14 +2,35 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
+const MAX_ADDRESSES = 5;
+const PHONE_REGEX = /^0\d{9,10}$/;
+
+async function getAuthUserId(): Promise<number | null> {
+  const session = await auth();
+  if (!session?.user?.email) return null;
+  const user = await prisma.nguoi_dung.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
+  });
+  return user?.id ?? null;
+}
+
+async function verifyOwnership(addressId: number, userId: number): Promise<boolean> {
+  const address = await prisma.dia_chi_nguoi_dung.findUnique({
+    where: { id: addressId },
+    select: { ma_nguoi_dung: true },
+  });
+  return address?.ma_nguoi_dung === userId;
+}
+
 // [GET] Lấy danh sách địa chỉ
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.email)
+  const userId = await getAuthUserId();
+  if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const addresses = await prisma.dia_chi_nguoi_dung.findMany({
-    where: { nguoi_dung: { email: session.user.email } },
+    where: { ma_nguoi_dung: userId },
     orderBy: { la_mac_dinh: "desc" },
   });
   return NextResponse.json(addresses);
@@ -17,16 +38,9 @@ export async function GET() {
 
 // [POST] Thêm địa chỉ mới
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.email)
+  const userId = await getAuthUserId();
+  if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = await prisma.nguoi_dung.findUnique({
-    where: { email: session.user.email },
-    select: { id: true },
-  });
-  if (!user)
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const {
     chi_tiet_dia_chi,
@@ -35,13 +49,21 @@ export async function POST(req: Request) {
     ma_tinh_ghn, ma_quan_huyen_ghn, ma_phuong_xa_ghn,
   } = await req.json();
 
+  if (so_dien_thoai && !PHONE_REGEX.test(so_dien_thoai)) {
+    return NextResponse.json({ error: "Số điện thoại không hợp lệ (10-11 số, bắt đầu bằng 0)" }, { status: 400 });
+  }
+
   const count = await prisma.dia_chi_nguoi_dung.count({
-    where: { ma_nguoi_dung: user.id },
+    where: { ma_nguoi_dung: userId },
   });
+
+  if (count >= MAX_ADDRESSES) {
+    return NextResponse.json({ error: `Bạn chỉ được lưu tối đa ${MAX_ADDRESSES} địa chỉ` }, { status: 400 });
+  }
 
   const address = await prisma.dia_chi_nguoi_dung.create({
     data: {
-      ma_nguoi_dung: user.id,
+      ma_nguoi_dung: userId,
       chi_tiet_dia_chi,
       la_mac_dinh: count === 0,
       ho_ten: ho_ten || null,
@@ -60,8 +82,8 @@ export async function POST(req: Request) {
 
 // [PUT] Đặt mặc định hoặc Cập nhật địa chỉ
 export async function PUT(req: Request) {
-  const session = await auth();
-  if (!session?.user?.email)
+  const userId = await getAuthUserId();
+  if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const {
@@ -72,13 +94,13 @@ export async function PUT(req: Request) {
     ma_tinh_ghn, ma_quan_huyen_ghn, ma_phuong_xa_ghn,
   } = await req.json();
 
+  if (!await verifyOwnership(Number(id), userId)) {
+    return NextResponse.json({ error: "Không có quyền thao tác địa chỉ này" }, { status: 403 });
+  }
+
   if (action === "set-default") {
-    const user = await prisma.nguoi_dung.findUnique({
-      where: { email: session.user.email },
-      select: { id: true },
-    });
     await prisma.dia_chi_nguoi_dung.updateMany({
-      where: { ma_nguoi_dung: user?.id },
+      where: { ma_nguoi_dung: userId },
       data: { la_mac_dinh: false },
     });
     await prisma.dia_chi_nguoi_dung.update({
@@ -89,6 +111,10 @@ export async function PUT(req: Request) {
   }
 
   if (action === "update") {
+    if (so_dien_thoai && !PHONE_REGEX.test(so_dien_thoai)) {
+      return NextResponse.json({ error: "Số điện thoại không hợp lệ (10-11 số, bắt đầu bằng 0)" }, { status: 400 });
+    }
+
     await prisma.dia_chi_nguoi_dung.update({
       where: { id: Number(id) },
       data: {
@@ -111,7 +137,16 @@ export async function PUT(req: Request) {
 
 // [DELETE] Xóa địa chỉ
 export async function DELETE(req: Request) {
+  const userId = await getAuthUserId();
+  if (!userId)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { id } = await req.json();
+
+  if (!await verifyOwnership(Number(id), userId)) {
+    return NextResponse.json({ error: "Không có quyền xoá địa chỉ này" }, { status: 403 });
+  }
+
   await prisma.dia_chi_nguoi_dung.delete({ where: { id: Number(id) } });
   return NextResponse.json({ success: true });
 }

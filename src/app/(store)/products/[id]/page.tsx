@@ -17,7 +17,15 @@ export default async function ProductDetailPage({
       where: { id: productId },
       include: {
         anh_san_pham: true,
-        bien_the_san_pham: { orderBy: { gia_ban: "asc" } },
+        bien_the_san_pham: {
+          orderBy: { gia_ban: "asc" },
+          include: {
+            lo_hang: {
+              where: { trang_thai: "BINH_THUONG" },
+              include: { ton_kho_tong: { select: { so_luong: true } } },
+            },
+          },
+        },
         danh_muc: true,
         danh_gia_san_pham: {
           where: { trang_thai: "DA_DUYET" },
@@ -54,7 +62,7 @@ export default async function ProductDetailPage({
           bien_the_san_pham: { ma_san_pham: productId },
           don_hang: {
             nguoi_dung: { email: session.user.email },
-            trang_thai: "HOAN_THANH",
+            trang_thai: { in: ["DA_GIAO", "HOAN_THANH"] },
           },
         },
       })
@@ -72,13 +80,18 @@ export default async function ProductDetailPage({
     hinh_anh: product.anh_san_pham.length > 0
       ? product.anh_san_pham.map((a: any) => a.duong_dan_anh)
       : ["https://images.unsplash.com/photo-1542838132-92c53300491e?w=800"],
-    bien_the: product.bien_the_san_pham.map((bt: any) => ({
-      id: bt.id,
-      ten_bien_the: bt.ten_bien_the,
-      don_vi_tinh: bt.don_vi_tinh,
-      gia_ban: Number(bt.gia_ban),
-      gia_goc: bt.gia_goc ? Number(bt.gia_goc) : null,
-    })),
+    bien_the: product.bien_the_san_pham.map((bt: any) => {
+      const tonKho = bt.lo_hang?.reduce((sum: number, lh: any) =>
+        sum + (lh.ton_kho_tong?.reduce((s: number, tk: any) => s + (tk.so_luong || 0), 0) || 0), 0) || 0;
+      return {
+        id: bt.id,
+        ten_bien_the: bt.ten_bien_the,
+        don_vi_tinh: bt.don_vi_tinh,
+        gia_ban: Number(bt.gia_ban),
+        gia_goc: bt.gia_goc ? Number(bt.gia_goc) : null,
+        ton_kho: tonKho,
+      };
+    }),
     danh_gia: Number(trungBinhSao),
     luot_danh_gia: soLuotDanhGia,
     danh_sach_danh_gia: product.danh_gia_san_pham.map((dg: any) => ({
@@ -102,12 +115,46 @@ export default async function ProductDetailPage({
     gia_ban: Number(p.bien_the_san_pham[0]?.gia_ban || 0),
   }));
 
+  const totalStock = formattedProduct.bien_the.reduce((s: number, bt: any) => s + (bt.ton_kho || 0), 0);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: formattedProduct.ten_san_pham,
+    description: formattedProduct.mo_ta,
+    image: formattedProduct.hinh_anh,
+    brand: { "@type": "Brand", name: formattedProduct.xuat_xu },
+    offers: formattedProduct.bien_the.length > 0 ? {
+      "@type": "AggregateOffer",
+      priceCurrency: "VND",
+      lowPrice: Math.min(...formattedProduct.bien_the.map((bt: any) => bt.gia_ban)),
+      highPrice: Math.max(...formattedProduct.bien_the.map((bt: any) => bt.gia_ban)),
+      offerCount: formattedProduct.bien_the.length,
+      availability: totalStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    } : undefined,
+    ...(Number(trungBinhSao) > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: trungBinhSao,
+        reviewCount: soLuotDanhGia,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
+  };
+
   return (
-    <ProductDetailClient
-      product={formattedProduct}
-      relatedProducts={formattedRelated}
-      isLoggedIn={!!session}
-      daMua={!!daMua}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductDetailClient
+        product={formattedProduct}
+        relatedProducts={formattedRelated}
+        isLoggedIn={!!session}
+        daMua={!!daMua}
+      />
+    </>
   );
 }

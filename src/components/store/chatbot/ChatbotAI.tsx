@@ -1,222 +1,289 @@
-// components/Chatbot.tsx
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { FaRobot, FaTimes, FaPaperPlane, FaShoppingBag } from "react-icons/fa";
-import Link from "next/link"; // Dùng Link của Next để điều hướng nhanh
+import { useRouter } from "next/navigation";
+import { FaRobot, FaTimes, FaPaperPlane } from "react-icons/fa";
+import { ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { useCart } from "@/lib/CartContext";
 
-// 1. Định nghĩa Type cho tin nhắn (Hứng full data từ Backend)
+interface Product {
+  id: number;
+  name: string;
+  image: string | null;
+  price: number | null;
+  unit: string;
+}
+
 interface Message {
   id: number;
   sender: "user" | "bot";
   text: string;
-  hasProduct?: boolean;
-  productName?: string;
-  productPrice?: number;
-  productImage?: string;
+  products?: Product[];
+  navigate?: string | null;
 }
 
-export default function Chatbot() {
+function formatBotText(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|\n)/g);
+  return parts.map((part, i) => {
+    if (part === "\n") return <br key={i} />;
+    if (part.startsWith("**") && part.endsWith("**"))
+      return <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>;
+    if (part.startsWith("*") && part.endsWith("*"))
+      return <em key={i}>{part.slice(1, -1)}</em>;
+    return part;
+  });
+}
+
+export default function ChatbotAI() {
+  const router = useRouter();
+  const { cart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  // Khởi tạo tin nhắn chào mừng
   const [messages, setMessages] = useState<Message[]>([
-    { 
-        id: 1,
-        sender: "bot", 
-        text: "Chào bạn! Mình là Freshy 🥦, trợ lý AI của FreshFood. Hôm nay bạn muốn mua thực phẩm gì nhỉ?" 
-    }
+    {
+      id: 1,
+      sender: "bot",
+      text: "Chào bạn! Mình là Freshy 🥦, trợ lý AI của NôngSản Việt. Bạn muốn tìm mua gì hôm nay?",
+    },
   ]);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // 2. Tự động cuộn xuống khi có tin nhắn mới
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 3. Xử lý gửi tin nhắn
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim() || isLoading) return;
 
     const userText = input;
-    const userMsgId = Date.now();
-
-    // Thêm tin nhắn của user vào UI ngay lập tức
-    setMessages(prev => [...prev, { id: userMsgId, sender: "user", text: userText }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now(), sender: "user", text: userText },
+    ]);
     setInput("");
     setIsLoading(true);
 
     try {
-      // Gọi API Route nội bộ của Next.js
+      const history = messages
+        .filter((m) => m.sender === "user" || m.sender === "bot")
+        .slice(-10)
+        .map((m) => ({ role: m.sender === "user" ? "user" : "model", text: m.text }));
+
+      const cartSummary = cart.length > 0 ? {
+        totalItems: cart.reduce((sum, item) => sum + item.so_luong, 0),
+        totalWeight: cart.reduce((sum, item) => sum + item.so_luong * 500, 0),
+      } : null;
+
       const res = await fetch("/api/chat", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ message: userText })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userText, history, cart: cartSummary }),
       });
 
-      if (!res.ok) throw new Error("Lỗi kết nối server.");
+      if (!res.ok) throw new Error("Lỗi kết nối");
 
-      // Nhận cục JSON đã được Gemini chuẩn hóa
-      const aiData = await res.json();
-      
-      // Thêm tin nhắn của Bot vào UI
-      setMessages(prev => [...prev, { 
+      const data = await res.json();
+
+      setMessages((prev) => [
+        ...prev,
+        {
           id: Date.now() + 1,
-          sender: "bot", 
-          text: aiData.text || "Mình chưa hiểu ý bạn lắm.",
-          hasProduct: aiData.hasProduct,
-          productName: aiData.productName,
-          productPrice: aiData.productPrice,
-          productImage: aiData.productImage
-      }]);
+          sender: "bot",
+          text: data.text || "Mình chưa hiểu ý bạn lắm.",
+          products: data.products || [],
+          navigate: data.navigate || null,
+        },
+      ]);
 
-    } catch (error) {
-      setMessages(prev => [...prev, { 
-        id: Date.now() + 1,
-        sender: "bot", 
-        text: "Hệ thống của mình đang bận, bạn đợi xíu nhé! 😢" 
-      }]);
+      if (data.navigate) {
+        setTimeout(() => {
+          router.push(data.navigate);
+        }, 1500);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: "bot",
+          text: "Hệ thống đang bận, bạn thử lại sau nhé! 😢",
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    // Fixed container ở góc màn hình
     <div className="fixed bottom-6 right-6 z-50 font-sans">
-      
-      {/* NÚT BẤM MỞ CHAT (Floating Button) */}
       {!isOpen && (
-        <button 
-            onClick={() => setIsOpen(true)} 
-            className="bg-green-600 text-white p-4 rounded-full shadow-2xl hover:bg-green-700 hover:scale-110 transition-all duration-300 animate-bounce active:scale-95"
-            aria-label="Mở chat với AI"
+        <button
+          onClick={() => setIsOpen(true)}
+          className="bg-emerald-600 text-white p-4 rounded-full shadow-2xl hover:bg-emerald-700 hover:scale-110 transition-all duration-300 active:scale-95"
+          style={{ animation: "bounce-gentle 2s infinite" }}
         >
-          <FaRobot size={28} />
+          <FaRobot size={26} />
         </button>
       )}
 
-      {/* CỬA SỔ CHAT */}
       {isOpen && (
-        <div className="w-[360px] h-[550px] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col animate-slideUp origin-bottom-right">
-          
-          {/* HEADER CHAT */}
-          <div className="bg-linear-to-r from-green-600 to-emerald-700 p-4 text-white flex justify-between items-center shadow-md z-10">
-              <div className="flex items-center gap-3">
-                 <div className="bg-white/20 text-white p-2.5 rounded-full backdrop-blur-sm shadow-inner">
-                    <FaRobot size={20} />
-                 </div>
-                 <div>
-                    <h3 className="font-bold text-base">Trợ lý FreshFood AI</h3>
-                    <p className="text-[11px] text-green-100 flex items-center gap-1.5">
-                       <span className="w-2 h-2 rounded-full bg-lime-400 inline-block animate-pulse"></span> Sẵn sàng tư vấn
-                    </p>
-                 </div>
+        <div className="w-[380px] h-[580px] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col"
+          style={{ animation: "slideUp 0.3s ease-out" }}>
+
+          {/* Header */}
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 p-4 text-white flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-2.5 rounded-full">
+                <FaRobot size={18} />
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white transition hover:rotate-90">
-                 <FaTimes size={20} />
-              </button>
+              <div>
+                <h3 className="font-bold text-[15px]">Freshy - Trợ lý AI</h3>
+                <p className="text-[11px] text-emerald-100 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-lime-400 inline-block animate-pulse" />
+                  Sẵn sàng tư vấn
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-white/80 hover:text-white transition hover:rotate-90 duration-200"
+            >
+              <FaTimes size={18} />
+            </button>
           </div>
 
-          {/* NỘI DUNG TIN NHẮN (Body) */}
-          <div className="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          {/* Messages */}
+          <div className="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3">
             {messages.map((msg) => (
-              <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-                
-                {/* Bong bóng chat text */}
-                <div className="flex items-end max-w-[85%]">
-                    {msg.sender === 'bot' && (
-                        <div className="w-7 h-7 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-2 mb-1 shrink-0 shadow-sm border border-green-200">
-                          <FaRobot size={14}/>
-                        </div>
-                    )}
-                    <div className={`p-3.5 rounded-2xl text-sm shadow-sm leading-relaxed ${
-                        msg.sender === 'user' 
-                          ? 'bg-green-600 text-white rounded-br-sm' 
-                          : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
-                    }`}>
-                      {msg.text}
+              <div
+                key={msg.id}
+                className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
+              >
+                <div className="flex items-end max-w-[88%]">
+                  {msg.sender === "bot" && (
+                    <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-2 mb-1 shrink-0">
+                      <FaRobot size={13} />
                     </div>
+                  )}
+                  <div
+                    className={`p-3 rounded-2xl text-[13px] leading-relaxed ${
+                      msg.sender === "user"
+                        ? "bg-emerald-600 text-white rounded-br-sm"
+                        : "bg-white text-gray-800 border border-gray-100 rounded-bl-sm shadow-sm"
+                    }`}
+                  >
+                    {msg.sender === "bot" ? formatBotText(msg.text) : msg.text}
+                  </div>
                 </div>
 
-                {/* 👇 RENDER THẺ SẢN PHẨM NẾU CÓ DATA */}
-                {msg.sender === 'bot' && msg.hasProduct && msg.productName && (
-                    <div className="mt-2.5 ml-9 w-64 bg-white border border-green-100 rounded-xl overflow-hidden shadow-lg transition hover:border-green-300 animate-fadeIn">
-                        {msg.productImage && (
-                            <div className="h-36 bg-gray-100 relative overflow-hidden">
-                                {/* Dùng img thường cho đơn giản, hoặc thay bằng Next Image nếu muốn tối ưu */}
-                                <img 
-                                  src={msg.productImage} 
-                                  alt={msg.productName} 
-                                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
-                                />
-                            </div>
-                        )}
-                        <div className="p-4">
-                            <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 min-h-[40px]">{msg.productName}</h4>
-                            <div className="flex justify-between items-end mt-2">
-                                <p className="text-green-600 font-extrabold text-base">
-                                   {msg.productPrice ? msg.productPrice.toLocaleString('vi-VN') + ' ₫' : 'Liên hệ'}
-                                </p>
-                            </div>
-                            
-                            {/* Nút xem chi tiết/mua hàng */}
-                            {/* Bạn cần thay đường dẫn /product/[id] tương ứng với route của bạn */}
-                            <Link 
-                                href="/products" // Ví dụ trỏ về trang danh sách sản phẩm
-                                className="mt-4 w-full bg-green-50 text-green-700 border border-green-200 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-green-600 hover:text-white transition active:scale-95"
-                            >
-                               <FaShoppingBag size={13} /> Xem chi tiết
-                            </Link>
-                        </div>
-                    </div>
+                {/* Navigation button */}
+                {msg.sender === "bot" && msg.navigate && (
+                  <div className="ml-9 mt-2">
+                    <Link
+                      href={msg.navigate}
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-[12px] font-medium text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 transition-all"
+                    >
+                      <span>👉</span>
+                      <span>Đi đến trang</span>
+                      <span className="text-emerald-500">→</span>
+                    </Link>
+                  </div>
                 )}
 
+                {/* Product cards */}
+                {msg.sender === "bot" && msg.products && msg.products.length > 0 && (
+                  <div className="ml-9 mt-2 flex flex-col gap-2 w-full max-w-[280px]">
+                    {msg.products.map((product) => (
+                      <Link
+                        key={product.id}
+                        href={`/products/${product.id}`}
+                        className="flex items-center gap-3 p-2.5 bg-white border border-emerald-100 rounded-xl hover:border-emerald-300 hover:shadow-md transition-all group"
+                      >
+                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
+                          {product.image ? (
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <ShoppingCart size={20} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
+                            {product.name}
+                          </p>
+                          <p className="text-[13px] font-bold text-emerald-600 mt-0.5">
+                            {product.price
+                              ? `${product.price.toLocaleString("vi-VN")}đ/${product.unit}`
+                              : "Liên hệ"}
+                          </p>
+                        </div>
+                        <div className="text-[10px] text-emerald-500 font-medium shrink-0">
+                          Xem →
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
-            
-            {/* Loading Animation (Ba chấm) */}
+
             {isLoading && (
-              <div className="flex justify-start items-center">
-                  <div className="w-7 h-7 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-2 shrink-0">
-                    <FaRobot size={14}/>
-                  </div>
-                 <div className="bg-white border border-gray-100 p-3.5 rounded-2xl rounded-bl-sm shadow-sm flex gap-1.5 items-center">
-                    <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                 </div>
+              <div className="flex items-center">
+                <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-2 shrink-0">
+                  <FaRobot size={13} />
+                </div>
+                <div className="bg-white border border-gray-100 p-3 rounded-2xl rounded-bl-sm shadow-sm flex gap-1.5">
+                  <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                </div>
               </div>
             )}
-            {/* Dummy div để scroll down */}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* INPUT FORM (Ô nhập liệu) */}
-          <div className="p-3 bg-white border-t border-gray-100 z-10">
-             <form onSubmit={handleSend} className="flex items-center gap-2">
-                <input 
-                  type="text" 
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Hỏi Freshy về giá rau, củ hôm nay..."
-                  className="flex-1 bg-gray-100 border-none rounded-full px-5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 transition placeholder:text-gray-400 text-gray-900"
-                  disabled={isLoading}
-                />
-                <button 
-                  type="submit" 
-                  disabled={!input.trim() || isLoading}
-                  className="w-11 h-11 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95 shrink-0 shadow-md"
-                >
-                   <FaPaperPlane size={16} className="-ml-0.5 mt-px" />
-                </button>
-             </form>
+          {/* Input */}
+          <div className="p-3 bg-white border-t border-gray-100">
+            <form onSubmit={handleSend} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Hỏi Freshy về nông sản, giá cả..."
+                className="flex-1 bg-gray-100 rounded-full px-4 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-emerald-400 transition text-gray-900 placeholder:text-gray-400"
+                disabled={isLoading}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95 shrink-0 shadow-md"
+              >
+                <FaPaperPlane size={14} className="-ml-0.5" />
+              </button>
+            </form>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes bounce-gentle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+      `}</style>
     </div>
   );
 }

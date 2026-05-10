@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import nodemailer from "nodemailer"; // Phú nhớ đã chạy: npm install nodemailer
+import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+    const { success: allowed } = rateLimit(`otp:${ip}`, 3, 60_000);
+    if (!allowed) {
+      return NextResponse.json(
+        { message: "Bạn đã yêu cầu quá nhiều lần. Vui lòng đợi 1 phút." },
+        { status: 429 },
+      );
+    }
+
     const { email } = await req.json();
-    console.log(">>> Bắt đầu xử lý quên mật khẩu cho:", email);
 
     // 1. Kiểm tra xem email có tồn tại trong hệ thống không
     const user = await prisma.nguoi_dung.findUnique({
@@ -13,7 +23,6 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
-      console.log(">>> Lỗi: Email không tồn tại trong bảng nguoi_dung");
       return NextResponse.json(
         { message: "Email này chưa được đăng ký trong hệ thống!" },
         { status: 404 },
@@ -28,15 +37,15 @@ export async function POST(req: Request) {
     // 3. Tạo mã OTP ngẫu nhiên (6 số)
     const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 4. Lưu vào Database
+    // 4. Hash OTP trước khi lưu vào Database
+    const hashedOtp = await bcrypt.hash(generatedOtp, 10);
     await prisma.ma_otp.create({
       data: {
         email: email,
-        code: generatedOtp,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000), // Hết hạn sau 5 phút
+        code: hashedOtp,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
     });
-    console.log(">>> Đã lưu mã OTP mới vào Database");
 
     // 5. Cấu hình Nodemailer (Dùng mã 16 ký tự Phú vừa lấy)
     const transporter = nodemailer.createTransport({
@@ -55,7 +64,7 @@ export async function POST(req: Request) {
       html: `
         <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
           <h2 style="color: #008A3D;">Xác thực mã OTP</h2>
-          <p>Chào Phú, bạn vừa yêu cầu khôi phục mật khẩu.</p>
+          <p>Xin chào, bạn vừa yêu cầu khôi phục mật khẩu.</p>
           <p>Mã OTP của bạn là: <b style="font-size: 24px; color: #008A3D;">${generatedOtp}</b></p>
           <p>Mã này có hiệu lực trong <b>5 phút</b>. Nếu không phải bạn yêu cầu, hãy bỏ qua email này.</p>
           <hr />

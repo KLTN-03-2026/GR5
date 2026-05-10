@@ -15,6 +15,24 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { signIn } from "next-auth/react";
 
+function detectBlink(landmarks: faceapi.FaceLandmarks68): boolean {
+  const leftEye = landmarks.getLeftEye();
+  const rightEye = landmarks.getRightEye();
+
+  const eyeAspectRatio = (eye: faceapi.Point[]) => {
+    const vertical1 = Math.hypot(eye[1].x - eye[5].x, eye[1].y - eye[5].y);
+    const vertical2 = Math.hypot(eye[2].x - eye[4].x, eye[2].y - eye[4].y);
+    const horizontal = Math.hypot(eye[0].x - eye[3].x, eye[0].y - eye[3].y);
+    return (vertical1 + vertical2) / (2.0 * horizontal);
+  };
+
+  const leftEAR = eyeAspectRatio(leftEye);
+  const rightEAR = eyeAspectRatio(rightEye);
+  const avgEAR = (leftEAR + rightEAR) / 2;
+
+  return avgEAR < 0.21;
+}
+
 export default function FaceIDLoginPage() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -22,6 +40,9 @@ export default function FaceIDLoginPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("loading");
   const [msg, setMsg] = useState("Đang khởi động AI...");
+  const [livenessVerified, setLivenessVerified] = useState(false);
+  const blinkCountRef = useRef(0);
+  const wasBlinkingRef = useRef(false);
 
   // 1. Load Models
   useEffect(() => {
@@ -60,7 +81,7 @@ export default function FaceIDLoginPage() {
     }
   };
 
-  // 3. Logic So sánh khuôn mặt qua API
+  // 3. Liveness detection + So sánh khuôn mặt qua API
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (isScanning && status === "idle") {
@@ -75,51 +96,71 @@ export default function FaceIDLoginPage() {
           .withFaceLandmarks(true)
           .withFaceDescriptor();
 
-        if (detection) {
-          setMsg("Đã phát hiện khuôn mặt, đang xác thực...");
-          clearInterval(interval);
+        if (!detection) {
+          setMsg("Không phát hiện khuôn mặt, hãy nhìn thẳng vào camera...");
+          return;
+        }
 
-          // Gọi API face-login
-          try {
-            const res = await fetch("/api/auth/face-login", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ descriptor: Array.from(detection.descriptor) }),
+        // Liveness: yêu cầu nháy mắt 2 lần
+        if (!livenessVerified) {
+          const isBlink = detectBlink(detection.landmarks);
+
+          if (isBlink && !wasBlinkingRef.current) {
+            blinkCountRef.current++;
+            wasBlinkingRef.current = true;
+          } else if (!isBlink) {
+            wasBlinkingRef.current = false;
+          }
+
+          if (blinkCountRef.current >= 2) {
+            setLivenessVerified(true);
+            setMsg("Xác thực sống thành công! Đang nhận diện...");
+          } else {
+            setMsg(`Vui lòng nháy mắt (${blinkCountRef.current}/2)...`);
+          }
+          return;
+        }
+
+        // Đã qua liveness → xác thực khuôn mặt
+        setMsg("Đã phát hiện khuôn mặt, đang xác thực...");
+        clearInterval(interval);
+
+        try {
+          const res = await fetch("/api/auth/face-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ descriptor: Array.from(detection.descriptor) }),
+          });
+
+          const data = await res.json();
+
+          if (data.success && data.faceToken) {
+            const result = await signIn("face-id", {
+              faceToken: data.faceToken,
+              redirect: false,
             });
 
-            const data = await res.json();
-
-            if (data.success && data.faceToken) {
-              // Đăng nhập qua NextAuth bằng face-id provider
-              const result = await signIn("face-id", {
-                faceToken: data.faceToken,
-                redirect: false,
-              });
-
-              if (result?.ok) {
-                handleLoginSuccess(data.roles);
-              } else {
-                setStatus("error");
-                setMsg("Xác thực FaceID thất bại. Vui lòng thử lại.");
-                stopCamera();
-              }
+            if (result?.ok) {
+              handleLoginSuccess(data.roles);
             } else {
               setStatus("error");
-              setMsg(data.message ?? "Khuôn mặt không khớp với bất kỳ tài khoản nào.");
+              setMsg("Xác thực FaceID thất bại. Vui lòng thử lại.");
               stopCamera();
             }
-          } catch {
+          } else {
             setStatus("error");
-            setMsg("Lỗi kết nối. Vui lòng thử lại.");
+            setMsg(data.message ?? "Khuôn mặt không khớp với bất kỳ tài khoản nào.");
             stopCamera();
           }
-        } else {
-          setMsg("Không phát hiện khuôn mặt, hãy nhìn thẳng vào camera...");
+        } catch {
+          setStatus("error");
+          setMsg("Lỗi kết nối. Vui lòng thử lại.");
+          stopCamera();
         }
       }, 800);
     }
     return () => clearInterval(interval);
-  }, [isScanning, status]);
+  }, [isScanning, status, livenessVerified]);
 
   const stopCamera = () => {
     const stream = videoRef.current?.srcObject as MediaStream;
@@ -143,6 +184,9 @@ export default function FaceIDLoginPage() {
     setStatus("idle");
     setMsg("Nhấn nút để bắt đầu quét khuôn mặt");
     setIsScanning(false);
+    setLivenessVerified(false);
+    blinkCountRef.current = 0;
+    wasBlinkingRef.current = false;
     stopCamera();
   };
 

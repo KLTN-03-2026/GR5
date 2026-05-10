@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 // ==========================================
 // PATCH — Cập nhật vị trí kho (tên, sức chứa, ghi chú)
+// Chỉ ADMIN được phép
 // ==========================================
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const session = await auth();
+    const roles = (session?.user as any)?.roles as string[] | undefined;
+    if (!roles?.includes("ADMIN")) {
+      return NextResponse.json({ error: "Bạn không có quyền thực hiện thao tác này" }, { status: 403 });
+    }
+
     const { id } = await params;
     const body = await req.json();
     const { suc_chua_toi_da, ghi_chu, khu_vuc } = body;
@@ -28,9 +36,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 // ==========================================
 // DELETE — Xóa toàn bộ khu (theo tên khu), với kiểm tra tồn kho
+// Chỉ ADMIN được phép
 // ==========================================
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const session = await auth();
+    const roles = (session?.user as any)?.roles as string[] | undefined;
+    if (!roles?.includes("ADMIN")) {
+      return NextResponse.json({ error: "Bạn không có quyền thực hiện thao tác này" }, { status: 403 });
+    }
+
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
     const { ma_vi_tri_dich } = body; // vị trí đích nếu cần chuyển hàng

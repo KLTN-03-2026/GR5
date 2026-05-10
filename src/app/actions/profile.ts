@@ -27,6 +27,21 @@ export async function updateProfile(
   const ngay_sinh = ngay_sinh_raw ? new Date(ngay_sinh_raw) : null;
   const avatarFile = formData.get("avatar") as File | null;
 
+  if (so_dien_thoai && !/^0\d{9,10}$/.test(so_dien_thoai)) {
+    return { error: "Số điện thoại không hợp lệ (10-11 số, bắt đầu bằng 0)" };
+  }
+
+  if (ngay_sinh) {
+    const now = new Date();
+    if (isNaN(ngay_sinh.getTime()) || ngay_sinh > now) {
+      return { error: "Ngày sinh không hợp lệ" };
+    }
+    const age = now.getFullYear() - ngay_sinh.getFullYear();
+    if (age > 120 || age < 10) {
+      return { error: "Ngày sinh không hợp lệ" };
+    }
+  }
+
   let anh_dai_dien: string | undefined;
 
   console.log("avatarFile:", avatarFile?.name, "size:", avatarFile?.size, "type:", avatarFile?.type);

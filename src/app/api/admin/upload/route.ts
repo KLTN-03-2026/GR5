@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
 import path from "path";
 import fs from "fs";
+import sharp from "sharp";
+
+const MAX_WIDTH = 1200;
+const QUALITY = 80;
 
 export async function POST(request: Request) {
   try {
@@ -15,20 +19,31 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Tạo thư mục public/uploads nếu chưa có
     const uploadDir = path.join(process.cwd(), "public/uploads");
     if (!fs.existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
     }
 
-    // Đặt tên file không bị trùng
-    const filename = `${Date.now()}-${file.name.replace(/\s/g, '-')}`;
-    const filepath = path.join(uploadDir, filename);
-    
-    // Lưu file vào thư mục
-    await writeFile(filepath, buffer);
+    const isImage = file.type.startsWith("image/");
+    let outputBuffer: Buffer;
+    let ext: string;
 
-    // Trả về đường dẫn ảnh để lưu vào Database
+    if (isImage) {
+      outputBuffer = await sharp(buffer)
+        .resize({ width: MAX_WIDTH, withoutEnlargement: true })
+        .webp({ quality: QUALITY })
+        .toBuffer();
+      ext = "webp";
+    } else {
+      outputBuffer = buffer;
+      ext = path.extname(file.name).slice(1) || "bin";
+    }
+
+    const filename = `${Date.now()}-${file.name.replace(/\.[^.]+$/, "").replace(/\s/g, "-")}.${ext}`;
+    const filepath = path.join(uploadDir, filename);
+
+    await fs.promises.writeFile(filepath, outputBuffer);
+
     return NextResponse.json({ url: `/uploads/${filename}` });
   } catch (error) {
     console.error("Lỗi upload:", error);

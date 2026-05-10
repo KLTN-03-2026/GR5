@@ -1,16 +1,30 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { decode } from "@auth/core/jwt";
 
-// Các route công khai không cần auth
-const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/verify-otp", "/403"];
-const AUTH_ONLY_REDIRECT = ["/login", "/register"]; // Đã login → redirect về /
+const AUTH_SECRET = process.env.AUTH_SECRET!;
 
-export default async function proxy(req: NextRequest) {
+async function getSessionToken(req: NextRequest) {
+  const cookieName = process.env.NODE_ENV === "production"
+    ? "__Secure-authjs.session-token"
+    : "authjs.session-token";
+  const token = req.cookies.get(cookieName)?.value;
+  if (!token) return null;
+
+  try {
+    const payload = await decode({ token, secret: AUTH_SECRET, salt: cookieName });
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+const AUTH_ONLY_REDIRECT = ["/login", "/register"];
+
+export default async function middleware(req: NextRequest) {
   const { nextUrl } = req;
   const pathname = nextUrl.pathname;
 
-  // Tránh check auth cho các tài nguyên tĩnh, API NextAuth
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon.ico") ||
@@ -19,12 +33,7 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Dùng getToken thay vì auth() để tránh import prisma / mariadb vào Edge Runtime
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET,
-    secureCookie: process.env.NODE_ENV === "production",
-  });
+  const token = await getSessionToken(req);
 
   const isLoggedIn = !!token;
   const roles: string[] = (token?.roles as string[]) || [];
@@ -43,7 +52,7 @@ export default async function proxy(req: NextRequest) {
 
   // 2. Nhân viên nội bộ (ADMIN, THU_KHO, STAFF) vào trang store → redirect về dashboard tương ứng
   if (isLoggedIn && (isAdmin || isThuKho || isStaff) && !pathname.startsWith("/api")) {
-    const STORE_ROUTES = ["/products", "/cart", "/checkout", "/orders", "/search", "/categories"];
+    const STORE_ROUTES = ["/products", "/cart", "/checkout", "/payment", "/orders", "/search", "/categories"];
     const isStorePath =
       pathname === "/" ||
       STORE_ROUTES.some((r) => pathname.startsWith(r));
@@ -76,7 +85,6 @@ export default async function proxy(req: NextRequest) {
   }
 
   // 5. Route /staff → STAFF hoặc ADMIN
-  //    STAFF thuần (không phải ADMIN) chỉ được vào /staff/warehouse và /staff/map
   if (pathname.startsWith("/staff")) {
     if (!isLoggedIn) {
       return NextResponse.redirect(new URL(`/login?callbackUrl=${pathname}`, nextUrl));
@@ -84,7 +92,6 @@ export default async function proxy(req: NextRequest) {
     if (!isStaff && !isAdmin) {
       return NextResponse.redirect(new URL("/403", nextUrl));
     }
-    // STAFF thuần: giới hạn chỉ 2 chức năng theo bảng phân quyền
     if (isStaff && !isAdmin) {
       const allowedPaths = ["/staff/warehouse", "/staff/map", "/staff/orders", "/staff/hr"];
       const isAllowed = allowedPaths.some((p) => pathname.startsWith(p)) || pathname === "/staff";
@@ -104,7 +111,6 @@ export default async function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Matcher: chạy middleware trên các route cần thiết (bỏ qua static files, api/auth)
 export const config = {
   matcher: [
     "/",
@@ -112,6 +118,7 @@ export const config = {
     "/categories/:path*",
     "/cart/:path*",
     "/checkout/:path*",
+    "/payment/:path*",
     "/search/:path*",
     "/orders/:path*",
     "/admin/:path*",

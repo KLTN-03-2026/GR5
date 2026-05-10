@@ -85,6 +85,7 @@ export default async function ProductsPage({
         "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600",
       gia_ban: Number(defaultVariant?.gia_ban || 0),
       gia_goc: defaultVariant?.gia_goc ? Number(defaultVariant.gia_goc) : null,
+      ma_bien_the: defaultVariant?.id || null,
       danh_gia: Number(trungBinhSao),
       luot_danh_gia: soLuotDanhGia,
     };

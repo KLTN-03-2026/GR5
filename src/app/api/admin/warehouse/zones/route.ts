@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 // ==========================================
 // GET — Lấy toàn bộ cây vị trí kho
@@ -83,9 +84,16 @@ export async function GET() {
 
 // ==========================================
 // POST — Tạo khu vực mới (auto-generate vị trí)
+// Chỉ ADMIN được phép
 // ==========================================
 export async function POST(req: Request) {
   try {
+    const session = await auth();
+    const roles = (session?.user as any)?.roles as string[] | undefined;
+    if (!roles?.includes("ADMIN")) {
+      return NextResponse.json({ error: "Bạn không có quyền thực hiện thao tác này" }, { status: 403 });
+    }
+
     const body = await req.json();
     const { ten_khu, so_day, so_ke, so_tang, suc_chua_toi_da, ma_kho, ghi_chu } = body;
 

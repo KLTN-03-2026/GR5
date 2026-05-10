@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import ExpirationWarnings from "./ExpirationWarnings";
 import IssueHistory from "./IssueHistory";
+import ZoneManager from "./ZoneManager";
 import { type Day, type Floor, type Shelf, type Zone } from "./WarehouseFloorPlan";
 
 type MapData = { zones: Zone[]; stats: { totalBoxes: number; expiringBoxes: number; zonesCount: number } };
@@ -369,6 +370,7 @@ export default function WarehouseMapView({ readOnly = false }: { readOnly?: bool
   const [tab,     setTab]     = useState("map");
   const [zones,   setZones]   = useState<Zone[]>([]);
   const [activeZone, setActiveZone] = useState<Zone|null>(null);
+  const [zoneManagerData, setZoneManagerData] = useState<any[]>([]);
 
   const load = async (showSpinner = false) => {
     if (showSpinner) setLoading(true);
@@ -385,7 +387,19 @@ export default function WarehouseMapView({ readOnly = false }: { readOnly?: bool
     } catch {}
     finally { setLoading(false); }
   };
-  useEffect(() => { load(); }, []);
+
+  const loadZoneManager = async () => {
+    try {
+      const r = await fetch("/api/admin/warehouse/zones", { cache: "no-store" });
+      if (!r.ok) return;
+      const j = await r.json();
+      setZoneManagerData(j.zones ?? []);
+    } catch {}
+  };
+
+  const handleRefreshAll = () => { load(); loadZoneManager(); };
+
+  useEffect(() => { load(); if (!readOnly) loadZoneManager(); }, []);
 
   return (
     <div style={{ fontFamily:"Inter,system-ui,sans-serif",color:"#0f172a" }}>
@@ -431,6 +445,13 @@ export default function WarehouseMapView({ readOnly = false }: { readOnly?: bool
                 <div style={{ display:"flex",gap:12,overflowX:"auto",paddingBottom:8 }}>
                   {zones.map(zone => <ZoneCard key={zone.name} zone={zone} onClick={() => setActiveZone(zone)} />)}
                 </div>
+
+                {/* Zone Manager — only for admin (not readOnly) */}
+                {!readOnly && (
+                  <div style={{ marginTop: 20 }}>
+                    <ZoneManager zones={zoneManagerData} onRefresh={handleRefreshAll} />
+                  </div>
+                )}
               </>
             )
           )}

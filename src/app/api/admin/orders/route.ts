@@ -130,28 +130,73 @@ export async function PUT(req: Request) {
         // 1. Đổi trạng thái phiếu yêu cầu đổi trả
         await tx.yeu_cau_doi_tra.updateMany({
           where: { ma_don_hang: Number(orderId), trang_thai: "CHO_DUYET" },
-          data: { trang_thai: returnStatus }, // 'DA_DUYET' hoặc 'TU_CHOI'
+          data: { trang_thai: returnStatus },
         });
 
         // 2. Định tuyến lại trạng thái của Đơn hàng gốc
         let newOrderStatus = "";
         if (returnStatus === "DA_DUYET") {
-          newOrderStatus = "DA_HOAN_TRA"; // Hoặc trạng thái tương đương trong hệ thống của bạn
+          newOrderStatus = "DA_HOAN_TRA";
 
-          /* (Tùy chọn) Logic hoàn kho nếu bạn muốn:
-          const order = await tx.don_hang.findUnique({ where: { id: Number(orderId) }, include: { chi_tiet_don_hang: true }});
-          for (const item of order!.chi_tiet_don_hang) {
-            await tx.bien_the_san_pham.update({ where: { id: item.ma_bien_the }, data: { so_luong_ton: { increment: item.so_luong } }});
+          // Hoàn kho: trả lại số lượng tồn cho từng biến thể sản phẩm
+          const order = await tx.don_hang.findUnique({
+            where: { id: Number(orderId) },
+            include: { chi_tiet_don_hang: true, giao_dich_thanh_toan: true }
+          });
+
+          if (order) {
+            for (const item of order.chi_tiet_don_hang) {
+              if (item.ma_bien_the && item.so_luong) {
+                const latestStock = await tx.ton_kho_tong.findFirst({
+                  where: { lo_hang: { ma_bien_the: item.ma_bien_the } },
+                  orderBy: { ngay_cap_nhat: "desc" },
+                });
+                if (latestStock) {
+                  await tx.ton_kho_tong.update({
+                    where: { id: latestStock.id },
+                    data: { so_luong: { increment: item.so_luong } },
+                  });
+                }
+              }
+            }
+
+            // Hoàn tiền: tạo record lich_su_hoan_tien nếu đơn đã thanh toán online
+            const paidTransaction = order.giao_dich_thanh_toan.find(
+              (t) => t.trang_thai === "DA_THANH_TOAN"
+            );
+            if (paidTransaction) {
+              const returnRequest = await tx.yeu_cau_doi_tra.findFirst({
+                where: { ma_don_hang: Number(orderId) },
+                orderBy: { ngay_tao: "desc" },
+              });
+
+              if (returnRequest) {
+                await tx.lich_su_hoan_tien.create({
+                  data: {
+                    ma_giao_dich: paidTransaction.id,
+                    ma_yeu_cau_doi_tra: returnRequest.id,
+                    so_tien: order.tong_tien,
+                    trang_thai: "DANG_XU_LY",
+                  },
+                });
+              }
+            }
           }
-          */
         } else if (returnStatus === "TU_CHOI") {
-          newOrderStatus = "DA_GIAO"; // Bị từ chối thì đơn quay về trạng thái Đã giao
+          newOrderStatus = "DA_GIAO";
         }
 
-        // 3. Cập nhật Đơn hàng
+        // 3. Cập nhật Đơn hàng + ghi lịch sử
         const updatedOrder = await tx.don_hang.update({
           where: { id: Number(orderId) },
           data: { trang_thai: newOrderStatus },
+        });
+
+        await tx.lich_su_don_hang.create({
+          data: {
+            ma_don_hang: Number(orderId),
+            trang_thai: newOrderStatus,
+          },
         });
 
         return updatedOrder;
@@ -176,6 +221,14 @@ export async function PUT(req: Request) {
           where: { id: Number(orderId) },
           data: { trang_thai: status },
         });
+
+        await tx.lich_su_don_hang.create({
+          data: {
+            ma_don_hang: Number(orderId),
+            trang_thai: status,
+          },
+        });
+
         return updatedOrder;
       });
 

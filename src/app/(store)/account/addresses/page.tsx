@@ -93,7 +93,13 @@ export default function AddressPage() {
       .finally(() => setLoadingWard(false));
   }, [form.ma_quan_huyen]);
 
+  const MAX_ADDRESSES = 5;
+
   const openAdd = () => {
+    if (addresses.length >= MAX_ADDRESSES) {
+      toast.error(`Bạn chỉ được lưu tối đa ${MAX_ADDRESSES} địa chỉ`);
+      return;
+    }
     setEditAddr(null);
     setForm(EMPTY_FORM);
     setDistricts([]);
@@ -120,6 +126,10 @@ export default function AddressPage() {
   const handleSave = async () => {
     if (!form.ho_ten.trim()) { toast.error("Vui lòng nhập họ tên người nhận"); return; }
     if (!form.so_dien_thoai.trim()) { toast.error("Vui lòng nhập số điện thoại"); return; }
+    if (!/^0\d{9,10}$/.test(form.so_dien_thoai.trim())) {
+      toast.error("Số điện thoại không hợp lệ (10-11 số, bắt đầu bằng 0)");
+      return;
+    }
     if (!form.ma_tinh || !form.ma_quan_huyen || !form.ma_phuong_xa) {
       toast.error("Vui lòng chọn đầy đủ tỉnh / quận / phường");
       return;
@@ -143,18 +153,22 @@ export default function AddressPage() {
       };
 
       if (editAddr) {
-        await fetch("/api/store/account/addresses", {
+        const res = await fetch("/api/store/account/addresses", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: editAddr.id, action: "update", ...payload }),
         });
+        const data = await res.json();
+        if (!res.ok) { toast.error(data.error || "Có lỗi xảy ra"); setSaving(false); return; }
         toast.success("Đã cập nhật địa chỉ");
       } else {
-        await fetch("/api/store/account/addresses", {
+        const res = await fetch("/api/store/account/addresses", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        const data = await res.json();
+        if (!res.ok) { toast.error(data.error || "Có lỗi xảy ra"); setSaving(false); return; }
         toast.success("Đã thêm địa chỉ mới");
       }
       setShowModal(false);

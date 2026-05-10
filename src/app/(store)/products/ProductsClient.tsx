@@ -24,6 +24,7 @@ interface ProductData {
   anh_chinh: string;
   gia_ban: number;
   gia_goc: number | null;
+  ma_bien_the: number | null;
   danh_gia: number;
   luot_danh_gia: number;
 }

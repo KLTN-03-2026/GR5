@@ -35,11 +35,11 @@ export async function GET(req: NextRequest) {
           take: 1,
           select: { duong_dan_anh: true },
         },
-        // Lấy biến thể đầu tiên để lấy giá
         bien_the_san_pham: {
           take: 1,
           orderBy: { gia_ban: "asc" },
           select: {
+            id: true,
             gia_ban: true,
             don_vi_tinh: true,
           },
@@ -47,13 +47,13 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Format lại response cho gọn
     const result = products.map((p) => ({
       id: p.id,
       ten_san_pham: p.ten_san_pham,
       xuat_xu: p.xuat_xu,
       anh_chinh: p.anh_san_pham[0]?.duong_dan_anh || null,
       gia_ban: Number(p.bien_the_san_pham[0]?.gia_ban || 0),
+      ma_bien_the: p.bien_the_san_pham[0]?.id || null,
       don_vi: p.bien_the_san_pham[0]?.don_vi_tinh || null,
     }));
 
