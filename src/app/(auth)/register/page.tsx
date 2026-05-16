@@ -21,14 +21,20 @@ function OtpInput({
   hasError: boolean;
 }) {
   const refs = useRef<(HTMLInputElement | null)[]>([]);
-  const digits = value.padEnd(6, "").split("").slice(0, 6);
+  const digits = Array.from({ length: 6 }, (_, i) => value[i] || "");
 
   function handleKey(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.ctrlKey || e.metaKey) return; // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
     if (e.key === "Backspace") {
       e.preventDefault();
-      const next = digits.map((d, idx) => (idx === i ? "" : d)).join("").trimEnd();
-      onChange(next.padEnd(i > 0 && digits[i] === "" ? i - 1 : i, "").slice(0, 6));
+      const next = digits.map((d, idx) => (idx === i ? "" : d));
+      onChange(next.join("").replace(/\s+$/, ""));
       if (digits[i] === "" && i > 0) refs.current[i - 1]?.focus();
+      return;
+    }
+    const allowedKeys = ['Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+    if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
     }
   }
 
@@ -61,6 +67,7 @@ function OtpInput({
           ref={(el) => { refs.current[i] = el; }}
           type="text"
           inputMode="numeric"
+          pattern="[0-9]*"
           maxLength={1}
           value={digits[i] ?? ""}
           disabled={disabled}

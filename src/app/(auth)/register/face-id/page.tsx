@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
 
 export default function FaceIDRegisterPage() {
   const router = useRouter();
@@ -56,7 +57,7 @@ export default function FaceIDRegisterPage() {
       }
       setMsg("Hãy giữ mặt thẳng trong khung hình");
     } catch (err) {
-      alert("Không mở được camera, Phú kiểm tra quyền truy cập nhé!");
+      toast.error("Không mở được camera! Vui lòng kiểm tra quyền truy cập.");
     }
   };
 

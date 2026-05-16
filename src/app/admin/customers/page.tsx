@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Pagination from "@/components/ui/Pagination";
+import * as XLSX from "xlsx";
+import toast from "react-hot-toast";
 
 interface Customer {
   id: number;
@@ -11,6 +13,7 @@ interface Customer {
   sdt: string | null;
   avatar: string | null;
   gioi_tinh: string | null;
+  ngay_sinh: string | null;
   ngay_tao: string;
   trang_thai: number;
   tinh_thanh: string | null;
@@ -64,6 +67,9 @@ export default function CustomersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ ho_ten: "", email: "", so_dien_thoai: "", gioi_tinh: "", ngay_sinh: "", trang_thai: 1 });
+  const [saving, setSaving] = useState(false);
 
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
@@ -93,9 +99,96 @@ export default function CustomersPage() {
     return () => clearTimeout(timer);
   }, [fetchCustomers]);
 
+  const handleExportExcel = async () => {
+    try {
+      const res = await fetch(`/api/admin/customers?limit=10000&sort=${sortBy}`);
+      const json = await res.json();
+      const all: Customer[] = json.data || [];
+      if (all.length === 0) {
+        toast.error("Không có khách hàng để xuất");
+        return;
+      }
+      const rows = all.map((c, i) => ({
+        STT: i + 1,
+        "Mã KH": c.id,
+        "Họ tên": c.ten,
+        "Email": c.email,
+        "SĐT": c.sdt || "",
+        "Giới tính": c.gioi_tinh || "",
+        "Ngày sinh": c.ngay_sinh ? new Date(c.ngay_sinh).toLocaleDateString("vi-VN") : "",
+        "Tỉnh/Thành": c.tinh_thanh || "",
+        "Quận/Huyện": c.quan_huyen || "",
+        "Tổng đơn": c.tong_don,
+        "Đơn đã giao": c.don_giao,
+        "Tổng chi tiêu (đ)": c.tong_chi_tieu,
+        "Đơn cuối": c.don_cuoi ? new Date(c.don_cuoi).toLocaleDateString("vi-VN") : "",
+        "Ngày tạo": new Date(c.ngay_tao).toLocaleDateString("vi-VN"),
+        "Trạng thái": c.trang_thai === 1 ? "Hoạt động" : "Khoá",
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "KhachHang");
+      const today = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `KhachHang_${today}.xlsx`);
+      toast.success(`Đã xuất ${all.length} khách hàng`);
+    } catch {
+      toast.error("Lỗi khi xuất Excel");
+    }
+  };
+
   const openPanel = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsPanelOpen(true);
+    setIsEditing(false);
+  };
+
+  const startEdit = () => {
+    if (!selectedCustomer) return;
+    setEditForm({
+      ho_ten: selectedCustomer.ten || "",
+      email: selectedCustomer.email || "",
+      so_dien_thoai: selectedCustomer.sdt || "",
+      gioi_tinh: selectedCustomer.gioi_tinh || "",
+      ngay_sinh: selectedCustomer.ngay_sinh?.slice(0, 10) || "",
+      trang_thai: selectedCustomer.trang_thai,
+    });
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!selectedCustomer) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${selectedCustomer.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      if (res.ok) {
+        const updatedCustomer: Customer = {
+          ...selectedCustomer,
+          ten: editForm.ho_ten,
+          email: editForm.email,
+          sdt: editForm.so_dien_thoai || null,
+          gioi_tinh: editForm.gioi_tinh || null,
+          ngay_sinh: editForm.ngay_sinh || null,
+          trang_thai: editForm.trang_thai,
+        };
+        setCustomers((prev) =>
+          prev.map((c) => (c.id === selectedCustomer.id ? updatedCustomer : c))
+        );
+        setSelectedCustomer(updatedCustomer);
+        setIsEditing(false);
+      } else {
+        const errorData = await res.json().catch(() => null);
+        alert(errorData?.message || "Có lỗi xảy ra khi cập nhật khách hàng");
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật khách hàng:", error);
+      alert("Có lỗi xảy ra khi cập nhật khách hàng");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -108,7 +201,7 @@ export default function CustomersPage() {
               <h1 className="text-xl font-semibold text-slate-900">Quản lý khách hàng</h1>
               <p className="text-sm text-slate-500 mt-0.5">Theo dõi và quản lý cơ sở khách hàng</p>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+            <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
               Xuất Excel
             </button>
@@ -287,71 +380,187 @@ export default function CustomersPage() {
             >
               {/* Panel Header */}
               <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h4 className="text-sm font-semibold text-slate-800">Chi tiết khách hàng</h4>
-                <button
-                  onClick={() => setIsPanelOpen(false)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+                <h4 className="text-sm font-semibold text-slate-800">
+                  {isEditing ? "Chỉnh sửa khách hàng" : "Chi tiết khách hàng"}
+                </h4>
+                <div className="flex items-center gap-1">
+                  {!isEditing && (
+                    <button
+                      onClick={startEdit}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      title="Chỉnh sửa"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setIsPanelOpen(false); setIsEditing(false); }}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
               </div>
 
               {/* Panel Content */}
               <div className="flex-1 overflow-y-auto">
-                {/* Profile */}
-                <div className="px-6 py-6 text-center border-b border-slate-100">
-                  <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center text-xl font-bold mb-3 ${getAvatarColor(selectedCustomer.id)}`}>
-                    {selectedCustomer.avatar ? (
-                      <img src={selectedCustomer.avatar} alt="" className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      getInitials(selectedCustomer.ten)
-                    )}
-                  </div>
-                  <h5 className="text-base font-semibold text-slate-900">{selectedCustomer.ten}</h5>
-                  <p className="text-xs text-slate-500 mt-0.5">{selectedCustomer.email}</p>
-                  <div className="mt-2">
-                    {(() => { const seg = getSegment(selectedCustomer); return (
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${seg.color}`}>{seg.label}</span>
-                    ); })()}
-                  </div>
-                </div>
+                {isEditing ? (
+                  /* Edit Form */
+                  <div className="px-6 py-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">Họ tên</label>
+                        <input
+                          type="text"
+                          value={editForm.ho_ten}
+                          onChange={(e) => setEditForm({ ...editForm, ho_ten: e.target.value })}
+                          className="w-full h-10 bg-slate-50 border border-slate-200 rounded-lg px-3.5 text-sm text-slate-800 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 transition-all"
+                          placeholder="Nhập họ tên"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">Email</label>
+                        <input
+                          type="email"
+                          value={editForm.email}
+                          onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                          className="w-full h-10 bg-slate-50 border border-slate-200 rounded-lg px-3.5 text-sm text-slate-800 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 transition-all"
+                          placeholder="Nhập email"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">Số điện thoại</label>
+                        <input
+                          type="tel"
+                          value={editForm.so_dien_thoai}
+                          onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 11); setEditForm({ ...editForm, so_dien_thoai: v }); }}
+                          className="w-full h-10 bg-slate-50 border border-slate-200 rounded-lg px-3.5 text-sm text-slate-800 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 transition-all"
+                          placeholder="Nhập số điện thoại"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={11}
+                          onKeyDown={(e) => { if (e.ctrlKey || e.metaKey) return; if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key)) e.preventDefault(); }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">Giới tính</label>
+                        <select
+                          value={editForm.gioi_tinh}
+                          onChange={(e) => setEditForm({ ...editForm, gioi_tinh: e.target.value })}
+                          className="w-full h-10 bg-slate-50 border border-slate-200 rounded-lg px-3.5 text-sm text-slate-800 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 transition-all"
+                        >
+                          <option value="">-- Chọn giới tính --</option>
+                          <option value="Nam">Nam</option>
+                          <option value="Nữ">Nữ</option>
+                          <option value="Khác">Khác</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">Ngày sinh</label>
+                        <input
+                          type="date"
+                          value={editForm.ngay_sinh}
+                          onChange={(e) => setEditForm({ ...editForm, ngay_sinh: e.target.value })}
+                          className="w-full h-10 bg-slate-50 border border-slate-200 rounded-lg px-3.5 text-sm text-slate-800 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">Trạng thái</label>
+                        <select
+                          value={editForm.trang_thai}
+                          onChange={(e) => setEditForm({ ...editForm, trang_thai: Number(e.target.value) })}
+                          className="w-full h-10 bg-slate-50 border border-slate-200 rounded-lg px-3.5 text-sm text-slate-800 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 transition-all"
+                        >
+                          <option value={1}>Hoạt động</option>
+                          <option value={0}>Bị khóa</option>
+                        </select>
+                      </div>
+                    </div>
 
-                {/* Stats Grid */}
-                <div className="px-6 py-5 border-b border-slate-100">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-emerald-50 rounded-xl p-3.5">
-                      <p className="text-[10px] font-medium text-emerald-600 uppercase tracking-wider">Tổng chi tiêu</p>
-                      <p className="text-lg font-bold text-emerald-700 mt-1">{formatCurrency(selectedCustomer.tong_chi_tieu)}đ</p>
-                    </div>
-                    <div className="bg-blue-50 rounded-xl p-3.5">
-                      <p className="text-[10px] font-medium text-blue-600 uppercase tracking-wider">Tổng đơn hàng</p>
-                      <p className="text-lg font-bold text-blue-700 mt-1">{selectedCustomer.tong_don} đơn</p>
-                    </div>
-                    <div className="bg-purple-50 rounded-xl p-3.5">
-                      <p className="text-[10px] font-medium text-purple-600 uppercase tracking-wider">Đã giao</p>
-                      <p className="text-lg font-bold text-purple-700 mt-1">{selectedCustomer.don_giao} đơn</p>
-                    </div>
-                    <div className="bg-amber-50 rounded-xl p-3.5">
-                      <p className="text-[10px] font-medium text-amber-600 uppercase tracking-wider">TB/đơn</p>
-                      <p className="text-lg font-bold text-amber-700 mt-1">
-                        {selectedCustomer.tong_don > 0 ? formatCurrency(Math.round(selectedCustomer.tong_chi_tieu / selectedCustomer.tong_don)) + "đ" : "—"}
-                      </p>
+                    <div className="flex items-center gap-3 mt-6 pt-5 border-t border-slate-100">
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        className="flex-1 h-10 border border-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                        disabled={saving}
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex-1 h-10 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {saving ? (
+                          <>
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                            Đang lưu...
+                          </>
+                        ) : (
+                          "Lưu thay đổi"
+                        )}
+                      </button>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  /* Read-only View */
+                  <>
+                    {/* Profile */}
+                    <div className="px-6 py-6 text-center border-b border-slate-100">
+                      <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center text-xl font-bold mb-3 ${getAvatarColor(selectedCustomer.id)}`}>
+                        {selectedCustomer.avatar ? (
+                          <img src={selectedCustomer.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                          getInitials(selectedCustomer.ten)
+                        )}
+                      </div>
+                      <h5 className="text-base font-semibold text-slate-900">{selectedCustomer.ten}</h5>
+                      <p className="text-xs text-slate-500 mt-0.5">{selectedCustomer.email}</p>
+                      <div className="mt-2">
+                        {(() => { const seg = getSegment(selectedCustomer); return (
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${seg.color}`}>{seg.label}</span>
+                        ); })()}
+                      </div>
+                    </div>
 
-                {/* Details List */}
-                <div className="px-6 py-5">
-                  <h6 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Thông tin</h6>
-                  <div className="space-y-3">
-                    <DetailRow label="Số điện thoại" value={selectedCustomer.sdt || "Chưa cập nhật"} />
-                    <DetailRow label="Giới tính" value={selectedCustomer.gioi_tinh || "—"} />
-                    <DetailRow label="Khu vực" value={selectedCustomer.tinh_thanh ? `${selectedCustomer.quan_huyen || ""}, ${selectedCustomer.tinh_thanh}` : "—"} />
-                    <DetailRow label="Ngày tham gia" value={formatDate(selectedCustomer.ngay_tao)} />
-                    <DetailRow label="Đơn gần nhất" value={formatDate(selectedCustomer.don_cuoi)} />
-                    <DetailRow label="Trạng thái" value={selectedCustomer.trang_thai === 1 ? "Hoạt động" : "Bị khóa"} valueColor={selectedCustomer.trang_thai === 1 ? "text-emerald-600" : "text-red-500"} />
-                  </div>
-                </div>
+                    {/* Stats Grid */}
+                    <div className="px-6 py-5 border-b border-slate-100">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-emerald-50 rounded-xl p-3.5">
+                          <p className="text-[10px] font-medium text-emerald-600 uppercase tracking-wider">Tổng chi tiêu</p>
+                          <p className="text-lg font-bold text-emerald-700 mt-1">{formatCurrency(selectedCustomer.tong_chi_tieu)}đ</p>
+                        </div>
+                        <div className="bg-blue-50 rounded-xl p-3.5">
+                          <p className="text-[10px] font-medium text-blue-600 uppercase tracking-wider">Tổng đơn hàng</p>
+                          <p className="text-lg font-bold text-blue-700 mt-1">{selectedCustomer.tong_don} đơn</p>
+                        </div>
+                        <div className="bg-purple-50 rounded-xl p-3.5">
+                          <p className="text-[10px] font-medium text-purple-600 uppercase tracking-wider">Đã giao</p>
+                          <p className="text-lg font-bold text-purple-700 mt-1">{selectedCustomer.don_giao} đơn</p>
+                        </div>
+                        <div className="bg-amber-50 rounded-xl p-3.5">
+                          <p className="text-[10px] font-medium text-amber-600 uppercase tracking-wider">TB/đơn</p>
+                          <p className="text-lg font-bold text-amber-700 mt-1">
+                            {selectedCustomer.tong_don > 0 ? formatCurrency(Math.round(selectedCustomer.tong_chi_tieu / selectedCustomer.tong_don)) + "đ" : "—"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Details List */}
+                    <div className="px-6 py-5">
+                      <h6 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Thông tin</h6>
+                      <div className="space-y-3">
+                        <DetailRow label="Số điện thoại" value={selectedCustomer.sdt || "Chưa cập nhật"} />
+                        <DetailRow label="Giới tính" value={selectedCustomer.gioi_tinh || "—"} />
+                        <DetailRow label="Ngày sinh" value={formatDate(selectedCustomer.ngay_sinh)} />
+                        <DetailRow label="Khu vực" value={selectedCustomer.tinh_thanh ? `${selectedCustomer.quan_huyen || ""}, ${selectedCustomer.tinh_thanh}` : "—"} />
+                        <DetailRow label="Ngày tham gia" value={formatDate(selectedCustomer.ngay_tao)} />
+                        <DetailRow label="Đơn gần nhất" value={formatDate(selectedCustomer.don_cuoi)} />
+                        <DetailRow label="Trạng thái" value={selectedCustomer.trang_thai === 1 ? "Hoạt động" : "Bị khóa"} valueColor={selectedCustomer.trang_thai === 1 ? "text-emerald-600" : "text-red-500"} />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.aside>
           </>

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const range = searchParams.get("range") || "week";
@@ -43,15 +45,15 @@ export async function GET(request: Request) {
   ] = await Promise.all([
     // Tổng đơn hàng trong khoảng
     prisma.don_hang.count({ where: { ngay_tao: { gte: startDate } } }),
-    // Đơn chờ xác nhận
-    prisma.don_hang.count({ where: { trang_thai: "CHO_XAC_NHAN", ngay_tao: { gte: startDate } } }),
-    // Đơn đang xử lý
-    prisma.don_hang.count({ where: { trang_thai: "DANG_XU_LY", ngay_tao: { gte: startDate } } }),
-    // Đơn đang giao
-    prisma.don_hang.count({ where: { trang_thai: "DANG_GIAO_HANG", ngay_tao: { gte: startDate } } }),
-    // Đơn đã giao
+    // Đơn chờ xác nhận (tất cả, không filter theo ngày)
+    prisma.don_hang.count({ where: { trang_thai: "CHO_XAC_NHAN" } }),
+    // Đơn đang xử lý: đã xác nhận + đang đóng gói + đã thanh toán + chờ giao hàng + chờ xử lý (tất cả, không filter theo ngày)
+    prisma.don_hang.count({ where: { trang_thai: { in: ["DA_XAC_NHAN", "DANG_DONG_GOI", "DA_THANH_TOAN", "CHO_XU_LY", "CHO_GIAO_HANG"] } } }),
+    // Đơn đang giao (tất cả, không filter theo ngày)
+    prisma.don_hang.count({ where: { trang_thai: "DANG_GIAO_HANG" } }),
+    // Đơn đã giao (trong khoảng thời gian)
     prisma.don_hang.count({ where: { trang_thai: "DA_GIAO", ngay_tao: { gte: startDate } } }),
-    // Đơn đã hủy
+    // Đơn đã hủy (trong khoảng thời gian)
     prisma.don_hang.count({ where: { trang_thai: "DA_HUY", ngay_tao: { gte: startDate } } }),
     // Tất cả đơn trong range (lấy tổng tiền)
     prisma.don_hang.findMany({
@@ -91,7 +93,7 @@ export async function GET(request: Request) {
     // Top 5 sản phẩm bán chạy
     prisma.chi_tiet_don_hang.groupBy({
       by: ["ma_bien_the"],
-      where: { don_hang: { trang_thai: { in: ["DA_GIAO", "DANG_GIAO_HANG", "DANG_XU_LY"] } } },
+      where: { don_hang: { trang_thai: { in: ["DA_GIAO", "DANG_GIAO_HANG", "DA_XAC_NHAN", "DANG_DONG_GOI", "DA_THANH_TOAN", "CHO_XU_LY", "CHO_GIAO_HANG"] } } },
       _sum: { so_luong: true },
       orderBy: { _sum: { so_luong: "desc" } },
       take: 5,
@@ -171,7 +173,7 @@ export async function GET(request: Request) {
       lowStock: lowStockCount,
     },
     orderStatus: {
-      total: totalOrders,
+      total: pendingOrders + processingOrders + shippingOrders + deliveredOrders + cancelledOrders,
       pending: pendingOrders,
       processing: processingOrders,
       shipping: shippingOrders,

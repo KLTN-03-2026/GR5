@@ -76,7 +76,7 @@ export async function GET(req: Request) {
           },
           lich_su_don_hang: {
             orderBy: { thoi_gian_doi: "asc" },
-            select: { trang_thai: true, thoi_gian_doi: true },
+            select: { trang_thai: true, thoi_gian_doi: true, ghi_chu: true },
           }
         },
         orderBy: {
@@ -109,7 +109,7 @@ export async function PUT(req: Request) {
     const body = await req.json();
 
     // Nhận thêm action và returnStatus để phân biệt luồng xử lý
-    const { orderId, status, action, returnStatus, adminId = 1 } = body;
+    const { orderId, status, action, returnStatus, adminId = 1, ly_do_huy } = body;
 
     if (!orderId) {
       return NextResponse.json(
@@ -219,13 +219,17 @@ export async function PUT(req: Request) {
 
         const updatedOrder = await tx.don_hang.update({
           where: { id: Number(orderId) },
-          data: { trang_thai: status },
+          data: {
+            trang_thai: status,
+            ...(status === "DA_HUY" && ly_do_huy ? { ly_do_huy } : {})
+          },
         });
 
         await tx.lich_su_don_hang.create({
           data: {
             ma_don_hang: Number(orderId),
             trang_thai: status,
+            ...(status === "DA_HUY" && ly_do_huy ? { ghi_chu: ly_do_huy } : {})
           },
         });
 

@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
 
 // Tách Component nhỏ để dùng useSearchParams (Tránh lỗi build của Next.js)
 function VerifyOTPContent() {
@@ -20,8 +21,13 @@ function VerifyOTPContent() {
 
   // 1. Xử lý nhập mã (Nhảy ô)
   const handleChange = (element: HTMLInputElement, index: number) => {
-    const value = element.value;
-    if (isNaN(Number(value))) return;
+    const value = element.value.replace(/\D/g, '');
+    if (!value) {
+      const newOtp = [...otp];
+      newOtp[index] = "";
+      setOtp(newOtp);
+      return;
+    }
 
     const newOtp = [...otp];
     newOtp[index] = value.substring(value.length - 1);
@@ -45,7 +51,7 @@ function VerifyOTPContent() {
   // 3. Hàm XÁC NHẬN MÃ (Gọi API verify-otp)
   const handleVerify = async () => {
     const fullOtp = otp.join("");
-    if (fullOtp.length < 6) return alert("Phú ơi, nhập đủ 6 số đã nhé!");
+    if (fullOtp.length < 6) { toast.error("Vui lòng nhập đủ 6 số!"); return; }
 
     setLoading(true);
     try {
@@ -58,13 +64,13 @@ function VerifyOTPContent() {
       const data = await res.json();
 
       if (res.ok) {
-        // Chuyển hướng sang trang đặt mật khẩu mới
-        router.push(`/reset-password?email=${email}`);
+        // Chuyển hướng sang trang đặt mật khẩu mới kèm reset token
+        router.push(`/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(data.resetToken)}`);
       } else {
-        alert(data.message || "Mã OTP không đúng hoặc hết hạn!");
+        toast.error(data.message || "Mã OTP không đúng hoặc hết hạn!");
       }
     } catch (error) {
-      alert("Lỗi hệ thống rồi Phú ơi, thử lại sau nhé!");
+      toast.error("Lỗi hệ thống, vui lòng thử lại sau!");
     } finally {
       setLoading(false);
     }
@@ -72,7 +78,7 @@ function VerifyOTPContent() {
 
   // 4. Hàm GỬI LẠI MÃ (Xử lý cái nút đang bị cứng đơ)
   const handleResend = async () => {
-    if (!email) return alert("Không tìm thấy email người nhận!");
+    if (!email) { toast.error("Không tìm thấy email người nhận!"); return; }
 
     setResending(true);
     try {
@@ -83,11 +89,11 @@ function VerifyOTPContent() {
       });
 
       if (res.ok) {
-        alert("Mã mới đã bay vào mail của Phú rồi đó!");
-        setOtp(new Array(6).fill("")); // Xóa mã cũ trên giao diện
-        inputRefs.current[0]?.focus(); // Focus lại ô đầu tiên
+        toast.success("Mã mới đã được gửi vào email của bạn!");
+        setOtp(new Array(6).fill(""));
+        inputRefs.current[0]?.focus();
       } else {
-        alert("Gửi lại thất bại, Phú check lại mail nhé!");
+        toast.error("Gửi lại thất bại, vui lòng kiểm tra lại email!");
       }
     } catch (error) {
       console.error("Lỗi gửi lại mã:", error);
@@ -128,13 +134,35 @@ function VerifyOTPContent() {
           <input
             key={index}
             type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             maxLength={1}
             ref={(el) => {
               if (el) inputRefs.current[index] = el;
             }}
             value={data}
             onChange={(e) => handleChange(e.target, index)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
+            onKeyDown={(e) => {
+              handleKeyDown(e, index);
+              if (e.ctrlKey || e.metaKey) return;
+              const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+              if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            onPaste={(e) => {
+              e.preventDefault();
+              const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+              if (pasted.length > 0) {
+                const newOtp = [...otp];
+                for (let i = 0; i < pasted.length && index + i < 6; i++) {
+                  newOtp[index + i] = pasted[i];
+                }
+                setOtp(newOtp);
+                const focusIdx = Math.min(index + pasted.length, 5);
+                inputRefs.current[focusIdx]?.focus();
+              }
+            }}
             className="w-12 h-14 bg-[#F1FAF4] border-2 border-transparent rounded-xl text-center text-xl font-black text-[#008A3D] focus:border-[#008A3D] focus:bg-white outline-none transition-all shadow-inner"
           />
         ))}

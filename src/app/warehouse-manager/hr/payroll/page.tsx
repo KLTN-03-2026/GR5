@@ -5,7 +5,8 @@ import {
   PayrollTable,
   LuongNhanVien,
 } from "@/components/admin/payroll/PayrollTable";
-import * as XLSX from "xlsx"; // Import thư viện Excel
+import * as XLSX from "xlsx";
+import toast from "react-hot-toast";
 
 export default function PayrollPage() {
   const [data, setData] = useState<LuongNhanVien[]>([]);
@@ -42,7 +43,7 @@ export default function PayrollPage() {
   // LOGIC XUẤT EXCEL (Chuẩn bị data và trigger download)
   const exportToExcel = () => {
     if (data.length === 0) {
-      alert("Không có dữ liệu để xuất!");
+      toast.error("Không có dữ liệu để xuất!");
       return;
     }
 

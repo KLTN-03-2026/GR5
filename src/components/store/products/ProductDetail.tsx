@@ -286,7 +286,7 @@ export default function ProductDetail({
             </h3>
             <div className="space-y-3 text-sm text-gray-600">
               <div className="flex justify-between border-b border-emerald-100/50 pb-2">
-                <span>Nội thành TPHCM:</span>
+                <span>Nội thành Đà Nẵng:</span>
                 <span className="font-bold text-gray-900">2 - 4 giờ</span>
               </div>
               <div className="flex justify-between border-b border-emerald-100/50 pb-2">

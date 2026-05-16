@@ -1,5 +1,4 @@
 import React from "react";
-import WarehouseLayoutTabs from "@/components/admin/warehouse/WarehouseLayoutTabs";
 
 export default function WarehouseLayout({
   children,
@@ -14,8 +13,6 @@ export default function WarehouseLayout({
           Sơ đồ kho, tồn kho sản phẩm, cảnh báo HSD và lịch sử
         </p>
       </div>
-
-      <WarehouseLayoutTabs />
 
       <div>{children}</div>
     </div>

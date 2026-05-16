@@ -355,17 +355,30 @@ function CreateNCCModal({
     hinh_thuc_thanh_toan: "CHUYEN_KHOAN",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.ten_ncc.trim()) { setError("Vui lòng nhập tên nhà cung cấp"); return; }
+    setError("");
     setLoading(true);
-    await fetch("/api/admin/ncc", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    setLoading(false);
-    onSuccess();
+    try {
+      const res = await fetch("/api/admin/ncc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || data.message || "Không thể tạo NCC");
+        return;
+      }
+      onSuccess();
+    } catch {
+      setError("Lỗi kết nối, vui lòng thử lại");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -441,8 +454,11 @@ function CreateNCCModal({
               <input
                 value={form.so_dien_thoai}
                 onChange={(e) =>
-                  setForm({ ...form, so_dien_thoai: e.target.value })
+                  setForm({ ...form, so_dien_thoai: e.target.value.replace(/\D/g, '').slice(0, 11) })
                 }
+                onKeyDown={(e) => { if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
+                inputMode="numeric"
+                maxLength={11}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0912..."
               />
@@ -453,7 +469,10 @@ function CreateNCCModal({
               </label>
               <input
                 value={form.zalo}
-                onChange={(e) => setForm({ ...form, zalo: e.target.value })}
+                onChange={(e) => setForm({ ...form, zalo: e.target.value.replace(/\D/g, '').slice(0, 11) })}
+                onKeyDown={(e) => { if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
+                inputMode="numeric"
+                maxLength={11}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Số Zalo (nếu khác SĐT)"
               />
@@ -492,6 +511,11 @@ function CreateNCCModal({
               </select>
             </div>
           </div>
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {error}
+            </div>
+          )}
           <div className="flex gap-3 pt-2 justify-end border-t border-gray-100">
             <button
               type="button"

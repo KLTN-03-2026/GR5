@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AssignShiftModal } from "@/components/admin/shifts/AssignShiftModal";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { ChevronLeft, ChevronRight, CalendarDays, Plus, Trash2 } from "lucide-react";
 
 type CaLamViec = { id: number; ten_ca: string; gio_bat_dau: string };
@@ -31,6 +32,7 @@ export default function ShiftsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedShift, setSelectedShift] = useState<{ id: number; name: string } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({isOpen: false, title: "", message: "", onConfirm: () => {}});
 
   const getStartOfWeek = (date: Date) => {
     const d = new Date(date);
@@ -87,12 +89,19 @@ export default function ShiftsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteLich = async (idLich: number) => {
-    if (!confirm("Bạn có chắc chắn muốn hủy ca của nhân viên này?")) return;
-    try {
-      const res = await fetch(`/api/phan-ca/${idLich}`, { method: "DELETE" });
-      if (res.ok) fetchLichTuan(currentWeekStart);
-    } catch (e) { console.error(e); }
+  const handleDeleteLich = (idLich: number) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Xác nhận hủy ca",
+      message: "Bạn có chắc chắn muốn hủy ca của nhân viên này?",
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`/api/phan-ca/${idLich}`, { method: "DELETE" });
+          if (res.ok) fetchLichTuan(currentWeekStart);
+        } catch (e) { console.error(e); }
+      },
+    });
   };
 
   const DAY_NAMES = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
@@ -255,6 +264,17 @@ export default function ShiftsPage() {
         selectedDate={selectedDate}
         selectedShift={selectedShift}
         onSuccess={() => fetchLichTuan(currentWeekStart)}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant="danger"
+        confirmText="Xác nhận"
+        cancelText="Hủy"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
       />
     </div>
   );

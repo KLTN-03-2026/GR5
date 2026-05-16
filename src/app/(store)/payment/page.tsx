@@ -1,17 +1,17 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   MapPin, CheckCircle2, Banknote, FileText,
-  ArrowRight, ChevronLeft, Building2, Copy, Check, QrCode,
-  Lock, ShieldCheck, RefreshCw, Truck, Plus, Loader2, Package,
-  ChevronDown, User, Phone,
+  ArrowRight, ChevronLeft, Building2, Copy, Check,
+  Lock, RefreshCw, Truck, Plus, Loader2, Ticket, Info,
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from "@/lib/CartContext";
+import toast from 'react-hot-toast';
 
 const BANK_INFO = {
   bankCode: "MB",
@@ -299,7 +299,7 @@ function AddressForm({ onAddressChange }: {
             </div>
             <div>
               <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Số điện thoại *</label>
-              <input style={inputStyle} value={sdt} onChange={e => setSdt(e.target.value)} placeholder="0901234567" />
+              <input style={inputStyle} value={sdt} onChange={e => setSdt(e.target.value.replace(/\D/g, "").slice(0, 11))} placeholder="0901234567" type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={11} onKeyDown={(e) => { if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault(); }} />
             </div>
           </div>
 
@@ -355,8 +355,13 @@ export default function CheckoutPage() {
   const [noteLen, setNoteLen] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<number | null>(null);
+  const [pendingOrderTotal, setPendingOrderTotal] = useState<number | null>(null);
   const [couponCode, setCouponCode] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [khoVoucher, setKhoVoucher] = useState<any[]>([]);
 
   const [deliveryAddress, setDeliveryAddress] = useState<any>(null);
   const [shippingFee, setShippingFee] = useState(0);
@@ -364,18 +369,94 @@ export default function CheckoutPage() {
   const [feeError, setFeeError] = useState('');
   const [expectedDate, setExpectedDate] = useState<string>('');
 
-  const { cart, clearCart } = useCart() as any;
-  const { data: session, status } = useSession();
+  const { cart, clearCart, isCartLoaded } = useCart() as any;
+  const { status } = useSession();
   const router = useRouter();
 
+  const hasRedirected = useRef(false);
+  const isOrderSubmitting = useRef(false);
+
   useEffect(() => {
+    if (status === "loading") return;
+    if (!isCartLoaded) return;
+    if (hasRedirected.current) return;
+    if (isOrderSubmitting.current) return;
+
     if (status === "unauthenticated") {
-      router.push("/login");
+      hasRedirected.current = true;
+      router.push("/login?callbackUrl=/payment");
+      return;
     }
-  }, [status, router]);
+
+    if (status === "authenticated" && cart.length === 0 && !pendingOrderId) {
+      const pendingOrder = localStorage.getItem('pending_payment_order');
+      if (pendingOrder) {
+        const pendingMethod = localStorage.getItem('pending_payment_method') || 'bank_transfer';
+        hasRedirected.current = true;
+        router.push(`/payment/check?orderId=${pendingOrder}&status=pending&method=${pendingMethod}`);
+      } else {
+        hasRedirected.current = true;
+        router.push("/");
+      }
+    }
+  }, [status, router, cart.length, pendingOrderId, isCartLoaded]);
 
   const subTotal = cart.reduce((acc: number, item: any) => acc + item.gia_ban * item.so_luong, 0);
-  const total = subTotal + shippingFee;
+  const total = subTotal + shippingFee - couponDiscount;
+
+  // Lấy danh sách voucher khả dụng
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/coupons?t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) setKhoVoucher(data);
+        }
+      } catch {}
+    })();
+  }, []);
+
+  // Tự bỏ mã nếu giỏ giảm dưới đơn tối thiểu
+  useEffect(() => {
+    if (!couponApplied) return;
+    const current = khoVoucher.find((c) => c.ma_code === couponCode);
+    const minOrder = current ? Number(current.don_toi_thieu) || 0 : 0;
+    if (minOrder > 0 && subTotal < minOrder) {
+      setCouponApplied(false);
+      setCouponDiscount(0);
+      setCouponError('');
+      toast.error(`Đơn hàng không còn đủ ${minOrder.toLocaleString('vi-VN')}đ để dùng mã ${couponCode}`);
+    }
+  }, [subTotal, couponApplied, couponCode, khoVoucher]);
+
+  const applyCouponCode = async (codeRaw: string) => {
+    const code = codeRaw.trim();
+    if (!code) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await fetch('/api/store/coupon/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ma_code: code, tong_tien_hang: subTotal }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCouponCode(code);
+        setCouponApplied(true);
+        setCouponDiscount(data.so_tien_giam);
+        toast.success('Áp dụng mã giảm giá thành công!');
+      } else {
+        setCouponError(data.message || 'Mã không hợp lệ');
+        toast.error(data.message || 'Mã không hợp lệ');
+      }
+    } catch {
+      setCouponError('Lỗi kết nối, thử lại sau');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   // Tính phí vận chuyển khi địa chỉ thay đổi
   useEffect(() => {
@@ -418,6 +499,7 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     try {
       setIsSubmitting(true);
+      isOrderSubmitting.current = true;
       if (cart.length === 0) throw new Error("Giỏ hàng của bạn đang trống!");
       if (!deliveryAddress) throw new Error("Vui lòng nhập địa chỉ giao hàng!");
 
@@ -437,6 +519,7 @@ export default function CheckoutPage() {
           ma_tinh_ghn: deliveryAddress.ma_tinh,
           ma_quan_huyen_ghn: deliveryAddress.ma_quan_huyen,
           ma_phuong_xa_ghn: deliveryAddress.ma_phuong_xa,
+          ma_giam_gia: couponApplied ? couponCode.trim() : undefined,
           idempotency_key: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
         })
       });
@@ -444,15 +527,23 @@ export default function CheckoutPage() {
       const orderData = await createOrderRes.json();
       if (!orderData.success) throw new Error(orderData.message);
       const orderId = orderData.orderId;
+      const orderTotal = Number(orderData.totalAmount ?? total);
 
       if (paymentMethod === 'cod') {
+        // COD: Xóa giỏ hàng ngay vì không cần chờ thanh toán
         clearCart?.();
         window.location.href = `/payment/check?orderId=${orderId}&status=success&method=cod`;
       } else if (paymentMethod === 'bank_transfer') {
-        setPendingOrderId(orderId);
+        // Chuyển khoản: Xóa giỏ hàng ngay và hiển thị QR
+        localStorage.setItem('pending_payment_order', orderId.toString());
+        localStorage.setItem('pending_payment_method', 'bank_transfer');
+        localStorage.setItem('pending_payment_total', String(Math.round(orderTotal)));
         clearCart?.();
+        setPendingOrderTotal(orderTotal);
+        setPendingOrderId(orderId);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
+        // Thanh toán online (VNPay, MoMo): KHÔNG xóa giỏ hàng
         const paymentRes = await fetch('/api/store/payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -460,17 +551,64 @@ export default function CheckoutPage() {
         });
         const paymentData = await paymentRes.json();
         if (paymentData.success && paymentData.paymentUrl) {
-          clearCart?.();
+          localStorage.setItem('pending_payment_order', orderId.toString());
+          localStorage.setItem('pending_payment_method', paymentMethod);
+          localStorage.setItem('pending_payment_total', String(Math.round(orderTotal)));
+          localStorage.setItem('pending_payment_cart', JSON.stringify(cart));
           window.location.href = paymentData.paymentUrl;
+          setTimeout(() => {
+            isOrderSubmitting.current = false;
+            setIsSubmitting(false);
+          }, 10000);
         } else {
           throw new Error(paymentData.message || "Không lấy được link thanh toán");
         }
       }
     } catch (error: any) {
-      alert("❌ Lỗi: " + error.message);
+      toast.error(error.message);
+      isOrderSubmitting.current = false;
       setIsSubmitting(false);
     }
   };
+
+  // Polling để kiểm tra trạng thái thanh toán tự động
+  useEffect(() => {
+    if (!pendingOrderId) return;
+
+    if (pendingOrderTotal === null) {
+      fetch(`/api/store/orders/${pendingOrderId}?t=${Date.now()}`, { cache: 'no-store' })
+        .then((res) => res.json())
+        .then((data) => {
+          const orderTotal = Number(data.order?.tong_tien ?? 0);
+          if (data.success && orderTotal > 0) {
+            setPendingOrderTotal(orderTotal);
+            localStorage.setItem('pending_payment_total', String(Math.round(orderTotal)));
+          }
+        })
+        .catch(() => {});
+    }
+
+    const checkPaymentStatus = async () => {
+      try {
+        const res = await fetch(`/api/store/orders/${pendingOrderId}?t=${Date.now()}`, { cache: 'no-store' });
+        const data = await res.json();
+
+        if (data.success && data.order && ['DA_THANH_TOAN', 'CHO_GIAO_HANG', 'DANG_GIAO_HANG', 'DA_GIAO'].includes(data.order.trang_thai)) {
+          window.location.href = `/payment/check?orderId=${pendingOrderId}&status=success&method=bank_transfer`;
+        }
+      } catch (error) {
+        console.error('Lỗi kiểm tra trạng thái:', error);
+      }
+    };
+
+    checkPaymentStatus();
+
+    // Kiểm tra mỗi 3 giây
+    const interval = setInterval(checkPaymentStatus, 3000);
+
+    // Dọn dẹp khi unmount
+    return () => clearInterval(interval);
+  }, [pendingOrderId, pendingOrderTotal]);
 
   // Màn hình chuyển khoản
   if (pendingOrderId) {
@@ -485,9 +623,22 @@ export default function CheckoutPage() {
             <h1 style={{ fontSize: 20, fontWeight: 700, color: "#111827", margin: "0 0 6px" }}>Hoàn tất chuyển khoản</h1>
             <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>Đơn hàng <strong>#{pendingOrderId}</strong> đã được tạo</p>
           </div>
-          <BankTransferPanel total={total} orderId={pendingOrderId} />
+          <BankTransferPanel total={pendingOrderTotal ?? total} orderId={pendingOrderId} />
+          <div style={{ background: "#fef3c7", border: "1px solid #fbbf24", borderRadius: 10, padding: "12px 16px", marginTop: 16, fontSize: 13, color: "#92400e", display: "flex", alignItems: "center", gap: 8 }}>
+            <RefreshCw style={{ width: 16, height: 16, animation: "spin 2s linear infinite" }} />
+            <span>Đang tự động kiểm tra thanh toán...</span>
+          </div>
           <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
-            <button onClick={() => window.location.href = `/payment/check?orderId=${pendingOrderId}&status=pending&method=bank_transfer`}
+            <button onClick={async () => {
+                try {
+                  const res = await fetch(`/api/store/orders/${pendingOrderId}?t=${Date.now()}`, { cache: 'no-store' });
+                  const data = await res.json();
+                  const paid = data.success && ['DA_THANH_TOAN', 'CHO_XU_LY', 'CHO_GIAO_HANG', 'DANG_GIAO_HANG', 'DA_GIAO'].includes(data.order?.trang_thai);
+                  window.location.href = `/payment/check?orderId=${pendingOrderId}&status=${paid ? 'success' : 'pending'}&method=bank_transfer`;
+                } catch {
+                  window.location.href = `/payment/check?orderId=${pendingOrderId}&status=pending&method=bank_transfer`;
+                }
+              }}
               style={{ width: "100%", padding: "14px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
               Tôi đã chuyển khoản xong ✓
             </button>
@@ -589,9 +740,16 @@ export default function CheckoutPage() {
                         </div>
                         {active && <CheckCircle2 style={{ width: 18, height: 18, color: "#16a34a", flexShrink: 0 }} />}
                       </label>
-                      <AnimatePresence>
-                        {paymentMethod === 'bank_transfer' && m.id === 'bank_transfer' && <BankTransferPanel total={total} orderId={null} />}
-                      </AnimatePresence>
+                      {/* Thông báo cho chuyển khoản ngân hàng */}
+                      {paymentMethod === 'bank_transfer' && m.id === 'bank_transfer' && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          style={{ marginTop: 12, padding: "10px 14px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 8, fontSize: 12, color: "#1e40af" }}>
+                          💡 Mã QR và thông tin chuyển khoản sẽ hiển thị sau khi bạn bấm "Tạo đơn & Xem QR"
+                        </motion.div>
+                      )}
                     </div>
                   );
                 })}
@@ -650,17 +808,90 @@ export default function CheckoutPage() {
                 <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#374151", marginBottom: 6 }}>Mã giảm giá</label>
                 {couponApplied ? (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "8px 12px" }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a" }}>{couponCode}</span>
-                    <button onClick={() => { setCouponApplied(false); setCouponCode(''); }} style={{ fontSize: 12, color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Hủy</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <CheckCircle2 style={{ width: 14, height: 14, color: "#16a34a" }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a" }}>{couponCode}</span>
+                      <span style={{ fontSize: 12, color: "#16a34a" }}>(-{couponDiscount.toLocaleString('vi-VN')}đ)</span>
+                    </div>
+                    <button onClick={() => { setCouponApplied(false); setCouponCode(''); setCouponDiscount(0); setCouponError(''); }} style={{ fontSize: 12, color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Hủy</button>
                   </div>
                 ) : (
-                  <div style={{ display: "flex" }}>
-                    <input type="text" value={couponCode} onChange={e => setCouponCode(e.target.value)} placeholder="Nhập mã voucher"
-                      style={{ flex: 1, height: 38, border: "1px solid #d1d5db", borderRight: "none", borderRadius: "8px 0 0 8px", fontSize: 13, padding: "0 12px", outline: "none", boxSizing: "border-box" }} />
-                    <button onClick={() => couponCode.trim() && setCouponApplied(true)}
-                      style={{ height: 38, padding: "0 14px", background: "#16a34a", color: "#fff", fontSize: 13, fontWeight: 500, border: "none", borderRadius: "0 8px 8px 0", cursor: "pointer" }}>
-                      Áp dụng
-                    </button>
+                  <div>
+                    <div style={{ display: "flex" }}>
+                      <input type="text" value={couponCode} onChange={e => { setCouponCode(e.target.value); setCouponError(''); }} placeholder="Nhập mã voucher"
+                        onKeyDown={(e) => e.key === 'Enter' && applyCouponCode(couponCode)}
+                        style={{ flex: 1, height: 38, border: `1px solid ${couponError ? '#fca5a5' : '#d1d5db'}`, borderRight: "none", borderRadius: "8px 0 0 8px", fontSize: 13, padding: "0 12px", outline: "none", boxSizing: "border-box" }} />
+                      <button onClick={() => applyCouponCode(couponCode)}
+                        disabled={couponLoading || !couponCode.trim()}
+                        style={{ height: 38, padding: "0 14px", background: couponLoading ? "#9ca3af" : "#16a34a", color: "#fff", fontSize: 13, fontWeight: 500, border: "none", borderRadius: "0 8px 8px 0", cursor: couponLoading ? "not-allowed" : "pointer" }}>
+                        {couponLoading ? '...' : 'Áp dụng'}
+                      </button>
+                    </div>
+                    {couponError && <p style={{ fontSize: 12, color: "#dc2626", margin: "4px 0 0" }}>{couponError}</p>}
+                  </div>
+                )}
+
+                {/* Danh sách voucher khả dụng */}
+                {!couponApplied && khoVoucher.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                      <Ticket style={{ width: 14, height: 14, color: "#ef4444" }} />
+                      <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Voucher khả dụng</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 200, overflowY: "auto" }}>
+                      {khoVoucher.map((voucher) => {
+                        const minOrder = Number(voucher.don_toi_thieu) || 0;
+                        const giamToiDa = Number(voucher.giam_toi_da) || 0;
+                        const giaTriGiam = Number(voucher.gia_tri_giam) || 0;
+                        const isEligible = subTotal >= minOrder;
+
+                        const voucherExpiry = voucher.ngay_ket_thuc ? new Date(voucher.ngay_ket_thuc) : null;
+                        const hoursLeft = voucherExpiry ? Math.max(0, (voucherExpiry.getTime() - Date.now()) / 3600000) : null;
+                        const expiringSoon = hoursLeft !== null && hoursLeft <= 24;
+
+                        return (
+                          <div
+                            key={voucher.id}
+                            style={{ padding: "10px 12px", borderRadius: 8, border: `1px solid ${isEligible ? "#bbf7d0" : "#e5e7eb"}`, background: isEligible ? "#fff" : "#f9fafb", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, opacity: isEligible ? 1 : 0.6 }}
+                          >
+                            <div style={{ minWidth: 0 }}>
+                              <p style={{ fontSize: 13, fontWeight: 700, color: isEligible ? "#dc2626" : "#6b7280", margin: "0 0 2px" }}>
+                                {voucher.ma_code}
+                              </p>
+                              <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>
+                                Giảm{" "}
+                                {voucher.loai_giam_gia === "TIEN_MAT" ? (
+                                  <strong style={{ color: "#374151" }}>{giaTriGiam.toLocaleString("vi-VN")}đ</strong>
+                                ) : (
+                                  <strong style={{ color: "#374151" }}>{giaTriGiam}%</strong>
+                                )}
+                                {voucher.loai_giam_gia === "PHAN_TRAM" && giamToiDa > 0 && ` (Tối đa ${giamToiDa.toLocaleString("vi-VN")}đ)`}
+                                {minOrder > 0 && ` · Từ ${minOrder.toLocaleString("vi-VN")}đ`}
+                              </p>
+                              {expiringSoon && (
+                                <p style={{ fontSize: 10, color: "#dc2626", margin: "2px 0 0", fontWeight: 500 }}>
+                                  ⏰ Hết hạn trong {Math.ceil(hoursLeft!)}h
+                                </p>
+                              )}
+                            </div>
+                            {isEligible ? (
+                              <button
+                                onClick={() => applyCouponCode(voucher.ma_code)}
+                                disabled={couponLoading}
+                                style={{ fontSize: 12, fontWeight: 600, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", padding: "4px 10px", borderRadius: 6, cursor: couponLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+                              >
+                                Dùng
+                              </button>
+                            ) : (
+                              <div title={`Mua thêm ${(minOrder - subTotal).toLocaleString("vi-VN")}đ để dùng mã này`} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#9ca3af", cursor: "not-allowed", flexShrink: 0 }}>
+                                <Info style={{ width: 12, height: 12 }} />
+                                <span>Cần thêm {(minOrder - subTotal).toLocaleString("vi-VN")}đ</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -683,6 +914,12 @@ export default function CheckoutPage() {
                     <span style={{ color: "#111827", fontWeight: 500 }}>{shippingFee.toLocaleString('vi-VN')}đ</span>
                   )}
                 </div>
+                {couponApplied && couponDiscount > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                    <span style={{ color: "#16a34a" }}>Giảm giá ({couponCode})</span>
+                    <span style={{ color: "#16a34a", fontWeight: 500 }}>-{couponDiscount.toLocaleString('vi-VN')}đ</span>
+                  </div>
+                )}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, marginTop: 4, borderTop: "1px solid #e5e7eb" }}>
                   <span style={{ fontSize: 15, fontWeight: 600, color: "#111827" }}>Tổng cộng</span>
                   <span style={{ fontSize: 20, fontWeight: 700, color: "#16a34a" }}>{total.toLocaleString('vi-VN')}đ</span>

@@ -129,7 +129,8 @@ export default function SupplierDebtTab({ nccId }: { nccId: number }) {
             <form onSubmit={handlePay} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Số tiền thanh toán *</label>
-                <input required type="number" value={form.so_tien} onChange={(e) => setForm({ ...form, so_tien: e.target.value })}
+                <input required type="number" min="0" value={form.so_tien} onChange={(e) => { const v = e.target.value.replace(/^-/, ''); setForm({ ...form, so_tien: v }); }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="VD: 5000000" />
               </div>

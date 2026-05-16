@@ -59,6 +59,11 @@ interface OrderDetail {
     doiTac: string;
     ngayGiaoDuKien: string | null;
   } | null;
+  phieuXuat: {
+    id: number;
+    trangThai: string;
+    ngayTao: string;
+  } | null;
   timeline: { trangThai: string; thoiGian: string }[];
   returnRequests: {
     id: number;
@@ -92,6 +97,7 @@ const PAYMENT_STATUS_CONFIG: Record<string, { label: string; icon: React.Element
 
 const ORDER_STATUS_STEPS = [
   { key: "CHO_XAC_NHAN",   label: "Đặt hàng" },
+  { key: "CHO_XU_LY",      label: "Chờ xử lý" },
   { key: "CHO_GIAO_HANG",  label: "Xác nhận" },
   { key: "DANG_GIAO_HANG", label: "Đang giao" },
   { key: "DA_GIAO",        label: "Hoàn thành" },
@@ -240,7 +246,9 @@ export default function StaffOrderDetailPage() {
   const isBankPending = payment?.phuongThuc === "BANK" && payment.trangThai === "CHO_THANH_TOAN";
   const canConfirmOrder =
     (order.status === "CHO_XAC_NHAN" && payment?.trangThai === "DA_THANH_TOAN") ||
-    (order.status === "CHO_XAC_NHAN" && payment?.phuongThuc === "COD");
+    (order.status === "CHO_XAC_NHAN" && payment?.phuongThuc === "COD") ||
+    order.status === "CHO_XU_LY";
+  const phieuXuatDone = order.phieuXuat?.trangThai === "HOAN_THANH";
   const allScanned = order.items.length > 0 && order.items.every((i) => scannedItems.has(i.id));
   const currentStepIdx = ORDER_STATUS_STEPS.findIndex((s) => s.key === order.status);
 
@@ -539,19 +547,6 @@ export default function StaffOrderDetailPage() {
                       <div className="text-right shrink-0">
                         <p className="font-bold text-gray-900 text-[14px]">×{item.soLuong} {item.donViTinh}</p>
                         <p className="text-[12px] text-gray-500 font-mono">{fmtCurrency(item.donGia * item.soLuong)}</p>
-                        {order.status === "CHO_GIAO_HANG" && (
-                          <button
-                            onClick={() => handleScanItem(item.id)}
-                            className={`mt-1 flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border transition-colors ${
-                              isScanned
-                                ? "bg-[#EAF3DE] text-[#3B6D11] border-[#3B6D11]/30"
-                                : "bg-white text-gray-500 border-gray-200 hover:border-[#1D9E75]/40 hover:text-[#1D9E75]"
-                            }`}
-                          >
-                            {isScanned ? <CheckCircle size={10} /> : <QrCode size={10} />}
-                            {isScanned ? "Đã lấy" : "Quét QR"}
-                          </button>
-                        )}
                       </div>
                     </div>
                   );
@@ -660,37 +655,69 @@ export default function StaffOrderDetailPage() {
                 </div>
               )}
 
-              {/* ── Luồng CHO_GIAO_HANG (nhặt hàng) ── */}
-              {order.status === "CHO_GIAO_HANG" && (
-                <div className="space-y-3">
-                  <div className="bg-[#FAEEDA] border border-[#BA7517]/20 rounded-lg p-2.5">
-                    <p className="text-[12px] text-[#BA7517]">
-                      <strong>Bước 2:</strong> Nhặt hàng theo danh sách. Quét QR từng kiện.
+              {/* ── Luồng CHO_XU_LY (đã thanh toán, chờ duyệt soạn hàng) ── */}
+              {order.status === "CHO_XU_LY" && (
+                <div className="space-y-2">
+                  <div className="bg-[#EAF3DE] border border-[#3B6D11]/20 rounded-lg p-2.5 mb-3">
+                    <p className="text-[12px] text-[#3B6D11]">
+                      <strong>Đã thanh toán</strong> — Xác nhận đơn để tạo phiếu xuất kho (FEFO) & chuyển sang bước giao hàng.
                     </p>
                   </div>
 
-                  {/* Progress bar */}
-                  <div className="bg-[#F5F5F4] rounded-lg p-3">
-                    <div className="flex justify-between text-[12px] text-gray-500 mb-1.5">
-                      <span>Tiến độ nhặt hàng</span>
-                      <span className="font-semibold text-[#1D9E75]">{scannedItems.size}/{order.items.length}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1.5">
-                      <div
-                        className="bg-[#1D9E75] h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${order.items.length > 0 ? (scannedItems.size / order.items.length) * 100 : 0}%` }}
-                      />
-                    </div>
+                  <button
+                    onClick={() => doAction("CONFIRM_ORDER")}
+                    disabled={actionLoading || order.hasStockIssue}
+                    className="w-full py-3 bg-[#3B6D11] hover:bg-[#2d5409] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
+                  >
+                    {actionLoading ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle size={15} />}
+                    ✅ Xác nhận đơn & soạn hàng
+                  </button>
+
+                  {order.hasStockIssue && (
+                    <button className="w-full py-2.5 bg-white border border-[#BA7517]/40 hover:bg-[#FAEEDA] text-[#BA7517] font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2">
+                      <AlertTriangle size={15} /> Liên hệ khách (thiếu hàng)
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setShowCancelDialog(true)}
+                    className="w-full py-2.5 bg-white border border-[#A32D2D]/40 hover:bg-[#FCEBEB] text-[#A32D2D] font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
+                  >
+                    <XCircle size={15} /> ❌ Huỷ đơn & Hoàn tiền
+                  </button>
+                </div>
+              )}
+
+              {/* ── Luồng CHO_GIAO_HANG (xuất kho) ── */}
+              {order.status === "CHO_GIAO_HANG" && (
+                <div className="space-y-3">
+                  <div className={`rounded-lg p-2.5 border ${phieuXuatDone ? "bg-[#EAF3DE] border-[#3B6D11]/20" : "bg-[#FAEEDA] border-[#BA7517]/20"}`}>
+                    <p className={`text-[12px] ${phieuXuatDone ? "text-[#3B6D11]" : "text-[#BA7517]"}`}>
+                      {phieuXuatDone ? (
+                        <><strong>Đã xuất kho xong</strong> — tạo vận đơn GHN hoặc nhập mã thủ công để chuyển sang giao hàng.</>
+                      ) : (
+                        <><strong>Bước 2:</strong> Phải hoàn thành xuất kho (nhặt hàng & quét kiện) trước khi tạo vận đơn.</>
+                      )}
+                    </p>
                   </div>
 
-                  {/* GHN Button */}
+                  <Link
+                    href={`/staff/warehouse/issue/${id}`}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
+                  >
+                    <PackageCheck size={15} />
+                    {phieuXuatDone ? "Xem chi tiết phiếu xuất" : "Đi tới trang Xuất kho"}
+                  </Link>
+
+                  {/* GHN Button — chỉ bấm được khi phiếu xuất đã hoàn thành */}
                   <button
                     onClick={handleCreateGHN}
-                    disabled={!allScanned || ghnLoading}
+                    disabled={ghnLoading || !phieuXuatDone}
+                    title={!phieuXuatDone ? "Hoàn thành xuất kho trước" : undefined}
                     className="w-full py-3 bg-[#1D9E75] hover:bg-[#125087] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
                   >
                     {ghnLoading ? <Loader2 size={15} className="animate-spin" /> : <Truck size={15} />}
-                    {allScanned ? "Tạo vận đơn GHN" : `Nhặt đủ ${order.items.length} kiện để tiếp tục`}
+                    Tạo vận đơn GHN
                   </button>
 
                   {/* Hoặc nhập mã vận đơn thủ công */}
@@ -701,12 +728,14 @@ export default function StaffOrderDetailPage() {
                         type="text"
                         value={trackingInput}
                         onChange={(e) => setTrackingInput(e.target.value)}
-                        placeholder="Mã vận đơn..."
-                        className="flex-1 px-3 py-2 text-[13px] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1D9E75]/40 focus:outline-none bg-[#F5F5F4]"
+                        placeholder={phieuXuatDone ? "Mã vận đơn..." : "Xuất kho xong mới nhập được"}
+                        disabled={!phieuXuatDone}
+                        className="flex-1 px-3 py-2 text-[13px] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1D9E75]/40 focus:outline-none bg-[#F5F5F4] disabled:bg-gray-100 disabled:cursor-not-allowed"
                       />
                       <button
                         onClick={() => doAction("ADD_TRACKING", { maVanDon: trackingInput })}
-                        disabled={!trackingInput || !allScanned || actionLoading}
+                        disabled={!trackingInput || actionLoading || !phieuXuatDone}
+                        title={!phieuXuatDone ? "Hoàn thành xuất kho trước" : undefined}
                         className="px-3 py-2 bg-[#5F5E5A] hover:bg-[#4a4947] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg text-[13px] transition-colors"
                       >
                         Lưu
@@ -719,19 +748,59 @@ export default function StaffOrderDetailPage() {
               {/* ── Luồng DANG_GIAO_HANG ── */}
               {order.status === "DANG_GIAO_HANG" && (
                 <div className="space-y-3">
-                  <div className="bg-[#E8F5F0] border border-[#1D9E75]/20 rounded-lg p-2.5">
-                    <p className="text-[12px] text-[#1D9E75]">
-                      <strong>Bước 3:</strong> Đơn đang trên đường giao. Xác nhận khi giao thành công.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => doAction("CONFIRM_DELIVERED")}
-                    disabled={actionLoading}
-                    className="w-full py-3 bg-[#3B6D11] hover:bg-[#2d5409] disabled:bg-gray-300 text-white font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
-                  >
-                    {actionLoading ? <Loader2 size={15} className="animate-spin" /> : <PackageCheck size={15} />}
-                    ✅ Xác nhận giao thành công
-                  </button>
+                  {order.shipping?.maVanDon ? (
+                    <div className="bg-[#E8F5F0] border border-[#1D9E75]/20 rounded-lg p-2.5">
+                      <p className="text-[12px] text-[#1D9E75]">
+                        <strong>Bước 3:</strong> Đơn đang được GHN vận chuyển. Trạng thái sẽ tự động cập nhật khi giao thành công.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="bg-[#FAEEDA] border border-[#BA7517]/30 rounded-lg p-2.5">
+                        <p className="text-[12px] text-[#BA7517]">
+                          <strong>Chưa có mã vận đơn:</strong> Tạo vận đơn GHN hoặc nhập thủ công để hoàn tất bước giao hàng.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={handleCreateGHN}
+                        disabled={ghnLoading}
+                        className="w-full py-3 bg-[#1D9E75] hover:bg-[#125087] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-[10px] text-[14px] transition-colors flex items-center justify-center gap-2"
+                      >
+                        {ghnLoading ? <Loader2 size={15} className="animate-spin" /> : <Truck size={15} />}
+                        Tạo vận đơn GHN
+                      </button>
+
+                      <div className="border-t border-gray-200 pt-3">
+                        <p className="text-[11px] text-gray-400 uppercase tracking-[0.06em] mb-1.5">Hoặc nhập thủ công</p>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={trackingInput}
+                            onChange={(e) => setTrackingInput(e.target.value)}
+                            placeholder="Mã vận đơn..."
+                            className="flex-1 px-3 py-2 text-[13px] border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#1D9E75]/40 focus:outline-none bg-[#F5F5F4]"
+                          />
+                          <button
+                            onClick={() => doAction("ADD_TRACKING", { maVanDon: trackingInput })}
+                            disabled={!trackingInput || actionLoading}
+                            className="px-3 py-2 bg-[#5F5E5A] hover:bg-[#4a4947] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg text-[13px] transition-colors"
+                          >
+                            Lưu
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => doAction("CONFIRM_DELIVERED")}
+                        disabled={actionLoading}
+                        className="w-full py-2.5 bg-white border border-[#3B6D11]/40 hover:bg-[#EAF3DE] disabled:bg-gray-100 disabled:cursor-not-allowed text-[#3B6D11] font-semibold rounded-[10px] text-[13px] transition-colors flex items-center justify-center gap-2"
+                      >
+                        {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <PackageCheck size={14} />}
+                        Xác nhận đã giao (bỏ qua vận đơn)
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
 

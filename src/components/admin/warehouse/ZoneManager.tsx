@@ -181,7 +181,8 @@ export default function ZoneManager({ zones, onRefresh }: Props) {
                   type="number"
                   min={1}
                   value={(form as any)[key]}
-                  onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
+                  onChange={(e) => { const v = e.target.value.replace(/^-/, '').replace(/^0+(?=\d)/, ''); setForm((p) => ({ ...p, [key]: v })); }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#1D9E75] bg-white text-center font-bold"
                 />
               </div>
@@ -193,7 +194,8 @@ export default function ZoneManager({ zones, onRefresh }: Props) {
               type="number"
               min={1}
               value={form.suc_chua_toi_da}
-              onChange={(e) => setForm((p) => ({ ...p, suc_chua_toi_da: e.target.value }))}
+              onChange={(e) => { const v = e.target.value.replace(/^-/, '').replace(/^0+(?=\d)/, ''); setForm((p) => ({ ...p, suc_chua_toi_da: v })); }}
+              onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
               className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#1D9E75] bg-white"
             />
           </div>
@@ -372,7 +374,8 @@ export default function ZoneManager({ zones, onRefresh }: Props) {
             <div className="px-6 py-4 space-y-3">
               <div>
                 <label className="text-xs text-gray-500 font-medium block mb-1">Sức chứa tối đa (thùng)</label>
-                <input type="number" min={1} value={editModal.capacity} onChange={(e) => setEditModal((p) => p ? { ...p, capacity: Number(e.target.value) } : p)}
+                <input type="number" min={1} value={editModal.capacity} onChange={(e) => { const v = e.target.value.replace(/^-/, '').replace(/^0+(?=\d)/, ''); setEditModal((p) => p ? { ...p, capacity: Number(v) } : p); }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#1D9E75]" />
               </div>
               <div>

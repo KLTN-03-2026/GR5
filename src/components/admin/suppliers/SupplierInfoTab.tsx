@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Edit3, PauseCircle, XCircle, Save, X } from "lucide-react";
+import { Edit3, PauseCircle, XCircle, Save, X, RefreshCw } from "lucide-react";
 
 const CHU_KY_LABELS: Record<string, string> = {
   NGAY_GIAO: "Ngay khi giao", "7_NGAY": "Sau 7 ngày", "15_NGAY": "Sau 15 ngày", "30_NGAY": "Sau 30 ngày",
@@ -54,11 +54,15 @@ export default function SupplierInfoTab({ ncc, onRefresh }: Props) {
     onRefresh();
   };
 
-  const field = (label: string, key: string, type = "text") => (
+  const field = (label: string, key: string, type = "text") => {
+    const isPhone = key === "so_dien_thoai" || key === "zalo";
+    return (
     <div className="group">
       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{label}</label>
       {editing ? (
-        <input type={type} value={(form[key] as string) ?? ""} onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+        <input type={type} value={(form[key] as string) ?? ""}
+          onChange={(e) => setForm({ ...form, [key]: isPhone ? e.target.value.replace(/\D/g, '').slice(0, 11) : e.target.value })}
+          {...(isPhone ? { inputMode: "numeric" as const, maxLength: 11, onKeyDown: (e: React.KeyboardEvent) => { if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault(); } } : {})}
           className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
       ) : (
         <div className="flex items-center gap-2">
@@ -78,6 +82,7 @@ export default function SupplierInfoTab({ ncc, onRefresh }: Props) {
       )}
     </div>
   );
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

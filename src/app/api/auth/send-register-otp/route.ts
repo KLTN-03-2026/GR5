@@ -69,13 +69,48 @@ export async function POST(req: Request) {
       to: email,
       subject: "Mã xác nhận đăng ký tài khoản",
       html: `
-        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #008A3D;">Xác nhận đăng ký tài khoản</h2>
-          <p>Xin chào, bạn đang tiến hành đăng ký tài khoản mới.</p>
-          <p>Mã OTP của bạn là: <b style="font-size: 24px; color: #008A3D;">${generatedOtp}</b></p>
-          <p>Mã này có hiệu lực trong <b>5 phút</b>. Nếu không phải bạn yêu cầu, hãy bỏ qua email này.</p>
-          <hr />
-          <small>Hệ thống quản lý Nông Sản Việt</small>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #008A3D; margin: 0;">🌾 Chào mừng bạn đến với Nông Sản Việt!</h2>
+          </div>
+
+          <p style="font-size: 16px; color: #333; line-height: 1.6;">
+            Xin chào,
+          </p>
+
+          <p style="font-size: 16px; color: #333; line-height: 1.6;">
+            Cảm ơn bạn đã đăng ký tài khoản tại <strong>Nông Sản Việt</strong> - nền tảng kết nối nông sản sạch từ trang trại đến bàn ăn.
+          </p>
+
+          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+            <p style="font-size: 14px; color: #666; margin: 0 0 10px 0;">Mã xác thực của bạn là:</p>
+            <p style="font-size: 32px; font-weight: bold; color: #008A3D; letter-spacing: 4px; margin: 10px 0;">
+              ${generatedOtp}
+            </p>
+            <p style="font-size: 14px; color: #d32f2f; margin: 10px 0 0 0;">
+              ⏱️ Mã này có hiệu lực trong <strong>5 phút</strong>
+            </p>
+          </div>
+
+          <p style="font-size: 14px; color: #666; line-height: 1.6;">
+            Vui lòng nhập mã này vào trang đăng ký để hoàn tất quá trình tạo tài khoản.
+          </p>
+
+          <p style="font-size: 14px; color: #999; line-height: 1.6; margin-top: 20px;">
+            <strong>Lưu ý:</strong> Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này. Mã xác thực sẽ tự động hết hiệu lực sau 5 phút.
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;" />
+
+          <div style="text-align: center;">
+            <p style="font-size: 12px; color: #999; margin: 5px 0;">
+              Trân trọng,<br/>
+              <strong style="color: #008A3D;">Đội ngũ Nông Sản Việt</strong>
+            </p>
+            <p style="font-size: 11px; color: #bbb; margin: 10px 0 0 0;">
+              © 2026 Nông Sản Việt. Hệ thống quản lý nông sản thông minh.
+            </p>
+          </div>
         </div>
       `,
     };

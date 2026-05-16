@@ -74,10 +74,27 @@ export async function GET() {
       where: { gio_vao: { gte: startOfDay, lte: endOfDay } },
     });
 
+    // Chỉ giữ lại các bản ghi có ngay_lam_viec đúng ngày hôm nay (theo local date)
+    const todayLocalKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const lichHomNayFiltered = lichHomNay.filter((l) => {
+      if (!l.ngay_lam_viec) return false;
+      const d = new Date(l.ngay_lam_viec);
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      return key === todayLocalKey;
+    });
+
     const danhSachCa = await prisma.ca_lam_viec.findMany({ orderBy: { gio_bat_dau: 'asc' } });
     const lichCaHomNay = danhSachCa
       .map((ca) => {
-        const nvTrongCa = lichHomNay.filter((l) => l.ma_ca_lam === ca.id);
+        // Dedupe theo ma_nguoi_dung để 1 NV không xuất hiện 2 lần trong cùng 1 ca
+        const seen = new Set<number>();
+        const nvTrongCa = lichHomNayFiltered.filter((l) => {
+          if (l.ma_ca_lam !== ca.id) return false;
+          const uid = l.nguoi_dung?.id;
+          if (!uid || seen.has(uid)) return false;
+          seen.add(uid);
+          return true;
+        });
         return {
           ma_ca: ca.id,
           ten_ca: ca.ten_ca,

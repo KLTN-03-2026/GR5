@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { signOut } from "next-auth/react";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import {
   KeyRound, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, X,
   ShieldCheck, ScanFace, Trash2,
@@ -66,6 +67,7 @@ export default function SecurityPage() {
   const [faceLoading, setFaceLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [faceMsg, setFaceMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({isOpen: false, title: "", message: "", onConfirm: () => {}});
 
   const fetchFaceStatus = useCallback(async () => {
     try {
@@ -101,17 +103,24 @@ export default function SecurityPage() {
   };
 
   const handleDeleteFace = async () => {
-    if (!confirm("Xóa dữ liệu FaceID? Bạn sẽ không thể đăng nhập bằng khuôn mặt cho đến khi đăng ký lại.")) return;
-    setFaceLoading(true);
-    try {
-      await fetch("/api/user/face-data", { method: "DELETE" });
-      setHasFaceData(false);
-      setFaceMsg({ type: "success", text: "Đã xóa dữ liệu FaceID" });
-    } catch {
-      setFaceMsg({ type: "error", text: "Xóa thất bại" });
-    } finally {
-      setFaceLoading(false);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Xóa dữ liệu FaceID",
+      message: "Xóa dữ liệu FaceID? Bạn sẽ không thể đăng nhập bằng khuôn mặt cho đến khi đăng ký lại.",
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setFaceLoading(true);
+        try {
+          await fetch("/api/user/face-data", { method: "DELETE" });
+          setHasFaceData(false);
+          setFaceMsg({ type: "success", text: "Đã xóa dữ liệu FaceID" });
+        } catch {
+          setFaceMsg({ type: "error", text: "Xóa thất bại" });
+        } finally {
+          setFaceLoading(false);
+        }
+      },
+    });
   };
 
   return (
@@ -339,6 +348,17 @@ export default function SecurityPage() {
 
         </AnimatePresence>
       </motion.div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant="danger"
+        confirmText="Xóa"
+        cancelText="Hủy"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

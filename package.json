@@ -11,7 +11,11 @@
     "db:studio": "prisma studio",
     "db:seed": "ts-node prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "seed:accounts": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed-accounts.ts"
+    "seed:accounts": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed-accounts.ts",
+    "seed:inventory": "npx ts-node -P tsconfig.seed.json prisma/seed-inventory.ts",
+    "seed:full": "npx ts-node -P tsconfig.seed.json prisma/seed-full.ts",
+    "seed:massive": "npx ts-node -P tsconfig.seed.json prisma/seed-massive.ts",
+    "seed:products": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed-index.ts"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

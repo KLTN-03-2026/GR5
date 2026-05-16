@@ -10,7 +10,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { action, so_luong_thuc_nhan, ghi_chu_kiem_tra, ly_do_chenh_lech, ma_nguoi_kiem_tra } = body;
+    const { action, so_luong_thuc_nhan, ghi_chu_kiem_tra, ly_do_chenh_lech, ma_nguoi_kiem_tra, han_su_dung, ngay_thu_hoach } = body;
 
     const phieu = await prisma.phieu_nhap_kho.findUnique({
       where: { id: Number(id) },
@@ -93,13 +93,66 @@ export async function PATCH(
         },
       });
 
-      // Đẩy hàng vào kho + sinh QR
-      const result = await WarehouseService.approveReceipt(Number(id));
+      // Đẩy hàng vào kho + sinh QR (truyền HSD nếu có)
+      const hsd = han_su_dung ? new Date(han_su_dung) : undefined;
+      const result = await WarehouseService.approveReceipt(Number(id), hsd ? { han_su_dung: hsd } : undefined);
 
       return NextResponse.json({
         message: `Đã duyệt! ${result.qrCodes?.length || 0} mã QR đã sinh.`,
         qrCodes: result.qrCodes,
         chenh_lech_pct: chenh,
+      });
+    }
+
+    // Action: RECEIVE_AND_APPROVE — Thủ kho nhận hàng + duyệt luôn (CHO_GIAO_HANG → DA_DUYET)
+    if (action === "receive_and_approve") {
+      if (phieu.trang_thai !== "CHO_GIAO_HANG") {
+        return NextResponse.json({ error: "Phiếu không ở trạng thái Chờ giao hàng" }, { status: 400 });
+      }
+      if (!han_su_dung) {
+        return NextResponse.json({ error: "Hạn sử dụng là bắt buộc khi nhận hàng" }, { status: 400 });
+      }
+
+      const chiTiet = phieu.chi_tiet_phieu_nhap[0];
+      const soLuongYeuCau = chiTiet?.so_luong_yeu_cau ?? 0;
+      const soLuongThucNhan = Number(so_luong_thuc_nhan) || soLuongYeuCau;
+      const chenh = soLuongYeuCau > 0
+        ? Math.abs((soLuongThucNhan - soLuongYeuCau) / soLuongYeuCau) * 100
+        : 0;
+
+      if (chenh > 5 && !ly_do_chenh_lech) {
+        return NextResponse.json({
+          error: `Chênh lệch ${chenh.toFixed(1)}% > 5%. Bắt buộc nhập lý do.`,
+        }, { status: 422 });
+      }
+
+      // Cập nhật chi tiết phiếu
+      if (chiTiet) {
+        await prisma.chi_tiet_phieu_nhap.update({
+          where: { id: chiTiet.id },
+          data: { so_luong_thuc_nhan: soLuongThucNhan },
+        });
+      }
+
+      // Cập nhật phiếu với HSD + ngày thu hoạch
+      await prisma.phieu_nhap_kho.update({
+        where: { id: Number(id) },
+        data: {
+          trang_thai: "DA_DUYET",
+          ngay_kiem_tra: new Date(),
+          han_su_dung_thuc_te: new Date(han_su_dung),
+          ngay_thu_hoach_tt: ngay_thu_hoach ? new Date(ngay_thu_hoach) : null,
+          ghi_chu_kiem_tra: ghi_chu_kiem_tra || null,
+          ly_do_chenh_lech: chenh > 5 ? ly_do_chenh_lech : null,
+        },
+      });
+
+      // Đẩy hàng vào kho + sinh QR
+      const result = await WarehouseService.approveReceipt(Number(id), { han_su_dung: new Date(han_su_dung) });
+
+      return NextResponse.json({
+        message: `Nhận hàng & duyệt thành công! ${result.qrCodes?.length || 0} mã QR đã sinh.`,
+        qrCodes: result.qrCodes,
       });
     }
 

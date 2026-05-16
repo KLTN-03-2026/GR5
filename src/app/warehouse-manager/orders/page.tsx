@@ -6,16 +6,17 @@ export default async function WarehouseManagerOrdersPage() {
     prisma.nha_cung_cap.findMany({ select: { id: true, ten_ncc: true }, where: { trang_thai: "DANG_HOP_TAC" } }),
     prisma.san_pham.findMany({
       select: {
+        id: true,
         ten_san_pham: true,
         bien_the_san_pham: { select: { id: true, ten_bien_the: true } }
       }
     }),
   ]);
 
-  const sp = [];
+  const sp: { id: number; name: string; productId: number }[] = [];
   for (const s of spRaw) {
     for (const bt of s.bien_the_san_pham) {
-      sp.push({ id: bt.id, name: bt.ten_bien_the || s.ten_san_pham });
+      sp.push({ id: bt.id, name: `${s.ten_san_pham} — ${bt.ten_bien_the}`, productId: s.id });
     }
   }
 

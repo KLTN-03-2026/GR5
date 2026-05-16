@@ -144,12 +144,29 @@ Module san pham quan ly danh muc san pham nong san, bao gom thong tin san pham, 
   - File: `products/[id]/page.tsx`
 
 ### Uu tien trung binh
-- [ ] Them landing page cho danh muc (mo ta, banner, san pham noi bat)
-- [ ] Them tinh nang "San pham lien quan" thong minh hon (dua tren hanh vi mua)
-- [ ] Them tinh nang "Thong bao khi co hang" (back in stock notification)
-- [ ] Them bo loc theo chung chi (VietGAP, Organic, GlobalGAP)
-- [ ] Them breadcrumb navigation tren trang san pham
-- [ ] Them quick view popup tren danh sach san pham
+- [x] Them landing page cho danh muc (mo ta, banner, san pham noi bat)
+  - Hero gradient emerald, breadcrumb, subcategories pills, featured products, full grid
+  - File: `categories/[id]/page.tsx`, `categories/[id]/CategoryProductCard.tsx`
+- [x] Them tinh nang "San pham lien quan" thong minh hon (dua tren hanh vi mua)
+  - 3 tang uu tien: frequently bought together (SQL) > cung danh muc + gia tuong tu > cung xuat xu
+  - Hien thi 4-6 san pham, grid responsive 2/3/4 col
+  - File: `products/[id]/page.tsx`, `ProductDetailClient.tsx`
+- [x] Them tinh nang "Thong bao khi co hang" (back in stock notification)
+  - Nut "Thong bao khi co hang" khi het hang, form email inline
+  - Ho tro ca user dang nhap (auto-fill email) va guest
+  - File: `ProductDetailClient.tsx`, `api/store/back-in-stock/route.ts`
+- [x] Them bo loc theo chung chi (VietGAP, Organic, GlobalGAP)
+  - Sidebar filter voi checkbox, mau sac rieng cho tung chung chi
+  - URL param: ?certificates=VietGAP,Organic
+  - File: `products/page.tsx`, `ProductsClient.tsx`
+- [x] Them breadcrumb navigation tren trang san pham
+  - Trang chu > San pham > [Danh muc] > [Ten san pham]
+  - ChevronRight separator, link hover emerald
+  - File: `products/[id]/page.tsx`, `ProductDetailClient.tsx`
+- [x] Them quick view popup tren danh sach san pham
+  - Eye icon tren hover card, modal 2 col (anh + info), chon bien the, them gio
+  - API: `api/store/products/detail/route.ts`
+  - File: `QuickViewModal.tsx`, `ProductCard.tsx`, `ProductsClient.tsx`
 
 ### Uu tien thap
 - [ ] Them tinh nang so sanh san pham (max 3-4 san pham)

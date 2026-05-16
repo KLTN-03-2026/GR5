@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  LayoutDashboard, Package, User, MapPin, Heart,
+  Package, User, MapPin, Heart,
   KeyRound, LogOut, Leaf, ChevronRight, ShieldCheck,
   Star, ShoppingBag, Bell,
 } from "lucide-react";
@@ -14,15 +14,6 @@ import { useCart } from "@/lib/CartContext";
 
 // ── nav config ────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  {
-    id: "overview",
-    name: "Tổng quan",
-    icon: LayoutDashboard,
-    path: "/account",
-    exact: true,
-    iconBg: "#e6f5ec",
-    iconColor: "#007A33",
-  },
   {
     id: "orders",
     name: "Đơn hàng",
@@ -344,7 +335,7 @@ export default function Sidebar({ user }: { user: any }) {
                   Huỷ
                 </button>
                 <button
-                  onClick={() => { clearCart(); signOut({ callbackUrl: "/" }); }}
+                  onClick={() => signOut({ callbackUrl: "/" })}
                   style={{ flex: 1, padding: "0.4rem", borderRadius: 7, border: "none", background: "#dc2626", color: "#fff", fontSize: "0.78rem", cursor: "pointer", fontWeight: 700 }}
                 >
                   Đăng xuất

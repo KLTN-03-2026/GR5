@@ -166,7 +166,8 @@ function ReviewModal({ phieu, onClose, onDone }: { phieu: Phieu; onClose: () => 
           <div>
             <label className="text-xs font-semibold text-gray-600 block mb-1.5">Số lượng thực nhận <span className="text-red-500">*</span></label>
             <input type="number" min={0} value={form.so_luong_thuc_nhan}
-              onChange={(e) => setForm((p) => ({ ...p, so_luong_thuc_nhan: e.target.value }))}
+              onChange={(e) => { const v = e.target.value.replace(/^-/, ''); setForm((p) => ({ ...p, so_luong_thuc_nhan: v })); }}
+              onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" />
             {chenh > 0 && (
               <div className={`mt-1.5 text-xs flex items-center gap-1.5 font-semibold ${chenh > 5 ? "text-red-600" : "text-amber-600"}`}>
@@ -459,7 +460,9 @@ export default function GoodsReceipt({ formOptions }: { formOptions: any }) {
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-600 block mb-1.5">Số lượng (thùng) <span className="text-red-500">*</span></label>
-                    <input type="number" min={1} name="so_luong_thung" value={formData.so_luong_thung} onChange={handleInput}
+                    <input type="number" min={1} name="so_luong_thung" value={formData.so_luong_thung}
+                      onChange={(e) => { const v = e.target.value.replace(/^-/, ''); if (v === '' || Number(v) >= 1) { const synth = { ...e, target: { ...e.target, name: 'so_luong_thung', value: v } } as any; handleInput(synth); } }}
+                      onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                       placeholder="VD: 50" required className={inputCls} />
                   </div>
                 </div>

@@ -331,7 +331,8 @@ export default function SupplierReturnTab({ nccId }: { nccId: number }) {
                   min={1}
                   max={soKienTrongKho || undefined}
                   value={form.so_kien_tra}
-                  onChange={(e) => setForm({ ...form, so_kien_tra: e.target.value })}
+                  onChange={(e) => { const v = e.target.value.replace(/^-/, ''); setForm({ ...form, so_kien_tra: v }); }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-400"
                   placeholder={`Tối đa ${soKienTrongKho} kiện`}
                 />
@@ -345,9 +346,10 @@ export default function SupplierReturnTab({ nccId }: { nccId: number }) {
                 <input
                   required
                   type="number"
-                  min={1}
+                  min={0}
                   value={form.don_gia_tra}
-                  onChange={(e) => setForm({ ...form, don_gia_tra: e.target.value })}
+                  onChange={(e) => { const v = e.target.value.replace(/^-/, ''); setForm({ ...form, don_gia_tra: v }); }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-400"
                   placeholder="VD: 250000"
                 />

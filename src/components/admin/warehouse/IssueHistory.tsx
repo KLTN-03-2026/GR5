@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { ArrowDownToLine, ArrowUpFromLine, RefreshCw } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, RefreshCw, MapPin } from "lucide-react";
 import Pagination from "@/components/ui/Pagination";
 
 interface ImportRow {
@@ -9,9 +9,18 @@ interface ImportRow {
   ma_phieu: string;
   ncc: string;
   san_pham: string;
+  bien_the?: string;
+  don_vi_tinh?: string;
   so_luong: number;
   trang_thai: string;
+  vi_tri?: { khu_vuc: string | null; day: string | null; ke: string | null; tang: string | null } | null;
 }
+
+// don_vi_tinh đôi khi bị nhập kèm số ("7Kg") thay vì chỉ đơn vị — strip số để hiển thị gọn.
+const normalizeUnit = (raw?: string | null) => {
+  const cleaned = (raw || "").trim().replace(/^\d+(?:[.,]\d+)?\s*/, "").trim();
+  return cleaned;
+};
 
 interface ExportRow {
   ngay_xuat: string;
@@ -34,6 +43,7 @@ const PAGE_SIZE = 15;
 export default function IssueHistory({
   activeTab,
   onTabChange,
+  onViewLocation,
 }: {
   historyData?: any[];
   importHistoryData?: any[];
@@ -42,6 +52,7 @@ export default function IssueHistory({
   onPageChange?: (page: number) => void;
   activeTab?: "import" | "export";
   onTabChange?: (tab: "import" | "export") => void;
+  onViewLocation?: (khuVuc: string) => void;
 }) {
   const [subTab, setSubTab] = useState<"import" | "export">(activeTab || "import");
   const [importData, setImportData]   = useState<ImportRow[]>([]);
@@ -142,32 +153,60 @@ export default function IssueHistory({
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ borderBottom: "0.5px solid #e2e8f0", background: "#f8fafc" }}>
-                  {["Thời gian", "Mã Phiếu", "Nhà cung cấp", "Sản phẩm chính", "SL", "Trạng thái"].map((h, i) => (
-                    <th key={h} style={{ padding: "8px 12px", textAlign: i === 4 ? "right" : "left", fontWeight: 500, color: "#64748b", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
+                  {["Thời gian", "Mã Phiếu", "Nhà cung cấp", "Sản phẩm chính", "SL", "Trạng thái", "Vị trí"].map((h, i) => (
+                    <th key={h} style={{ padding: "8px 12px", textAlign: i === 4 ? "right" : i === 6 ? "center" : "left", fontWeight: 500, color: "#64748b", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {importData.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ padding: "32px 12px", textAlign: "center", color: "#94a3b8", fontStyle: "italic", fontSize: 12 }}>
+                    <td colSpan={7} style={{ padding: "32px 12px", textAlign: "center", color: "#94a3b8", fontStyle: "italic", fontSize: 12 }}>
                       Chưa có dữ liệu nhập kho.
                     </td>
                   </tr>
                 ) : importData.map((item, idx) => {
                   const s = item.trang_thai || "N/A";
                   const c = STATUS_MAP[s] || { bg: "#f1f5f9", col: "#475569", brd: "#e2e8f0", lbl: s };
+                  const unit = normalizeUnit(item.don_vi_tinh);
+                  const vt = item.vi_tri;
+                  const viTriLabel = vt && (vt.khu_vuc || vt.day || vt.ke)
+                    ? [vt.khu_vuc, vt.day, vt.ke, vt.tang].filter(Boolean).join(" · ")
+                    : null;
                   return (
                     <tr key={idx} style={{ borderBottom: "0.5px solid #f1f5f9", background: "#fff" }}>
                       <td style={{ padding: "8px 12px", color: "#64748b", whiteSpace: "nowrap" }}>{item.ngay_nhap}</td>
                       <td style={{ padding: "8px 12px", fontFamily: "monospace", color: "#0f172a" }}>{item.ma_phieu}</td>
                       <td style={{ padding: "8px 12px", color: "#475569" }}>{item.ncc}</td>
-                      <td style={{ padding: "8px 12px", fontWeight: 500, color: "#0f172a", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.san_pham}</td>
-                      <td style={{ padding: "8px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 500 }}>{item.so_luong.toLocaleString()}</td>
+                      <td style={{ padding: "8px 12px", fontWeight: 500, color: "#0f172a", maxWidth: 220, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        <div>{item.san_pham}</div>
+                        {(item.bien_the || unit) && (
+                          <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 400 }}>
+                            {[item.bien_the, unit && `đv: ${unit}`].filter(Boolean).join(" · ")}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: "8px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 500, whiteSpace: "nowrap" }}>
+                        {item.so_luong.toLocaleString()}
+                        {unit && <span style={{ fontWeight: 400, color: "#94a3b8", marginLeft: 4 }}>{unit}</span>}
+                      </td>
                       <td style={{ padding: "8px 12px" }}>
                         <span style={{ fontSize: 10, fontWeight: 500, padding: "2px 6px", borderRadius: 4, background: c.bg, color: c.col, border: `0.5px solid ${c.brd}`, whiteSpace: "nowrap" }}>
                           {c.lbl}
                         </span>
+                      </td>
+                      <td style={{ padding: "8px 12px", textAlign: "center" }}>
+                        {viTriLabel && vt?.khu_vuc ? (
+                          <button
+                            onClick={() => onViewLocation?.(vt.khu_vuc!)}
+                            title={`Xem vị trí: ${viTriLabel}`}
+                            style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", fontSize: 11, fontWeight: 500, borderRadius: 6, border: "0.5px solid #bfdbfe", background: "#eff6ff", color: "#1d4ed8", cursor: "pointer", whiteSpace: "nowrap" }}
+                          >
+                            <MapPin size={11} /> {viTriLabel}
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: 11, color: "#cbd5e1" }}>—</span>
+                        )}
                       </td>
                     </tr>
                   );

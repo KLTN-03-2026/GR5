@@ -167,6 +167,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt", maxAge: 30 * 60 }, // 30 phút
   secret: process.env.AUTH_SECRET,
   trustHost: true,
+  cookies: {
+    pkceCodeVerifier: {
+      name: "next-auth.pkce.code_verifier",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   pages: {
     signIn: "/login",
   },

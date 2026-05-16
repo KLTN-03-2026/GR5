@@ -5,21 +5,21 @@ import { auth } from "@/lib/auth";
 const GHN_BASE = process.env.GHN_BASE_URL || "https://dev-online-gateway.ghn.vn/shiip/public-api";
 const GHN_TOKEN = process.env.GHN_TOKEN!;
 const GHN_SHOP_ID = process.env.GHN_SHOP_ID!;
-const FROM_DISTRICT_ID = Number(process.env.GHN_FROM_DISTRICT_ID || 1527);
+const FROM_DISTRICT_ID = Number(process.env.GHN_FROM_DISTRICT_ID || 1526);
 
 // Rate limit tracker (in-memory, resets on server restart)
-let geminiCallTimestamps: number[] = [];
-const GEMINI_RATE_LIMIT = 18; // slightly under 20 to be safe
-const GEMINI_RATE_WINDOW = 60_000; // 1 minute
+let apiCallTimestamps: number[] = [];
+const API_RATE_LIMIT = 30;
+const API_RATE_WINDOW = 60_000; // 1 minute
 
 function isRateLimited(): boolean {
   const now = Date.now();
-  geminiCallTimestamps = geminiCallTimestamps.filter(t => now - t < GEMINI_RATE_WINDOW);
-  return geminiCallTimestamps.length >= GEMINI_RATE_LIMIT;
+  apiCallTimestamps = apiCallTimestamps.filter(t => now - t < API_RATE_WINDOW);
+  return apiCallTimestamps.length >= API_RATE_LIMIT;
 }
 
-function recordGeminiCall() {
-  geminiCallTimestamps.push(Date.now());
+function recordApiCall() {
+  apiCallTimestamps.push(Date.now());
 }
 
 async function resolveGhnWard(tinh: string, quan: string, phuong: string) {
@@ -85,7 +85,7 @@ async function calcShippingFee(districtId: number, wardCode: string, weight: num
 
 export async function POST(req: Request) {
   try {
-    const { message, history = [], cart } = await req.json();
+    const { message, history = [], cart, lastRecommendedProductIds = [] } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
@@ -161,35 +161,228 @@ export async function POST(req: Request) {
     }
 
     // Fast-path: chào hỏi
-    const greetingPattern = /^(xin\s*ch[aà]o|hello|hi|hey|chào|alo|bạn ơi|freshy|mình muốn hỏi|cho mình hỏi)\s*[!?.]*$/i;
+    const greetingPattern = /^(xin\s*ch[aà]o|hello|hi|hey|chào|alo|bạn ơi|freshy|mình muốn hỏi|cho mình hỏi|có ai không|bot ơi)\s*[!?.]*$/i;
     if (greetingPattern.test(message.trim())) {
+      const cartNote = cart && cart.totalItems > 0
+        ? `\n\nMình thấy bạn đang có **${cart.totalItems} sản phẩm** trong giỏ hàng. Cần mình tư vấn thêm không?`
+        : "";
       return NextResponse.json({
-        text: "Chào bạn! Mình là Freshy 🥦 Mình có thể giúp bạn tìm nông sản, xem giá, tính phí ship, hoặc dẫn bạn đến bất kỳ trang nào. Bạn cần gì nào?",
+        text: `Chào bạn! Mình là Freshy 🥦 Mình có thể giúp bạn tìm nông sản, xem giá, tính phí ship, hoặc dẫn bạn đến bất kỳ trang nào.${cartNote} Bạn cần gì nào?`,
         products: [],
         navigate: null,
       });
     }
 
-    // Fast-path: điều hướng đơn giản
+    // Fast-path: hỏi về giỏ hàng hiện tại
+    const cartQueryPattern = /(?:trong\s*giỏ|giỏ\s*(?:hàng\s*)?(?:có|của|đang)|mình\s*đang\s*có\s*gì|xem\s*giỏ)/i;
+    if (cartQueryPattern.test(message) && cart && cart.items && cart.items.length > 0) {
+      const itemList = cart.items.map((item: any) => `• **${item.name}** (${item.variant}) x${item.quantity} — ${item.price.toLocaleString("vi-VN")}đ`).join("\n");
+      const total = cart.items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+      return NextResponse.json({
+        text: `Giỏ hàng của bạn hiện có **${cart.totalItems} sản phẩm** (~${(cart.totalWeight / 1000).toFixed(1)}kg):\n\n${itemList}\n\n💰 Tạm tính: **${total.toLocaleString("vi-VN")}đ**\n\nBạn muốn thanh toán hay tiếp tục mua sắm?`,
+        products: [],
+        navigate: null,
+      });
+    }
+
+    // Fast-path: hỏi chính sách (đổi trả, bảo hành, giao hàng)
+    const policyPattern = /(?:chính\s*sách|đổi\s*trả|hoàn\s*(?:tiền|hàng)|bảo\s*hành|bảo\s*quản\s*thế\s*nào|giao.*(?:bao\s*lâu|mấy\s*ngày)|thời\s*gian\s*giao)/i;
+    if (policyPattern.test(message)) {
+      const isReturn = /đổi\s*trả|hoàn\s*(?:tiền|hàng)/i.test(message);
+      const isDelivery = /giao.*(?:bao\s*lâu|mấy\s*ngày)|thời\s*gian\s*giao/i.test(message);
+      if (isReturn) {
+        return NextResponse.json({
+          text: "📋 **Chính sách đổi trả:**\n• Đổi trả trong vòng **24h** nếu sản phẩm bị hỏng, không đúng mô tả\n• Hoàn tiền 100% nếu lỗi từ cửa hàng\n• Liên hệ hotline hoặc chat để được hỗ trợ\n\nBạn cần hỗ trợ đổi trả sản phẩm nào không?",
+          products: [],
+          navigate: null,
+        });
+      }
+      if (isDelivery) {
+        return NextResponse.json({
+          text: "🚚 **Thời gian giao hàng:**\n• Nội thành Đà Nẵng: **1-2 ngày**\n• Miền Trung: **2-3 ngày**\n• Miền Bắc/Nam: **3-5 ngày**\n\nGiao qua GHN. Phí ship tính theo trọng lượng và khoảng cách. Muốn mình tính phí ship cho bạn không?",
+          products: [],
+          navigate: null,
+        });
+      }
+    }
+
+    // Fast-path: cảm ơn / kết thúc
+    const thankPattern = /^(cảm\s*ơn|thanks|thank\s*you|ok\s*thanks|tạm\s*biệt|bye|hẹn\s*gặp\s*lại)\s*[!.]*$/i;
+    if (thankPattern.test(message.trim())) {
+      return NextResponse.json({
+        text: "Không có gì đâu ạ! 🌟 Chúc bạn mua sắm vui vẻ. Cần gì cứ hỏi Freshy nhé!",
+        products: [],
+        navigate: null,
+      });
+    }
+
+    // Fast-path: điều hướng thông minh (10+ routes)
     const navPatterns: [RegExp, string, string][] = [
       [/gi[oỏ]\s*h[aà]ng|cart/i, "/cart", "Mình đưa bạn đến giỏ hàng nhé! 🛒"],
-      [/thanh\s*to[aá]n|checkout|đặt\s*hàng/i, "/checkout", "Mình chuyển bạn đến trang thanh toán nhé! 💳"],
       [/đơn\s*h[aà]ng|order/i, "/account/orders", "Mình đưa bạn đến trang đơn hàng nhé! 📦"],
-      [/t[aà]i\s*kho[aả]n|profile|thông\s*tin/i, "/account/profile", "Mình chuyển bạn đến trang tài khoản nhé! 👤"],
+      [/t[aà]i\s*kho[aả]n|profile|thông\s*tin\s*(?:cá\s*nhân|tài\s*khoản)/i, "/account/profile", "Mình chuyển bạn đến trang tài khoản nhé! 👤"],
       [/địa\s*chỉ|address/i, "/account/addresses", "Mình đưa bạn đến quản lý địa chỉ nhé! 📍"],
       [/yêu\s*thích|favorite|wishlist/i, "/account/favorites", "Mình đưa bạn đến sản phẩm yêu thích nhé! ❤️"],
       [/trang\s*ch[uủ]|home|về\s*đầu/i, "/", "Mình đưa bạn về trang chủ nhé! 🏠"],
       [/giới\s*thiệu|about/i, "/about", "Mình chuyển bạn đến trang giới thiệu nhé! ℹ️"],
       [/nh[aà]\s*cung|nông\s*tr[aạ]i|farmer/i, "/farmers", "Mình đưa bạn đến trang nhà cung cấp nhé! 🌾"],
+      [/s[aả]n\s*ph[aẩ]m|products|xem\s*hàng/i, "/products", "Mình đưa bạn đến trang sản phẩm nhé! 🛍️"],
+      [/b2b|doanh\s*nghiệp|mua\s*sỉ|đại\s*lý/i, "/b2b", "Mình chuyển bạn đến trang mua sỉ B2B nhé! 🏢"],
+      [/đổi\s*m[aậ]t\s*kh[aẩ]u|password/i, "/account/change-password", "Mình đưa bạn đến trang đổi mật khẩu nhé! 🔐"],
+      [/thông\s*báo|notification/i, "/account/notifications", "Mình đưa bạn đến trang thông báo nhé! 🔔"],
+      [/danh\s*m[uụ]c|categor/i, "/categories", "Mình đưa bạn đến trang danh mục nhé! 📂"],
     ];
+
+    // Pattern riêng cho thanh toán - CHỈ cho phép khi giỏ hàng có đồ
+    const checkoutPattern = /thanh\s*to[aá]n|checkout/i;
+    const navRequestPattern = /đưa|chuyển|đi|mở|xem|vào|đến|tới|dẫn|qua/i;
+
+    if (checkoutPattern.test(message) && navRequestPattern.test(message)) {
+      if (cart && cart.totalItems > 0) {
+        return NextResponse.json({
+          text: "Mình chuyển bạn đến trang thanh toán nhé! 💳",
+          products: [],
+          navigate: "/payment",
+        });
+      } else {
+        return NextResponse.json({
+          text: "Giỏ hàng của bạn đang trống. Hãy thêm sản phẩm vào giỏ hàng trước khi thanh toán nhé! Bạn muốn mình gợi ý sản phẩm nào không? 🛒",
+          products: [],
+          navigate: null,
+        });
+      }
+    }
+
     for (const [pattern, path, text] of navPatterns) {
-      if (pattern.test(message) && /đưa|chuyển|đi|mở|xem|vào|đến|tới/i.test(message)) {
+      if (pattern.test(message) && navRequestPattern.test(message)) {
         return NextResponse.json({ text, products: [], navigate: path });
       }
     }
 
+    // Fast-path: "mua luôn"/"mua đi"/"lấy luôn" khi không chỉ rõ sản phẩm → dùng context
+    const quickBuyPattern = /^(?:mua\s*(?:luôn|ngay|đi)|lấy\s*(?:luôn|đi)|ok\s*mua|ừ\s*mua|mua|lấy)\s*(?:đi|luôn|nha|nhé|ạ)?[!.]*$/i;
+    if (quickBuyPattern.test(message.trim()) && lastRecommendedProductIds.length > 0) {
+      const firstProductId = lastRecommendedProductIds[0];
+      const product = await prisma.san_pham.findUnique({
+        where: { id: firstProductId },
+        select: {
+          id: true,
+          ten_san_pham: true,
+          anh_san_pham: { where: { la_anh_chinh: true }, take: 1 },
+          bien_the_san_pham: {
+            select: { gia_ban: true, don_vi_tinh: true },
+            orderBy: { gia_ban: "asc" },
+            take: 1,
+          },
+        },
+      });
+      if (product) {
+        return NextResponse.json({
+          text: `Mình đưa bạn đến trang **${product.ten_san_pham}** để chọn số lượng và thêm vào giỏ hàng nhé! 🛒`,
+          products: [{
+            id: product.id,
+            name: product.ten_san_pham,
+            image: product.anh_san_pham[0]?.duong_dan_anh || null,
+            price: product.bien_the_san_pham[0]?.gia_ban ? Number(product.bien_the_san_pham[0].gia_ban) : null,
+            unit: product.bien_the_san_pham[0]?.don_vi_tinh || "kg",
+          }],
+          navigate: `/products/${product.id}`,
+        });
+      }
+    }
+
+    // Fast-path: "đặt hàng" khi giỏ trống (chặn navigate payment)
+    const orderPattern = /(?:đặt\s*hàng|đặt\s*mua|order)/i;
+    if (orderPattern.test(message) && !(/muốn|cần|cho\s*mình/i.test(message) && /\S+\s+\S+/.test(message.replace(orderPattern, "").trim()))) {
+      if (!cart || cart.totalItems === 0) {
+        return NextResponse.json({
+          text: "Giỏ hàng của bạn đang trống. Hãy thêm sản phẩm vào giỏ trước khi đặt hàng nhé! Bạn muốn mình gợi ý sản phẩm nào không? 🛒",
+          products: [],
+          navigate: null,
+        });
+      } else {
+        return NextResponse.json({
+          text: "Mình chuyển bạn đến trang thanh toán nhé! 💳",
+          products: [],
+          navigate: "/payment",
+        });
+      }
+    }
+
+    // Fast-path: "muốn mua X" → tìm sản phẩm và navigate đến chi tiết
+    const buyPattern = /(?:muốn\s*mua|mua\s*ngay|mua\s*luôn|mua\s*cho\s*mình|cho\s*mình\s*mua)\s+(.+?)(?:\s*(?:đi|nhé|nha|giúp|với|ạ))?$/i;
+    const buyMatch = message.match(buyPattern);
+    if (buyMatch) {
+      const keyword = buyMatch[1].trim().toLowerCase();
+      const matchedProducts = await prisma.san_pham.findMany({
+        where: {
+          trang_thai: "DANG_BAN",
+          OR: [
+            { ten_san_pham: { contains: keyword } },
+            { danh_muc: { ten_danh_muc: { contains: keyword } } },
+          ],
+        },
+        include: {
+          anh_san_pham: { where: { la_anh_chinh: true }, take: 1 },
+          bien_the_san_pham: {
+            select: { gia_ban: true, don_vi_tinh: true },
+            orderBy: { gia_ban: "asc" },
+            take: 1,
+          },
+        },
+        take: 3,
+      });
+
+      if (matchedProducts.length === 1) {
+        const p = matchedProducts[0];
+        const product = {
+          id: p.id,
+          name: p.ten_san_pham,
+          image: p.anh_san_pham[0]?.duong_dan_anh || null,
+          price: p.bien_the_san_pham[0]?.gia_ban ? Number(p.bien_the_san_pham[0].gia_ban) : null,
+          unit: p.bien_the_san_pham[0]?.don_vi_tinh || "kg",
+        };
+        return NextResponse.json({
+          text: `Mình đưa bạn đến xem **${p.ten_san_pham}** nhé! Bạn chọn số lượng rồi thêm vào giỏ hàng nha. 🛒`,
+          products: [product],
+          navigate: `/products/${p.id}`,
+        });
+      } else if (matchedProducts.length > 1) {
+        const productList = matchedProducts.map(p => ({
+          id: p.id,
+          name: p.ten_san_pham,
+          image: p.anh_san_pham[0]?.duong_dan_anh || null,
+          price: p.bien_the_san_pham[0]?.gia_ban ? Number(p.bien_the_san_pham[0].gia_ban) : null,
+          unit: p.bien_the_san_pham[0]?.don_vi_tinh || "kg",
+        }));
+        return NextResponse.json({
+          text: `Mình tìm thấy ${productList.length} sản phẩm "${keyword}". Bạn click vào sản phẩm muốn mua để xem chi tiết và thêm vào giỏ hàng nhé! 🛒`,
+          products: productList,
+          navigate: null,
+        });
+      } else {
+        return NextResponse.json({
+          text: `Hiện cửa hàng chưa có sản phẩm "${keyword}". Bạn thử tìm kiếm từ khóa khác nhé!`,
+          products: [],
+          navigate: null,
+        });
+      }
+    }
+
+    // Fast-path: tìm kiếm sản phẩm bằng keyword
+    const searchNavPattern = /(?:tìm|search|tìm\s*kiếm)\s+(.+)/i;
+    const searchMatch = message.match(searchNavPattern);
+    if (searchMatch && /đưa|chuyển|đi|mở|xem|vào|đến|tới|dẫn|qua|trang/i.test(message)) {
+      const keyword = searchMatch[1].trim();
+      return NextResponse.json({
+        text: `Mình tìm kiếm "${keyword}" cho bạn nhé! 🔍`,
+        products: [],
+        navigate: `/search?q=${encodeURIComponent(keyword)}`,
+      });
+    }
+
     // Fast-path: hỏi giá / tìm sản phẩm đơn giản (xử lý local bằng DB query)
-    const pricePattern = /(?:giá|bao\s*nhiêu|có\s*bán|tìm|mua)\s+(.+)/i;
+    const pricePattern = /(?:giá|bao\s*nhiêu|có\s*bán|tìm)\s+(.+)/i;
     const searchPattern = /^(?:có|cho|tìm|xem|gợi\s*ý)\s+(.+?)(?:\s*(?:không|nào|đi|nhé|giúp|cho\s*mình))?$/i;
     const priceMatch = message.match(pricePattern) || message.match(searchPattern);
 
@@ -201,13 +394,11 @@ export async function POST(req: Request) {
         where: {
           trang_thai: "DANG_BAN",
           OR: [
-            { ten_san_pham: { contains: keyword, mode: "insensitive" } },
-            { danh_muc: { ten_danh_muc: { contains: keyword, mode: "insensitive" } } },
+            { ten_san_pham: { contains: keyword } },
+            { danh_muc: { ten_danh_muc: { contains: keyword } } },
           ],
         },
-        select: {
-          id: true,
-          ten_san_pham: true,
+        include: {
           anh_san_pham: { where: { la_anh_chinh: true }, take: 1 },
           bien_the_san_pham: {
             select: { gia_ban: true, don_vi_tinh: true },
@@ -228,7 +419,7 @@ export async function POST(req: Request) {
         }));
         const names = productList.map(p => p.name).join(", ");
         return NextResponse.json({
-          text: `Mình tìm thấy ${productList.length} sản phẩm liên quan đến "${keyword}": ${names}. Bạn muốn xem chi tiết sản phẩm nào không? 🛒`,
+          text: `Mình tìm thấy ${productList.length} sản phẩm liên quan đến "${keyword}": ${names}. Bạn click vào sản phẩm để xem chi tiết và thêm vào giỏ hàng nhé! 🛒`,
           products: productList,
           navigate: null,
         });
@@ -241,10 +432,10 @@ export async function POST(req: Request) {
       }
     }
 
-    // Rate limit check - nếu đã hết quota thì dùng fallback response
+    // Rate limit check
     if (isRateLimited()) {
       return NextResponse.json({
-        text: "Freshy đang hơi quá tải rồi 😅 Bạn đợi khoảng 1 phút rồi hỏi lại nhé! Hoặc bạn có thể dùng thanh tìm kiếm trên website để tìm sản phẩm nhanh hơn.",
+        text: "Hiện tại hệ thống AI đã hết lượt sử dụng miễn phí. Chúng tôi sẽ nâng cấp trong thời gian sớm nhất. Bạn vẫn có thể dùng thanh tìm kiếm để tìm sản phẩm nhé! 🙏",
         products: [],
         navigate: null,
       });
@@ -301,13 +492,16 @@ export async function POST(req: Request) {
 
     if (cart) {
       cartInfo = `\nGIỎ HÀNG HIỆN TẠI: ${cart.totalItems} sản phẩm, ~${(cart.totalWeight / 1000).toFixed(1)}kg`;
+      if (cart.items && cart.items.length > 0) {
+        const itemDetails = cart.items.map((item: any) => `  - ${item.name} (${item.variant}) x${item.quantity} — ${item.price?.toLocaleString("vi-VN")}đ`).join("\n");
+        cartInfo += `\nCHI TIẾT GIỎ HÀNG:\n${itemDetails}`;
+      }
     }
 
     const MODEL_NAME = "gemini-2.5-flash";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
 
-    const promptText = `
-Bạn là trợ lý bán hàng "Freshy" của cửa hàng nông sản sạch NôngSản Việt. Kho hàng đặt tại Đà Nẵng.
+    const promptText = `Bạn là trợ lý bán hàng "Freshy" của cửa hàng nông sản sạch NôngSản Việt. Kho hàng đặt tại Đà Nẵng.
 
 DANH SÁCH SẢN PHẨM ĐANG BÁN:
 ${productCatalog}
@@ -315,10 +509,10 @@ ${userAddressInfo}${cartInfo}
 
 CÁC TRANG CÓ THỂ ĐIỀU HƯỚNG:
 - /products : Trang tất cả sản phẩm
-- /products/{id} : Trang chi tiết sản phẩm (thay {id} bằng ID sản phẩm)
+- /products/{id} : Trang chi tiết sản phẩm (thay {id} bằng ID sản phẩm cụ thể)
 - /categories/{id} : Trang danh mục sản phẩm
 - /cart : Giỏ hàng
-- /checkout : Thanh toán
+- /payment : Trang thanh toán (CHỈ dùng khi giỏ hàng THỰC SỰ CÓ sản phẩm)
 - /account/orders : Đơn hàng của tôi
 - /account/profile : Thông tin tài khoản
 - /account/addresses : Địa chỉ giao hàng
@@ -328,64 +522,76 @@ CÁC TRANG CÓ THỂ ĐIỀU HƯỚNG:
 - /farmers : Nhà cung cấp/nông trại
 - / : Trang chủ
 
-QUY TẮC:
+QUY TẮC QUAN TRỌNG VỀ MUA HÀNG VÀ ĐIỀU HƯỚNG:
+1. KHÔNG BAO GIỜ navigate đến /payment, /checkout trừ khi GIỎ HÀNG HIỆN TẠI (xem ở trên) đã có sản phẩm.
+2. Khi khách nói "muốn mua", "mua ngay", "mua luôn", "đặt hàng" một sản phẩm cụ thể → PHẢI navigate đến /products/{id} để khách chọn số lượng và thêm vào giỏ. TUYỆT ĐỐI KHÔNG chuyển thẳng đến thanh toán.
+3. Khi khách nói "muốn mua" mà KHÔNG rõ sản phẩm nào → hỏi khách muốn mua gì, hoặc gợi ý sản phẩm từ danh sách.
+4. Khi khách nói "thanh toán" mà giỏ hàng TRỐNG → trả lời "Giỏ hàng đang trống, bạn cần thêm sản phẩm vào giỏ trước nhé!" và gợi ý sản phẩm.
+5. Khi khách nói "thanh toán" mà giỏ hàng CÓ ĐỒ → navigate đến /payment.
+6. FLOW ĐÚNG: Xem sản phẩm (/products/{id}) → Thêm vào giỏ (tại trang đó) → Thanh toán (/payment). KHÔNG BỎ QUA bước thêm vào giỏ.
+7. Khi gợi ý sản phẩm, LUÔN trả về productIds để hiển thị card (khách click vào để xem và thêm giỏ).
+
+QUY TẮC CHUNG:
 1. Trả lời ngắn gọn, thân thiện, tự nhiên bằng tiếng Việt.
 2. Nếu khách hỏi về sản phẩm, tìm trong danh sách trên và gợi ý phù hợp.
 3. Nếu khách hỏi giá, trả lời chính xác theo dữ liệu.
 4. Nếu không tìm thấy sản phẩm phù hợp, nói "Hiện cửa hàng chưa có sản phẩm này" và gợi ý sản phẩm tương tự nếu có.
 5. Có thể gợi ý combo, cách chế biến, bảo quản nông sản.
-6. Nếu khách muốn đi đến trang nào (ví dụ: "đưa tôi đến giỏ hàng", "xem đơn hàng", "tìm rau cải", "về trang chủ"), hãy trả về navigate với đường dẫn phù hợp.
-7. Khi điều hướng, hãy nói cho khách biết bạn đang chuyển họ đến đâu.
-8. Nếu khách hỏi phí ship/vận chuyển mà bạn không thể tính, hướng dẫn họ cung cấp địa chỉ dạng "Phường X, Quận Y, Tỉnh/TP Z" hoặc vào trang thanh toán.
-9. Kho hàng giao từ Đà Nẵng. Giao hàng qua GHN, thường 2-5 ngày tùy vùng.
-BẮT BUỘC trả về JSON:
-{
-  "text": "Nội dung trả lời khách",
-  "productIds": [mảng ID sản phẩm gợi ý, tối đa 3 sản phẩm, rỗng nếu không gợi ý],
-  "navigate": "/đường-dẫn-trang hoặc null nếu không cần điều hướng"
-}
+6. Khi điều hướng, hãy nói cho khách biết bạn đang chuyển họ đến đâu.
+7. Nếu khách hỏi phí ship/vận chuyển mà bạn không thể tính, hướng dẫn họ cung cấp địa chỉ dạng "Phường X, Quận Y, Tỉnh/TP Z".
+8. Kho hàng giao từ Đà Nẵng. Giao hàng qua GHN, thường 2-5 ngày tùy vùng.
+9. Nếu có thông tin giỏ hàng, tận dụng để tư vấn phù hợp (cross-sell, combo).
+10. Chính sách: Đổi trả trong 24h nếu hỏng/không đúng mô tả. Giao hàng 1-5 ngày tùy vùng.
 
-Câu hỏi của khách: "${message}"
-`;
+BẮT BUỘC trả về JSON:
+{"text": "Nội dung trả lời khách", "productIds": [mảng ID sản phẩm gợi ý, tối đa 3, rỗng nếu không gợi ý], "navigate": "/đường-dẫn hoặc null"}
+
+VÍ DỤ MẪU:
+- Khách: "muốn mua thanh long" → {"text": "Mình đưa bạn đến xem Thanh long nhé! Bạn chọn loại và số lượng rồi thêm vào giỏ hàng nha.", "productIds": [ID], "navigate": "/products/ID"}
+- Khách: "mua luôn đi" (sau khi bot gợi ý sản phẩm X) → {"text": "Bạn vào trang sản phẩm để chọn số lượng và thêm vào giỏ nhé!", "productIds": [ID_X], "navigate": "/products/ID_X"}
+- Khách: "thanh toán" (giỏ trống) → {"text": "Giỏ hàng đang trống. Thêm sản phẩm vào giỏ trước nhé!", "productIds": [], "navigate": null}
+- Khách: "thanh toán" (giỏ có đồ) → {"text": "Mình chuyển bạn đến thanh toán nhé!", "productIds": [], "navigate": "/payment"}
+
+Câu hỏi của khách: "${message}"`;
 
     const contents: any[] = [
       { role: "user", parts: [{ text: promptText }] },
       { role: "model", parts: [{ text: '{"text":"Tôi đã hiểu vai trò và danh sách sản phẩm. Sẵn sàng hỗ trợ!","productIds":[],"navigate":null}' }] },
     ];
 
-    for (const msg of history.slice(-10)) {
+    for (const h of history.slice(-10)) {
       contents.push({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.role === "user" ? msg.text : `{"text":"${msg.text.replace(/"/g, '\\"')}","productIds":[],"navigate":null}` }],
+        role: h.role === "user" ? "user" : "model",
+        parts: [{ text: h.role === "user" ? h.text : `{"text":"${h.text.replace(/"/g, '\\"')}","productIds":[],"navigate":null}` }],
       });
     }
 
     contents.push({ role: "user", parts: [{ text: message }] });
 
-    const payload = {
-      contents,
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.7,
-      },
-    };
-
-    recordGeminiCall();
+    recordApiCall();
 
     const response = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        contents,
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.7,
+        },
+      }),
     });
 
     const data = await response.json();
 
     if (data.error) {
       console.error("GEMINI ERROR:", data.error.message);
-      const isQuotaError = data.error.message?.includes("quota") || data.error.code === 429;
+      const isQuotaError = data.error.message?.includes("quota")
+        || data.error.message?.includes("RESOURCE_EXHAUSTED")
+        || data.error.code === 429;
       if (isQuotaError) {
         return NextResponse.json({
-          text: "Freshy đang hơi quá tải rồi 😅 Bạn đợi khoảng 1 phút rồi hỏi lại nhé! Trong lúc đó bạn có thể tìm sản phẩm bằng thanh tìm kiếm trên website.",
+          text: "Hiện tại hệ thống AI đã hết lượt sử dụng miễn phí. Chúng tôi sẽ nâng cấp trong thời gian sớm nhất. Bạn vẫn có thể dùng thanh tìm kiếm để tìm sản phẩm nhé! 🙏",
           products: [],
           navigate: null,
         });
@@ -436,13 +642,28 @@ Câu hỏi của khách: "${message}"
       }));
     }
 
+    // Chặn navigate đến payment/checkout khi giỏ hàng trống (phòng AI không tuân thủ rule)
+    let finalNavigate = aiResult.navigate || null;
+    if (finalNavigate && /\/(payment|checkout)/i.test(finalNavigate)) {
+      if (!cart || cart.totalItems === 0) {
+        finalNavigate = null;
+      }
+    }
+
     return NextResponse.json({
       text: responseText,
       products: recommendedProducts,
-      navigate: aiResult.navigate || null,
+      navigate: finalNavigate,
     });
   } catch (error: any) {
     console.error("CHAT ERROR:", error.message);
+    const msg = error.message || "";
+    if (msg.includes("quota") || msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED")) {
+      return NextResponse.json({
+        text: "Hiện tại hệ thống AI đã hết lượt sử dụng miễn phí. Chúng tôi sẽ nâng cấp trong thời gian sớm nhất. Bạn vẫn có thể dùng thanh tìm kiếm để tìm sản phẩm nhé! 🙏",
+        products: [],
+      });
+    }
     return NextResponse.json({
       text: "Hệ thống gặp sự cố, thử lại sau nhé!",
       products: [],

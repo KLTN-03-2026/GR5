@@ -106,7 +106,8 @@ export default function SupplierDeliveryTab({ ncc, nccId, onRefresh }: Props) {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">Mã phiếu nhập *</label>
-                <input type="number" required value={form.ma_phieu_nhap || ""} onChange={(e) => setForm({ ...form, ma_phieu_nhap: Number(e.target.value) })}
+                <input type="number" min="1" required value={form.ma_phieu_nhap || ""} onChange={(e) => { const v = e.target.value.replace(/^-/, ''); setForm({ ...form, ma_phieu_nhap: Number(v) }); }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Nhập ID phiếu nhập kho" />
               </div>
               <div className="flex items-center gap-2">

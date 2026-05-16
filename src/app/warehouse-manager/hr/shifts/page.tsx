@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AssignShiftModal } from "@/components/admin/shifts/AssignShiftModal";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 // Các type cơ bản
 type CaLamViec = { id: number; ten_ca: string; gio_bat_dau: string };
@@ -28,6 +29,8 @@ export default function ShiftsPage() {
     id: number;
     name: string;
   } | null>(null);
+
+  const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({isOpen: false, title: "", message: "", onConfirm: () => {}});
 
   // Helper tính thứ 2 của tuần hiện tại
   const getStartOfWeek = (date: Date) => {
@@ -101,13 +104,20 @@ export default function ShiftsPage() {
 
   // Xóa ca
   const handleDeleteLich = async (idLich: number) => {
-    if (!confirm("Bạn có chắc chắn muốn hủy ca của nhân viên này?")) return;
-    try {
-      const res = await fetch(`/api/phan-ca/${idLich}`, { method: "DELETE" });
-      if (res.ok) fetchLichTuan(currentWeekStart); // Refresh
-    } catch (e) {
-      console.error(e);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Hủy ca làm việc",
+      message: "Bạn có chắc chắn muốn hủy ca của nhân viên này?",
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`/api/phan-ca/${idLich}`, { method: "DELETE" });
+          if (res.ok) fetchLichTuan(currentWeekStart); // Refresh
+        } catch (e) {
+          console.error(e);
+        }
+      },
+    });
   };
 
   return (
@@ -245,6 +255,15 @@ export default function ShiftsPage() {
         selectedDate={selectedDate}
         selectedShift={selectedShift}
         onSuccess={() => fetchLichTuan(currentWeekStart)}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant="danger"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
       />
     </div>
   );

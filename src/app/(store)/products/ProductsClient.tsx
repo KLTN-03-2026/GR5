@@ -9,11 +9,12 @@ import {
   Filter,
   Search,
   Check,
-  MapPin,
+  ShieldCheck,
 } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "@/components/store/products/ProductCard";
+import QuickViewModal from "@/components/store/products/QuickViewModal";
 import gsap from "gsap";
 
 interface ProductData {
@@ -38,13 +39,13 @@ interface CategoryData {
 export default function ProductsClient({
   products,
   categories,
-  origins,
+  certificates = [],
   currentPage,
   totalPages,
 }: {
   products: ProductData[];
   categories: CategoryData[];
-  origins: string[];
+  certificates?: string[];
   currentPage: number;
   totalPages: number;
 }) {
@@ -52,6 +53,7 @@ export default function ProductsClient({
   const [expandedCats, setExpandedCats] = useState<Record<number, boolean>>({
     1: true,
   });
+  const [quickViewProductId, setQuickViewProductId] = useState<number | null>(null);
 
   const sidebarRef = useRef<HTMLElement>(null);
   const breadcrumbRef = useRef<HTMLDivElement>(null);
@@ -75,9 +77,11 @@ export default function ProductsClient({
   const currentRating = searchParams.get("rating")
     ? Number(searchParams.get("rating"))
     : null;
+  const currentCertificates = searchParams.get("certificates")
+    ? searchParams.get("certificates")!.split(",")
+    : [];
 
-  const currentOrigins =
-    searchParams.get("origin")?.split(",").filter(Boolean) || [];
+
 
   // Mount animation: sidebar slide-in, breadcrumb + toolbar fade down, cards stagger
   useEffect(() => {
@@ -141,23 +145,7 @@ export default function ProductsClient({
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const toggleOrigin = (origin: string) => {
-    let newOrigins = [...currentOrigins];
-    if (newOrigins.includes(origin)) {
-      newOrigins = newOrigins.filter((o) => o !== origin);
-    } else {
-      newOrigins.push(origin);
-    }
 
-    const params = new URLSearchParams(searchParams.toString());
-    if (newOrigins.length > 0) {
-      params.set("origin", newOrigins.join(","));
-    } else {
-      params.delete("origin");
-    }
-    params.set("page", "1");
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  };
 
   const PRICE_RANGES = [
     { label: "Tất cả giá", min: null, max: null },
@@ -175,6 +163,33 @@ export default function ProductsClient({
     else params.delete("maxPrice");
     params.set("page", "1");
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const handleCertificateToggle = (certName: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    let certs = [...currentCertificates];
+    if (certs.includes(certName)) {
+      certs = certs.filter((c) => c !== certName);
+    } else {
+      certs.push(certName);
+    }
+    if (certs.length > 0) {
+      params.set("certificates", certs.join(","));
+    } else {
+      params.delete("certificates");
+    }
+    params.set("page", "1");
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const CERTIFICATE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+    VietGAP: { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0" },
+    Organic: { bg: "#ecfdf5", text: "#065f46", border: "#a7f3d0" },
+    GlobalGAP: { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
+  };
+
+  const getCertColor = (name: string) => {
+    return CERTIFICATE_COLORS[name] || { bg: "#f9fafb", text: "#374151", border: "#e5e7eb" };
   };
 
   const RATING_FILTERS = [5, 4, 3];
@@ -287,38 +302,7 @@ export default function ProductsClient({
               </ul>
             </div>
 
-            {/* Xuất xứ */}
-            {origins.length > 0 && (
-              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 600, color: "#111827", display: "flex", alignItems: "center", gap: 6, margin: 0 }}>
-                    <MapPin style={{ width: 14, height: 14, color: "#16a34a" }} /> Xuất xứ
-                  </h3>
-                  {currentOrigins.length > 0 && (
-                    <button onClick={() => updateFilters("origin", null)}
-                      style={{ fontSize: 11, color: "#dc2626", background: "#fef2f2", border: "none", padding: "2px 8px", borderRadius: 4, cursor: "pointer", fontWeight: 500 }}>
-                      Xóa lọc
-                    </button>
-                  )}
-                </div>
-                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8, maxHeight: 180, overflowY: "auto" }}>
-                  {origins.map((origin, idx) => {
-                    const isActive = currentOrigins.includes(origin);
-                    return (
-                      <li key={idx}>
-                        <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                          <input type="checkbox" checked={isActive} onChange={() => toggleOrigin(origin)} style={{ display: "none" }} />
-                          <div style={{ width: 16, height: 16, borderRadius: 4, border: isActive ? "none" : "2px solid #d1d5db", background: isActive ? "#16a34a" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            {isActive && <Check style={{ width: 10, height: 10, color: "#fff" }} />}
-                          </div>
-                          <span style={{ fontSize: 13, color: isActive ? "#16a34a" : "#6b7280", fontWeight: isActive ? 600 : 400 }}>{origin}</span>
-                        </label>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
+
 
             {/* Khoảng giá */}
             <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px", marginBottom: 16 }}>
@@ -342,7 +326,7 @@ export default function ProductsClient({
             </div>
 
             {/* Đánh giá */}
-            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px" }}>
+            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <h3 style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>Đánh giá</h3>
                 {currentRating && (
@@ -374,6 +358,50 @@ export default function ProductsClient({
                 })}
               </ul>
             </div>
+
+            {/* Chứng chỉ chất lượng */}
+            {certificates.length > 0 && (
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <h3 style={{ fontSize: 13, fontWeight: 600, color: "#111827", display: "flex", alignItems: "center", gap: 6, margin: 0 }}>
+                    <ShieldCheck style={{ width: 14, height: 14, color: "#16a34a" }} /> Chứng chỉ chất lượng
+                  </h3>
+                  {currentCertificates.length > 0 && (
+                    <button onClick={() => updateFilters("certificates", null)}
+                      style={{ fontSize: 11, color: "#dc2626", background: "#fef2f2", border: "none", padding: "2px 8px", borderRadius: 4, cursor: "pointer", fontWeight: 500 }}>
+                      Xóa lọc
+                    </button>
+                  )}
+                </div>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {certificates.map((cert) => {
+                    const isActive = currentCertificates.includes(cert);
+                    const color = getCertColor(cert);
+                    return (
+                      <li key={cert}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                          <input type="checkbox" checked={isActive} onChange={() => handleCertificateToggle(cert)} style={{ display: "none" }} />
+                          <div style={{ width: 16, height: 16, borderRadius: 4, border: isActive ? "none" : "2px solid #d1d5db", background: isActive ? "#16a34a" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            {isActive && <Check style={{ width: 10, height: 10, color: "#fff" }} />}
+                          </div>
+                          <span style={{
+                            fontSize: 12,
+                            fontWeight: 500,
+                            padding: "2px 8px",
+                            borderRadius: 4,
+                            background: color.bg,
+                            color: color.text,
+                            border: `1px solid ${color.border}`,
+                          }}>
+                            {cert}
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </aside>
 
           {/* CỘT PHẢI */}
@@ -445,7 +473,7 @@ export default function ProductsClient({
             ) : (
               <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }} className="products-grid">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} onQuickView={(id) => setQuickViewProductId(id)} />
                 ))}
               </div>
             )}
@@ -485,6 +513,14 @@ export default function ProductsClient({
           </div>
         </div>
       </div>
+
+      {/* Quick View Modal */}
+      {quickViewProductId && (
+        <QuickViewModal
+          productId={quickViewProductId}
+          onClose={() => setQuickViewProductId(null)}
+        />
+      )}
     </div>
   );
 }

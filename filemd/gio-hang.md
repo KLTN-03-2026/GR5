@@ -83,7 +83,6 @@ Module gio hang quan ly trang thai gio hang cua khach hang, luu tru trong localS
 ## 4. Cong viec can lam (TODOs)
 
 ### Uu tien cao
-- [ ] Validate ton kho khi them vao gio hang (goi API kiem tra)
 - [ ] Validate voucher server-side khi tao don hang (khong chi o client)
 - [ ] Them canh bao khi san pham trong gio da het hang hoac thay doi gia
 - [ ] Dong bo gio hang len server cho user da dang nhap (su dung model `gio_hang`)

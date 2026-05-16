@@ -36,7 +36,7 @@ export async function GET() {
       if (!tree[khu].days[day]) tree[khu].days[day] = { name: day, shelves: {} };
       if (!tree[khu].days[day].shelves[ke]) tree[khu].days[day].shelves[ke] = { name: ke, floors: [] };
 
-      const current = pos._count.kien_hang_chi_tiet;
+      const current = pos.ton_kho_tong.reduce((s, t) => s + (t.so_luong ?? 0), 0);
       const capacity = pos.suc_chua_toi_da ?? 100;
 
       // Tìm lô sắp hết hạn (< 30 ngày)

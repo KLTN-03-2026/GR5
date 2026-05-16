@@ -112,13 +112,18 @@ export const WarehouseAdminService = {
         const daysLeft = getDaysLeft(hsd);
         const warning = daysLeft !== null && daysLeft <= 30;
 
+        // Tên hiển thị: "Tên sản phẩm — ten_bien_the" (vd "Cà chua bi — 1kg").
+        // Nếu thiếu sản phẩm, fallback xuống biến thể, cuối cùng là N/A.
+        const tenSP = entry.lo_hang?.bien_the_san_pham?.san_pham?.ten_san_pham?.trim() || "";
+        const tenBT = entry.lo_hang?.bien_the_san_pham?.ten_bien_the?.trim() || "";
+        const display = tenSP
+          ? (tenBT && tenBT.toLowerCase() !== tenSP.toLowerCase() ? `${tenSP} — ${tenBT}` : tenSP)
+          : (tenBT || "N/A");
+
         return {
           id: entry.id,
           ma_lo_hang: entry.lo_hang?.ma_lo_hang ?? `LO-${entry.ma_lo_hang}`,
-          san_pham:
-            entry.lo_hang?.bien_the_san_pham?.ten_bien_the ||
-            entry.lo_hang?.bien_the_san_pham?.san_pham?.ten_san_pham ||
-            "N/A",
+          san_pham: display,
           so_luong: entry.so_luong ?? 0,
           han_su_dung: formatDate(hsd),
           days_left: daysLeft,
@@ -129,9 +134,9 @@ export const WarehouseAdminService = {
         };
       });
 
-      const current = position._count.kien_hang_chi_tiet;
+      const current = floorBatches.reduce((sum, batch) => sum + batch.so_luong, 0);
       const capacity = position.suc_chua_toi_da ?? 100;
-      const totalQty = floorBatches.reduce((sum, batch) => sum + batch.so_luong, 0);
+      const totalQty = current;
       const expiringSoon = floorBatches.some((batch) => batch.warning);
       const percent = capacity > 0 ? Math.round((current / capacity) * 100) : 0;
 
@@ -160,7 +165,9 @@ export const WarehouseAdminService = {
       })),
     }));
 
-    const totalBoxes = positions.reduce((sum, position) => sum + position._count.kien_hang_chi_tiet, 0);
+    const totalBoxes = positions.reduce((sum, position) => {
+      return sum + position.ton_kho_tong.reduce((s, t) => s + (t.so_luong ?? 0), 0);
+    }, 0);
     const expiringBoxes = positions.reduce((sum, position) => {
       const soonCount = position.ton_kho_tong.filter((entry) => {
         const daysLeft = getDaysLeft(entry.lo_hang?.han_su_dung);
@@ -213,12 +220,20 @@ export const WarehouseAdminService = {
       id: receipt.id,
       ma_phieu: `PN-${receipt.id}`,
       ncc_ten: receipt.nha_cung_cap?.ten_ncc || "N/A",
+      nha_cung_cap: receipt.nha_cung_cap ? { ten_ncc: receipt.nha_cung_cap.ten_ncc } : null,
       ngay_tao: receipt.ngay_tao?.toISOString() ?? null,
       trang_thai: receipt.trang_thai,
       nguoi_tao: receipt.nguoi_dung?.ho_so_nguoi_dung?.ho_ten || receipt.nguoi_dung?.email || "N/A",
       tong_san_pham: receipt.chi_tiet_phieu_nhap.length,
       tong_so_luong: receipt.chi_tiet_phieu_nhap.reduce((sum, item) => sum + Number(item.so_luong_yeu_cau ?? 0), 0),
       co_chenh_lech: receipt.chi_tiet_phieu_nhap.some((item) => Number(item.so_luong_thuc_nhan ?? 0) !== Number(item.so_luong_yeu_cau ?? 0)),
+      chi_tiet: receipt.chi_tiet_phieu_nhap.map((item) => ({
+        id: item.id,
+        ma_bien_the: item.ma_bien_the,
+        so_luong_yeu_cau: item.so_luong_yeu_cau,
+        so_luong_thuc_nhan: item.so_luong_thuc_nhan,
+        bien_the_san_pham: item.bien_the_san_pham ? { ten_bien_the: item.bien_the_san_pham.ten_bien_the } : null,
+      })),
     }));
 
     return {
@@ -464,6 +479,38 @@ export const WarehouseAdminService = {
   },
 
   async getAlerts(filter: string) {
+    // Auto-sync: tạo cảnh báo cho các lô đã/sắp hết hạn (≤ 7 ngày) còn tồn kho
+    // mà chưa có bản ghi canh_bao_lo_hang chưa xử lý — bù trường hợp cron chưa chạy.
+    {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const targetDate = new Date(today);
+      targetDate.setDate(targetDate.getDate() + 7);
+
+      const loHangCanCanhBao = await prisma.lo_hang.findMany({
+        where: {
+          han_su_dung: { lte: targetDate },
+          trang_thai: { notIn: ["DA_TIEU_HUY", "TRA_NCC"] },
+          ton_kho_tong: { some: { so_luong: { gt: 0 } } },
+        },
+        select: { id: true, han_su_dung: true },
+      });
+
+      for (const lo of loHangCanCanhBao) {
+        const existing = await prisma.canh_bao_lo_hang.findFirst({
+          where: { ma_lo_hang: lo.id, da_xu_ly: false },
+        });
+        if (existing) continue;
+        const diffDays = Math.ceil(
+          (new Date(lo.han_su_dung).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        const loai = diffDays <= 0 ? "DA_HET_HAN" : `CON_${diffDays}_NGAY`;
+        await prisma.canh_bao_lo_hang.create({
+          data: { ma_lo_hang: lo.id, loai_canh_bao: loai },
+        });
+      }
+    }
+
     const rawWarnings = await prisma.canh_bao_lo_hang.findMany({
       orderBy: [{ da_xu_ly: "asc" }, { ngay_tao: "desc" }],
       include: {
@@ -502,14 +549,17 @@ export const WarehouseAdminService = {
         ? warning.ghi_chu_xu_ly.split(/\s+/).filter((token) => token.startsWith("http"))
         : [];
 
+      const tenSP = warning.lo_hang?.bien_the_san_pham?.san_pham?.ten_san_pham?.trim() || "";
+      const tenBT = warning.lo_hang?.bien_the_san_pham?.ten_bien_the?.trim() || "";
+      const sanPhamDisplay = tenSP
+        ? (tenBT && tenBT.toLowerCase() !== tenSP.toLowerCase() ? `${tenSP} — ${tenBT}` : tenSP)
+        : (tenBT || "N/A");
+
       return {
         id: warning.id,
         ma_lo_hang_id: warning.lo_hang?.id ?? null,
         ma_lo: warning.lo_hang?.ma_lo_hang ?? `LO-${warning.ma_lo_hang}`,
-        san_pham:
-          warning.lo_hang?.bien_the_san_pham?.ten_bien_the ||
-          warning.lo_hang?.bien_the_san_pham?.san_pham?.ten_san_pham ||
-          "N/A",
+        san_pham: sanPhamDisplay,
         san_pham_id: warning.lo_hang?.bien_the_san_pham?.san_pham?.id ?? null,
         ma_bien_the: warning.lo_hang?.ma_bien_the ?? null,
         ncc_id: warning.lo_hang?.nha_cung_cap?.id ?? null,
@@ -689,10 +739,15 @@ export const WarehouseAdminService = {
           include: {
             nha_cung_cap: { select: { ten_ncc: true } },
             nguoi_dung: { select: { ho_so_nguoi_dung: { select: { ho_ten: true } }, email: true } },
+            vi_tri_kho: { select: { khu_vuc: true, day: true, ke: true, tang: true } },
             chi_tiet_phieu_nhap: {
               include: {
                 bien_the_san_pham: {
-                  include: { san_pham: { select: { ten_san_pham: true } } },
+                  select: {
+                    ten_bien_the: true,
+                    don_vi_tinh: true,
+                    san_pham: { select: { ten_san_pham: true } },
+                  },
                 },
               },
             },
@@ -701,17 +756,24 @@ export const WarehouseAdminService = {
       ]);
 
       const imports = importReceipts.map((receipt) => {
-        const spChinh = receipt.chi_tiet_phieu_nhap[0]?.bien_the_san_pham?.ten_bien_the 
-                        || receipt.chi_tiet_phieu_nhap[0]?.bien_the_san_pham?.san_pham?.ten_san_pham 
-                        || "Không rõ";
+        const firstItem = receipt.chi_tiet_phieu_nhap[0];
+        const tenSanPham = firstItem?.bien_the_san_pham?.san_pham?.ten_san_pham || "Không rõ";
+        const tenBienThe = firstItem?.bien_the_san_pham?.ten_bien_the || "";
+        const donViTinh = firstItem?.bien_the_san_pham?.don_vi_tinh || "";
         const totalQty = receipt.chi_tiet_phieu_nhap.reduce((sum, item) => sum + Number(item.so_luong_thuc_nhan || item.so_luong_yeu_cau || 0), 0);
+        const vt = receipt.vi_tri_kho;
         return {
           ngay_nhap: receipt.ngay_tao?.toLocaleString("vi-VN") || "N/A",
           ma_phieu: `PN-${receipt.id}`,
           ncc: receipt.nha_cung_cap?.ten_ncc || "N/A",
-          san_pham: spChinh,
+          san_pham: tenSanPham,
+          bien_the: tenBienThe,
+          don_vi_tinh: donViTinh,
           so_luong: totalQty,
           trang_thai: receipt.trang_thai,
+          vi_tri: vt
+            ? { khu_vuc: vt.khu_vuc || null, day: vt.day || null, ke: vt.ke || null, tang: vt.tang || null }
+            : null,
         };
       });
 

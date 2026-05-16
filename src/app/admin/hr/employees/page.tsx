@@ -3,10 +3,35 @@
 import { useEffect, useState } from "react";
 import { EmployeeTable, NhanVien } from "@/components/admin/employees/EmployeeTable";
 import Pagination from "@/components/ui/Pagination";
+import * as XLSX from "xlsx";
 import {
   X, Plus, Loader2, Users, UserCheck, Palmtree, UserX, Search, Download,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+
+const CHUC_VU_OPTIONS = [
+  "Nhân viên kho",
+  "Nhân viên giao nhận",
+  "Nhân viên kiểm phẩm",
+  "Nhân viên đóng gói",
+  "Nhân viên bán hàng",
+  "Nhân viên giao hàng",
+  "Thủ kho",
+  "Kế toán kho",
+  "Quản lý ca",
+  "Tài xế",
+  "Bảo vệ",
+];
+
+const BO_PHAN_OPTIONS = [
+  "Kho Vận",
+  "Kiểm Phẩm",
+  "Bán Hàng",
+  "Giao Hàng",
+  "Kế Toán",
+  "Hành Chính",
+  "Bảo Vệ",
+];
 
 const EMPTY_FORM = {
   email: "",
@@ -113,6 +138,33 @@ export default function EmployeeListPage() {
     }
   };
 
+  const handleExportExcel = () => {
+    if (employees.length === 0) { toast.error("Không có nhân viên để xuất"); return; }
+    const STATUS_VI: Record<string, string> = {
+      DANG_LAM_VIEC: "Đang làm việc", CHUA_VAO_CA: "Chưa vào ca",
+      VANG_MAT: "Vắng mặt", NGHI_PHEP: "Nghỉ phép",
+      DA_VE: "Đã về", KHONG_CO_CA: "Không có ca",
+    };
+    const rows = employees.map((e, i) => ({
+      STT: i + 1,
+      "Mã NV": e.id,
+      "Họ tên": e.ho_ten,
+      "Email": e.email,
+      "SĐT": e.sdt || "",
+      "Chức vụ": e.chuc_vu || "",
+      "Bộ phận": e.bo_phan || "",
+      "Vai trò": (e.roles || []).join(", "),
+      "Ca hôm nay": e.ca_hom_nay || "",
+      "Trạng thái": STATUS_VI[e.trang_thai] || e.trang_thai,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "NhanVien");
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `NhanVien_${today}.xlsx`);
+    toast.success(`Đã xuất ${employees.length} nhân viên`);
+  };
+
   const workingToday = employees.filter((e) => e.trang_thai === "DANG_LAM_VIEC").length;
   const onLeave = employees.filter((e) => e.trang_thai === "NGHI_PHEP").length;
   const absent = employees.filter((e) => e.trang_thai === "VANG_MAT").length;
@@ -126,7 +178,7 @@ export default function EmployeeListPage() {
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-full">
-      <Toaster position="top-right" />
+
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -172,11 +224,11 @@ export default function EmployeeListPage() {
             />
           </form>
           <button
-            onClick={() => fetchEmployees(search, currentPage)}
+            onClick={handleExportExcel}
             className="flex items-center gap-2 px-3 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition"
           >
             <Download size={15} />
-            Export
+            Xuất Excel
           </button>
         </div>
 
@@ -185,7 +237,7 @@ export default function EmployeeListPage() {
           <div className="py-20 text-center text-gray-400 text-sm animate-pulse">Đang tải danh sách...</div>
         ) : (
           <>
-            <EmployeeTable employees={employees} onRefresh={() => fetchEmployees(search, currentPage)} />
+            <EmployeeTable employees={employees} onRefresh={() => fetchEmployees(search, currentPage)} isAdmin={true} />
             <div className="p-4 border-t">
               <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
             </div>
@@ -271,26 +323,65 @@ export default function EmployeeListPage() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Hồ sơ cá nhân</p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                      { label: "Họ và tên", name: "ho_ten", type: "text", placeholder: "Nguyễn Văn A", required: true },
-                      { label: "CCCD / CMND", name: "cccd", type: "text", placeholder: "012345678901", required: true },
-                      { label: "Số điện thoại", name: "so_dien_thoai", type: "tel", placeholder: "0901234567" },
-                      { label: "Ngày vào làm", name: "ngay_vao_lam", type: "date", placeholder: "" },
-                    ].map((f) => (
-                      <div key={f.name}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                          {f.label} {f.required && <span className="text-red-500">*</span>}
-                        </label>
-                        <input
-                          type={f.type}
-                          name={f.name}
-                          value={form[f.name as keyof typeof form]}
-                          onChange={handleChange}
-                          placeholder={f.placeholder}
-                          className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                      </div>
-                    ))}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Họ và tên <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="ho_ten"
+                        value={form.ho_ten}
+                        onChange={handleChange}
+                        placeholder="Nguyễn Văn A"
+                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        CCCD / CMND <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="cccd"
+                        value={form.cccd}
+                        onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 12); handleChange({ target: { name: 'cccd', value: v } } as any); }}
+                        placeholder="012345678901"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={12}
+                        onKeyDown={(e) => { if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
+                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Số điện thoại
+                      </label>
+                      <input
+                        type="tel"
+                        name="so_dien_thoai"
+                        value={form.so_dien_thoai}
+                        onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 11); handleChange({ target: { name: 'so_dien_thoai', value: v } } as any); }}
+                        placeholder="0901234567"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={11}
+                        onKeyDown={(e) => { if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
+                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Ngày vào làm
+                      </label>
+                      <input
+                        type="date"
+                        name="ngay_vao_lam"
+                        value={form.ngay_vao_lam}
+                        onChange={handleChange}
+                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -303,13 +394,23 @@ export default function EmployeeListPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Chức vụ</label>
-                      <input type="text" name="chuc_vu" value={form.chuc_vu} onChange={handleChange} placeholder="VD: Nhân viên kho"
-                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                      <select name="chuc_vu" value={form.chuc_vu} onChange={handleChange}
+                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                        <option value="">-- Chọn chức vụ --</option>
+                        {CHUC_VU_OPTIONS.map((cv) => (
+                          <option key={cv} value={cv}>{cv}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Bộ phận</label>
-                      <input type="text" name="bo_phan" value={form.bo_phan} onChange={handleChange} placeholder="VD: Kho Vận"
-                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                      <select name="bo_phan" value={form.bo_phan} onChange={handleChange}
+                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                        <option value="">-- Chọn bộ phận --</option>
+                        {BO_PHAN_OPTIONS.map((bp) => (
+                          <option key={bp} value={bp}>{bp}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Loại hợp đồng</label>
@@ -328,7 +429,10 @@ export default function EmployeeListPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Lương theo giờ (VNĐ)</label>
-                      <input type="number" name="luong_theo_gio" value={form.luong_theo_gio} onChange={handleChange} placeholder="VD: 35000" min={0}
+                      <input type="number" name="luong_theo_gio" value={form.luong_theo_gio}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || Number(v) >= 0) setForm((prev) => ({ ...prev, luong_theo_gio: v })); }}
+                        placeholder="VD: 35000" min={0}
+                        onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                         className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
                     </div>
                   </div>

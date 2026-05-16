@@ -59,7 +59,9 @@ export async function GET() {
           gio_vao: chamCong?.gio_vao || null,
           gio_ra: chamCong?.gio_ra || null,
           trang_thai: trangThai,
-          so_phut_tre: chamCong?.so_phut_tre || 0
+          so_phut_tre: chamCong?.so_phut_tre || 0,
+          anh_vao: chamCong?.anh_vao || null,
+          anh_ra: chamCong?.anh_ra || null,
         };
       });
 

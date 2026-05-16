@@ -8,13 +8,12 @@ import {
   ChevronDown,
   LogOut,
   MapPin,
-  ShoppingBag,
   ShieldCheck,
   X,
   Loader2,
   Leaf,
   Package,
-  Bell,
+  Menu,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -31,7 +30,15 @@ interface Product {
   xuat_xu?: string;
 }
 
-function SearchDropdown() {
+interface HeaderSession {
+  user?: {
+    email?: string | null;
+    name?: string | null;
+    image?: string | null;
+  } | null;
+}
+
+function SearchDropdown({ compact = false }: { compact?: boolean } = {}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
@@ -115,15 +122,15 @@ function SearchDropdown() {
   };
 
   return (
-    <div ref={containerRef} className="relative hidden lg:block">
+    <div ref={containerRef} className={compact ? "relative block w-full" : "relative hidden lg:block"}>
       <form
         onSubmit={handleSubmit}
         className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-200 ${
           isOpen
             ? "border-[#007832] bg-white shadow-lg shadow-green-100 ring-2 ring-[#007832]/10"
             : "border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white focus-within:border-[#007832] focus-within:bg-white focus-within:shadow-md"
-        }`}
-        style={{ minWidth: 160, maxWidth: 200 }}
+        } ${compact ? "w-full" : ""}`}
+        style={compact ? undefined : { minWidth: 160, maxWidth: 200 }}
       >
         <button type="submit" className="flex-shrink-0">
           {isLoading ? (
@@ -139,7 +146,7 @@ function SearchDropdown() {
           onChange={handleChange}
           onFocus={() => { if (query.trim()) setIsOpen(true); }}
           placeholder="Tìm kiếm nông sản..."
-          className="bg-transparent border-none focus:ring-0 text-sm flex-1 outline-none text-slate-700 placeholder-gray-400"
+          className="min-w-0 bg-transparent border-none focus:ring-0 text-sm flex-1 outline-none text-slate-700 placeholder-gray-400"
         />
         {query && (
           <button type="button" onClick={handleClear} className="flex-shrink-0 text-gray-300 hover:text-gray-500 transition-colors">
@@ -149,7 +156,7 @@ function SearchDropdown() {
       </form>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-2xl shadow-black/10 overflow-hidden z-50 min-w-[340px]">
+        <div className={`absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-2xl shadow-black/10 overflow-hidden z-50 ${compact ? "min-w-0" : "min-w-[340px]"}`}>
           {isLoading && (
             <div className="flex items-center justify-center gap-2 py-6 text-sm text-gray-400">
               <Loader2 className="w-4 h-4 animate-spin text-[#007832]" />
@@ -233,20 +240,21 @@ const NAV_LINKS = [
   { name: "Doanh nghiệp", path: "/b2b", badge: "Sắp ra mắt" },
 ];
 
-export default function Header({ session }: { session: any }) {
+export default function Header({ session }: { session: HeaderSession | null }) {
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const { cart, totalItems, clearCart } = useCart();
+  const { cart, totalItems } = useCart();
   const [avatarUrl, setAvatarUrl] = useState(session?.user?.image || null);
   const [displayName, setDisplayName] = useState(
     session?.user?.name || session?.user?.email?.split("@")[0],
   );
 
   useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => setMounted(true));
 
     if (session?.user?.email) {
       fetch("/api/store/account/profile/avatar")
@@ -258,9 +266,9 @@ export default function Header({ session }: { session: any }) {
         .catch(() => {});
     }
 
-    const handleAvatarUpdate = (event: any) => setAvatarUrl(event.detail);
+    const handleAvatarUpdate = (event: Event) => setAvatarUrl((event as CustomEvent<string>).detail);
     window.addEventListener("update-avatar", handleAvatarUpdate);
-    const handleNameUpdate = (event: any) => setDisplayName(event.detail);
+    const handleNameUpdate = (event: Event) => setDisplayName((event as CustomEvent<string>).detail);
     window.addEventListener("update-name", handleNameUpdate);
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
@@ -281,7 +289,12 @@ export default function Header({ session }: { session: any }) {
   }, [session]);
 
   // Đóng user menu khi chuyển trang
-  useEffect(() => { setUserMenuOpen(false); }, [pathname]);
+  useEffect(() => {
+    queueMicrotask(() => {
+      setUserMenuOpen(false);
+      setMobileMenuOpen(false);
+    });
+  }, [pathname]);
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
@@ -320,7 +333,7 @@ export default function Header({ session }: { session: any }) {
             : "bg-white border-b border-gray-100 py-0"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 lg:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5 lg:px-6">
           <div className="flex items-center h-16 gap-4">
 
             {/* Logo */}
@@ -331,11 +344,11 @@ export default function Header({ session }: { session: any }) {
               <div className="w-8 h-8 rounded-lg bg-[#007832] flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
                 <Leaf className="w-4 h-4 text-white" />
               </div>
-              <div className="flex flex-col leading-none">
+              <div className="flex flex-col leading-none min-w-0">
                 <span className="text-base font-black text-[#007832] tracking-tight whitespace-nowrap">
                   Verdant Curator
                 </span>
-                <span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase">
+                <span className="hidden min-[380px]:block text-[9px] text-gray-400 font-medium tracking-widest uppercase truncate">
                   Fresh · Organic · Đà Nẵng
                 </span>
               </div>
@@ -367,7 +380,7 @@ export default function Header({ session }: { session: any }) {
             </nav>
 
             {/* Right section */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="ml-auto flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
               <SearchDropdown />
 
               {/* Cart */}
@@ -436,7 +449,7 @@ export default function Header({ session }: { session: any }) {
               </div>
 
               {/* Divider */}
-              <div className="w-px h-6 bg-gray-200 mx-1" />
+              <div className="hidden sm:block w-px h-6 bg-gray-200 mx-1" />
 
               {/* User section */}
               {!mounted ? (
@@ -445,7 +458,7 @@ export default function Header({ session }: { session: any }) {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setUserMenuOpen(o => !o)}
-                    className="flex items-center gap-2.5 pl-1 pr-3 py-1.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all duration-150"
+                    className="flex items-center gap-2.5 pl-1 pr-2 sm:pr-3 py-1.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all duration-150"
                   >
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-700 flex items-center justify-center text-white text-xs font-black overflow-hidden shadow-sm">
                       {avatarUrl ? (
@@ -527,7 +540,7 @@ export default function Header({ session }: { session: any }) {
 
                       <div className="px-2 pb-2">
                         <button
-                          onClick={() => { clearCart(); signOut({ callbackUrl: "/" }); }}
+                          onClick={() => signOut({ callbackUrl: "/" })}
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
                         >
                           <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
@@ -549,17 +562,90 @@ export default function Header({ session }: { session: any }) {
                   </Link>
                   <Link
                     href="/register"
-                    className="flex items-center gap-1.5 bg-[#007832] text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-[#006028] hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
+                    className="hidden sm:flex items-center gap-1.5 bg-[#007832] text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-[#006028] hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
                   >
                     <User size={15} fill="white" />
                     Đăng ký
                   </Link>
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((open) => !open)}
+                aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
+                aria-expanded={mobileMenuOpen}
+                className="lg:hidden flex h-10 w-10 items-center justify-center rounded-xl text-gray-600 hover:bg-gray-100 hover:text-[#007832] transition-colors"
+              >
+                {mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
+              </button>
             </div>
           </div>
         </div>
       </header>
+
+      {mobileMenuOpen && (
+        <div className="fixed inset-x-0 top-16 bottom-0 z-40 bg-white lg:hidden border-t border-gray-100 shadow-2xl shadow-black/10 overflow-y-auto">
+          <div className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-5 sm:px-6">
+            <SearchDropdown compact />
+
+            <nav className="grid gap-1">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.path}
+                  href={link.path}
+                  className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${
+                    isActive(link.path)
+                      ? "bg-green-50 text-[#007832]"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <span>{link.name}</span>
+                  {link.badge && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                      {link.badge}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-5">
+              {session ? (
+                <>
+                  <Link
+                    href="/account/profile"
+                    className="rounded-2xl border border-gray-200 px-4 py-3 text-center text-sm font-bold text-gray-700 hover:border-[#007832] hover:text-[#007832]"
+                  >
+                    Tài khoản
+                  </Link>
+                  <Link
+                    href="/account/orders"
+                    className="rounded-2xl bg-[#007832] px-4 py-3 text-center text-sm font-bold text-white hover:bg-[#006028]"
+                  >
+                    Đơn hàng
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="rounded-2xl border border-gray-200 px-4 py-3 text-center text-sm font-bold text-gray-700 hover:border-[#007832] hover:text-[#007832]"
+                  >
+                    Đăng nhập
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="rounded-2xl bg-[#007832] px-4 py-3 text-center text-sm font-bold text-white hover:bg-[#006028]"
+                  >
+                    Đăng ký
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

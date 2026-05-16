@@ -7,7 +7,7 @@ import {
   X, CheckCircle2, Clock, MessageCircle, Send, ChevronLeft, ChevronRight,
   ThumbsUp, ThumbsDown, Filter, Image as ImageIcon,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 /* ────────────────── helpers ────────────────── */
 const STATUS_META: Record<string, { label: string; color: string; bg: string; Icon: any }> = {
@@ -177,7 +177,6 @@ export default function ReviewsPage() {
   /* ─────────────────────────── RENDER ─────────────────────────── */
   return (
     <div style={{ background: "#f7f8f6", minHeight: "100vh", padding: "24px 28px", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}>
-      <Toaster />
 
       {/* Page header */}
       <div style={{ marginBottom: 20 }}>

@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-interface RouteContext {
-  params: { id: string };
-}
-
 // DELETE: Hủy phân ca
-export async function DELETE(req: Request, context: RouteContext) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const maLich = Number(context.params.id);
+    const { id } = await params;
+    const maLich = Number(id);
     if (isNaN(maLich)) {
       return NextResponse.json({ success: false, message: 'ID không hợp lệ' }, { status: 400 });
     }

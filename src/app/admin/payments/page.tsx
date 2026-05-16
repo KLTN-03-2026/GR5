@@ -23,6 +23,18 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from "react-hot-toast";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import * as XLSX from "xlsx";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RTooltip,
+} from "recharts";
 
 // --- MAPPING STATUS ---
 const PAYMENT_STATUS: Record<string, { label: string; bg: string; color: string; icon: any }> = {
@@ -72,6 +84,7 @@ export default function PaymentsManagementContent() {
 
   const [viewingPayment, setViewingPayment] = useState<any | null>(null);
   const [isUpdating, setIsUpdating]         = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({isOpen: false, title: "", message: "", onConfirm: () => {}});
 
   const fetchPayments = async () => {
     try {
@@ -79,10 +92,13 @@ export default function PaymentsManagementContent() {
       const res = await fetch('/api/admin/payments');
       if (res.ok) {
         const data = await res.json();
-        setPayments(data);
+        if (Array.isArray(data)) setPayments(data);
+      } else {
+        toast.error('Lỗi tải dữ liệu thanh toán');
       }
     } catch (error) {
       console.error('Lỗi tải dữ liệu thanh toán:', error);
+      toast.error('Không thể kết nối server');
     } finally {
       setIsLoading(false);
     }
@@ -131,34 +147,115 @@ export default function PaymentsManagementContent() {
   const methodStats = useMemo(() => {
     const codTotal = payments.filter(p => p.phuong_thuc_thanh_toan === 'COD').reduce((s, p) => s + Number(p.tong_tien || 0), 0);
     const ckTotal  = payments.filter(p => p.phuong_thuc_thanh_toan === 'CHUYEN_KHOAN').reduce((s, p) => s + Number(p.tong_tien || 0), 0);
-    const total = codTotal + ckTotal || 1;
-    return { codTotal, ckTotal, codPct: Math.round((codTotal / total) * 100), ckPct: Math.round((ckTotal / total) * 100) };
+    const vnpayTotal = payments.filter(p => p.phuong_thuc_thanh_toan === 'VNPAY').reduce((s, p) => s + Number(p.tong_tien || 0), 0);
+    const momoTotal = payments.filter(p => p.phuong_thuc_thanh_toan === 'MOMO').reduce((s, p) => s + Number(p.tong_tien || 0), 0);
+    const total = codTotal + ckTotal + vnpayTotal + momoTotal || 1;
+    return {
+      codTotal, ckTotal, vnpayTotal, momoTotal,
+      codPct: Math.round((codTotal / total) * 100),
+      ckPct: Math.round((ckTotal / total) * 100),
+      vnpayPct: Math.round((vnpayTotal / total) * 100),
+      momoPct: Math.round((momoTotal / total) * 100),
+    };
   }, [payments]);
+
+  // ── Biểu đồ doanh thu theo ngày ───────────────────────────────────────
+  const [chartDays, setChartDays] = useState<7 | 30 | 90>(7);
+
+  const revenueSeries = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startMs = today.getTime() - (chartDays - 1) * 86400000;
+
+    const buckets = new Map<string, number>();
+    for (let i = 0; i < chartDays; i++) {
+      const d = new Date(startMs + i * 86400000);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      buckets.set(key, 0);
+    }
+
+    for (const p of payments) {
+      if (p.trang_thai_thanh_toan !== "DA_THANH_TOAN") continue;
+      if (!p.ngay_tao) continue;
+      const d = new Date(p.ngay_tao);
+      d.setHours(0, 0, 0, 0);
+      if (d.getTime() < startMs || d.getTime() > today.getTime()) continue;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      buckets.set(key, (buckets.get(key) ?? 0) + Number(p.tong_tien || 0));
+    }
+
+    return [...buckets.entries()].map(([key, total]) => {
+      const [, m, day] = key.split("-");
+      return { date: key, label: `${day}/${m}`, total };
+    });
+  }, [payments, chartDays]);
+
+  const chartHasData = revenueSeries.some((d) => d.total > 0);
+  const chartTotal = revenueSeries.reduce((s, d) => s + d.total, 0);
+  const chartPeak = revenueSeries.reduce((max, d) => (d.total > max.total ? d : max), revenueSeries[0] ?? { total: 0, label: "" });
+
+  const handleExportExcel = () => {
+    const source = filteredPayments.length > 0 ? filteredPayments : payments;
+    if (source.length === 0) { toast.error("Không có giao dịch để xuất"); return; }
+    const STATUS_VI: Record<string, string> = {
+      DA_THANH_TOAN: "Đã thanh toán", CHO_THANH_TOAN: "Chờ xử lý",
+      DA_HOAN_TIEN: "Đã hoàn tiền", THAT_BAI: "Đã huỷ",
+    };
+    const METHOD_VI: Record<string, string> = {
+      COD: "COD", CHUYEN_KHOAN: "Chuyển khoản", VNPAY: "VNPay", MOMO: "MoMo",
+    };
+    const rows = source.map((p, i) => ({
+      STT: i + 1,
+      "Mã GD": p.id,
+      "Mã đơn": p.ma_don_hang ?? "",
+      "Khách hàng": p.nguoi_dung?.ho_so_nguoi_dung?.ho_ten || p.nguoi_dung?.email || "",
+      "Email": p.nguoi_dung?.email || "",
+      "Phương thức": METHOD_VI[p.phuong_thuc_thanh_toan] || p.phuong_thuc_thanh_toan,
+      "Trạng thái": STATUS_VI[p.trang_thai_thanh_toan] || p.trang_thai_thanh_toan,
+      "Số tiền (đ)": Number(p.tong_tien || 0),
+      "Phí vận chuyển (đ)": Number(p.phi_van_chuyen || 0),
+      "Mã GD ngoài": p.ma_giao_dich_ben_ngoai || "",
+      "Ngày tạo": p.ngay_tao ? new Date(p.ngay_tao).toLocaleString("vi-VN") : "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "ThanhToan");
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `ThanhToan_${today}.xlsx`);
+    toast.success(`Đã xuất ${source.length} giao dịch`);
+  };
 
   const tabCount = (key: string) =>
     key === 'ALL' ? payments.length : payments.filter(p => p.trang_thai_thanh_toan === key).length;
 
-  const handleConfirmPayment = async (paymentId: number) => {
-    if (!confirm('Bạn xác nhận khách đã thanh toán cho giao dịch này? (Thường dùng cho Chuyển khoản)')) return;
-    setIsUpdating(true);
-    try {
-      const res = await fetch('/api/admin/payments/update', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: paymentId, status: 'DA_THANH_TOAN' }),
-      });
-      if (res.ok) {
-        alert('Cập nhật trạng thái thành công!');
-        fetchPayments();
-        setViewingPayment(null);
-      } else {
-        alert('Có lỗi xảy ra khi cập nhật!');
-      }
-    } catch {
-      alert('Lỗi kết nối server!');
-    } finally {
-      setIsUpdating(false);
-    }
+  const handleConfirmPayment = (paymentId: number) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Xác nhận thanh toán',
+      message: 'Bạn xác nhận khách đã thanh toán cho giao dịch này? (Thường dùng cho Chuyển khoản)',
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setIsUpdating(true);
+        try {
+          const res = await fetch('/api/admin/payments/update', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: paymentId, status: 'DA_THANH_TOAN' }),
+          });
+          if (res.ok) {
+            toast.success('Cập nhật trạng thái thành công!');
+            fetchPayments();
+            setViewingPayment(null);
+          } else {
+            toast.error('Có lỗi xảy ra khi cập nhật!');
+          }
+        } catch {
+          toast.error('Lỗi kết nối server!');
+        } finally {
+          setIsUpdating(false);
+        }
+      },
+    });
   };
 
   const startItem = filteredPayments.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
@@ -256,21 +353,97 @@ export default function PaymentsManagementContent() {
       <div style={{ display: 'grid', gridTemplateColumns: '60fr 40fr', gap: 16, marginBottom: 20 }}>
         {/* Biểu đồ doanh thu */}
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <TrendingUp style={{ width: 16, height: 16, color: '#16a34a' }} />
-              <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>Doanh thu 7 ngày gần nhất</span>
+              <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
+                Doanh thu {chartDays} ngày gần nhất
+              </span>
             </div>
             <select
+              value={chartDays}
+              onChange={(e) => setChartDays(Number(e.target.value) as 7 | 30 | 90)}
               style={{ height: 30, border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 12, padding: '0 8px', color: '#6b7280', background: '#fff', outline: 'none', cursor: 'pointer' }}
             >
-              <option>7 ngày</option>
-              <option>30 ngày</option>
-              <option>3 tháng</option>
+              <option value={7}>7 ngày</option>
+              <option value={30}>30 ngày</option>
+              <option value={90}>3 tháng</option>
             </select>
           </div>
-          <div style={{ height: 200, background: '#f9fafb', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #e5e7eb' }}>
-            <span style={{ fontSize: 13, color: '#9ca3af' }}>Chart sẽ render tại đây</span>
+
+          {/* Summary mini-row */}
+          <div style={{ display: 'flex', gap: 16, marginBottom: 8 }}>
+            <div>
+              <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Tổng kỳ</p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#16a34a', margin: 0 }}>{formatCurrency(chartTotal)}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Ngày cao nhất</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>
+                {chartPeak?.label ? `${chartPeak.label} · ${formatCurrency(chartPeak.total)}` : '—'}
+              </p>
+            </div>
+            <div>
+              <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Trung bình/ngày</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0 }}>
+                {formatCurrency(Math.round(chartTotal / Math.max(1, chartDays)))}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ height: 200 }}>
+            {isLoading ? (
+              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb', borderRadius: 8 }}>
+                <span style={{ fontSize: 13, color: '#9ca3af' }}>Đang tải...</span>
+              </div>
+            ) : !chartHasData ? (
+              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb', borderRadius: 8, border: '1px dashed #e5e7eb' }}>
+                <span style={{ fontSize: 13, color: '#9ca3af' }}>Chưa có giao dịch đã thanh toán trong {chartDays} ngày qua</span>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueSeries} margin={{ top: 10, right: 8, left: -10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#16a34a" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="#16a34a" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                    tickLine={false}
+                    interval={chartDays > 14 ? Math.ceil(chartDays / 10) : 0}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={56}
+                    tickFormatter={(v: number) => {
+                      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}tr`;
+                      if (v >= 1_000) return `${Math.round(v / 1_000)}K`;
+                      return String(v);
+                    }}
+                  />
+                  <RTooltip
+                    formatter={(value: any) => [formatCurrency(value), 'Doanh thu']}
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
+                    labelStyle={{ color: '#6b7280', fontSize: 11 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="#16a34a"
+                    strokeWidth={2}
+                    fill="url(#revGradient)"
+                    activeDot={{ r: 4 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -280,29 +453,24 @@ export default function PaymentsManagementContent() {
             <CreditCard style={{ width: 16, height: 16, color: '#6b7280' }} />
             <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>Phương thức thanh toán</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* COD */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>COD (Tiền mặt)</span>
-                <span style={{ fontSize: 12, color: '#9ca3af' }}>{formatCurrency(methodStats.codTotal)}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {[
+              { label: 'COD (Tiền mặt)', total: methodStats.codTotal, pct: methodStats.codPct, color: '#16a34a' },
+              { label: 'Chuyển khoản', total: methodStats.ckTotal, pct: methodStats.ckPct, color: '#6366f1' },
+              { label: 'VNPay', total: methodStats.vnpayTotal, pct: methodStats.vnpayPct, color: '#7e22ce' },
+              { label: 'MoMo', total: methodStats.momoTotal, pct: methodStats.momoPct, color: '#be185d' },
+            ].filter(m => m.total > 0).map(m => (
+              <div key={m.label}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>{m.label}</span>
+                  <span style={{ fontSize: 12, color: '#9ca3af' }}>{formatCurrency(m.total)}</span>
+                </div>
+                <div style={{ height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${m.pct}%`, background: m.color, borderRadius: 99 }} />
+                </div>
+                <span style={{ fontSize: 11, color: '#9ca3af', marginTop: 3, display: 'block' }}>{m.pct}%</span>
               </div>
-              <div style={{ height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${methodStats.codPct}%`, background: '#16a34a', borderRadius: 99 }} />
-              </div>
-              <span style={{ fontSize: 11, color: '#9ca3af', marginTop: 3, display: 'block' }}>{methodStats.codPct}%</span>
-            </div>
-            {/* Chuyển khoản */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>Chuyển khoản</span>
-                <span style={{ fontSize: 12, color: '#9ca3af' }}>{formatCurrency(methodStats.ckTotal)}</span>
-              </div>
-              <div style={{ height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${methodStats.ckPct}%`, background: '#6366f1', borderRadius: 99 }} />
-              </div>
-              <span style={{ fontSize: 11, color: '#9ca3af', marginTop: 3, display: 'block' }}>{methodStats.ckPct}%</span>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -356,6 +524,7 @@ export default function PaymentsManagementContent() {
 
         {/* Export */}
         <button
+          onClick={handleExportExcel}
           style={{ display: 'flex', alignItems: 'center', gap: 6, height: 38, padding: '0 16px', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', fontSize: 13, color: '#374151', cursor: 'pointer', flexShrink: 0 }}
           onMouseEnter={e => (e.currentTarget.style.borderColor = '#16a34a')}
           onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}
@@ -676,6 +845,17 @@ export default function PaymentsManagementContent() {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant="warning"
+        confirmText="Xác nhận"
+        cancelText="Hủy"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

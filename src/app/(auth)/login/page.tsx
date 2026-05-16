@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ScanFace, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -9,12 +10,14 @@ import { useRouter } from "next/navigation";
 import { handleLogin, handleGoogleLogin, handleFacebookLogin } from "@/app/actions/auth";
 import toast from "react-hot-toast";
 
-export default function LoginPage() {
+function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [socialPending, setSocialPending] = useState<"google" | "facebook" | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
 
   async function clientAction(formData: FormData) {
     setError("");
@@ -34,7 +37,7 @@ export default function LoginPage() {
   async function onGoogleLogin() {
     setSocialPending("google");
     try {
-      await handleGoogleLogin();
+      await handleGoogleLogin(callbackUrl);
     } catch {
       setSocialPending(null);
     }
@@ -43,7 +46,7 @@ export default function LoginPage() {
   async function onFacebookLogin() {
     setSocialPending("facebook");
     try {
-      await handleFacebookLogin();
+      await handleFacebookLogin(callbackUrl);
     } catch {
       setSocialPending(null);
     }
@@ -117,6 +120,9 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {/* Hidden: callbackUrl */}
+            <input type="hidden" name="callbackUrl" value={callbackUrl} />
 
             {/* Remember me */}
             <div className="flex items-center gap-2 px-1">
@@ -197,5 +203,13 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPage />
+    </Suspense>
   );
 }

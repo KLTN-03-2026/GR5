@@ -45,12 +45,30 @@ const menuItems = [
     description: "Tạo đơn đặt hàng nhà CC",
   },
   {
+    name: "Đơn Khách Hàng",
+    path: "/warehouse-manager/customer-orders",
+    icon: ClipboardList,
+    description: "Quản lý đơn hàng khách đặt",
+  },
+  {
     name: "Phiếu Nhập Kho",
     path: "/warehouse-manager/receipts",
     icon: PackageOpen,
     description: "Tạo & duyệt phiếu nhập",
   },
 
+  {
+    name: "Nhận Hàng (Check-in)",
+    path: "/warehouse-manager/receiving",
+    icon: ClipboardList,
+    description: "Nhận & đếm hàng thực tế",
+  },
+  {
+    name: "Kiểm Định (QC)",
+    path: "/warehouse-manager/qc",
+    icon: PackageOpen,
+    description: "Đánh giá & duyệt nhập kho",
+  },
   {
     name: "Khuyến Mãi Xả Kho",
     path: "/warehouse-manager/promotions",
@@ -81,6 +99,7 @@ const menuItems = [
       { name: "Chấm công", path: "/warehouse-manager/hr/attendance" },
       { name: "Bảng lương", path: "/warehouse-manager/hr/payroll" },
       { name: "Nghỉ phép", path: "/warehouse-manager/hr/leave" },
+      { name: "Tài khoản cá nhân", path: "/warehouse-manager/hr/account" },
     ]
   },
 ];

@@ -9,12 +9,13 @@ import {
 } from "lucide-react";
 
 const FaceRegister = dynamic(() => import("@/components/FaceRegister"), { ssr: false });
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 interface Props {
   userId: number | null;
 }
 
-type Section = "LICH_CA" | "NGHI_PHEP" | "DOI_MAT_KHAU" | "FACE_ID";
+type Section = "CHAM_CONG" | "LICH_CA" | "NGHI_PHEP" | "DOI_MAT_KHAU" | "FACE_ID";
 
 interface DonXinNghi {
   id: number;
@@ -25,6 +26,31 @@ interface DonXinNghi {
   trang_thai: string;
   ngay_tao: string;
 }
+
+interface CaLamViec {
+  id: number;
+  ten_ca: string;
+  gio_bat_dau: string | null;
+  gio_ket_thuc: string | null;
+}
+
+interface PhanCa {
+  id: number;
+  ma_nguoi_dung: number | null;
+  ma_ca_lam: number | null;
+  ngay_lam_viec: string | null;
+  ca_lam_viec: CaLamViec | null;
+}
+
+const formatCaTime = (t: string | null | undefined) => {
+  if (!t) return "--:--";
+  const d = new Date(t);
+  if (isNaN(d.getTime())) return "--:--";
+  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+};
+
+const sameDay = (a: Date, b: Date) =>
+  a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
 
 const LOAI_NGHI_LABEL: Record<string, string> = {
   PHEP_NAM: "Nghỉ Phép Năm",
@@ -52,8 +78,16 @@ export default function HRClient({ userId }: Props) {
   const [formSuccess, setFormSuccess] = useState(false);
   const [donList, setDonList] = useState<DonXinNghi[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [shifts, setShifts] = useState<PhanCa[]>([]);
+  const [loadingShifts, setLoadingShifts] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
-  const [activeSection, setActiveSection] = useState<Section>("LICH_CA");
+  const [activeSection, setActiveSection] = useState<Section>("CHAM_CONG");
+
+  const [chamCongStatus, setChamCongStatus] = useState<{ loading: boolean; message: string | null; type: "success" | "error" | null; data: any }>({
+    loading: false, message: null, type: null, data: null,
+  });
+  const [todayLog, setTodayLog] = useState<{ gio_vao: string | null; gio_ra: string | null; trang_thai: string } | null>(null);
+  const [scannerLoai, setScannerLoai] = useState<"VAO" | "RA" | null>(null);
 
   const [pwForm, setPwForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
   const [pwLoading, setPwLoading] = useState(false);
@@ -67,6 +101,8 @@ export default function HRClient({ userId }: Props) {
   const [faceLoading, setFaceLoading] = useState(false);
   const [showFaceScanner, setShowFaceScanner] = useState(false);
   const [faceMsg, setFaceMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({isOpen: false, title: "", message: "", onConfirm: () => {}});
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,18 +166,25 @@ export default function HRClient({ userId }: Props) {
     }
   };
 
-  const handleDeleteFace = async () => {
-    if (!confirm("Bạn chắc muốn xóa dữ liệu FaceID?")) return;
-    setFaceLoading(true);
-    try {
-      await fetch("/api/user/face-data", { method: "DELETE" });
-      setHasFaceData(false);
-      setFaceMsg({ type: "success", text: "Đã xóa dữ liệu FaceID" });
-    } catch {
-      setFaceMsg({ type: "error", text: "Xóa thất bại" });
-    } finally {
-      setFaceLoading(false);
-    }
+  const handleDeleteFace = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Xóa dữ liệu FaceID",
+      message: "Bạn chắc muốn xóa dữ liệu FaceID?",
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setFaceLoading(true);
+        try {
+          await fetch("/api/user/face-data", { method: "DELETE" });
+          setHasFaceData(false);
+          setFaceMsg({ type: "success", text: "Đã xóa dữ liệu FaceID" });
+        } catch {
+          setFaceMsg({ type: "error", text: "Xóa thất bại" });
+        } finally {
+          setFaceLoading(false);
+        }
+      },
+    });
   };
 
   const fetchHistory = useCallback(async () => {
@@ -161,6 +204,36 @@ export default function HRClient({ userId }: Props) {
   useEffect(() => {
     if (activeSection === "NGHI_PHEP" || activeSection === "LICH_CA") fetchHistory();
   }, [activeSection, fetchHistory]);
+
+  const fetchShifts = useCallback(async () => {
+    if (!userId) return;
+    setLoadingShifts(true);
+    try {
+      const now = new Date();
+      const dow = now.getDay();
+      const mon = new Date(now);
+      mon.setHours(0, 0, 0, 0);
+      mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1) + weekOffset * 7);
+      const sun = new Date(mon);
+      sun.setDate(mon.getDate() + 6);
+      const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const res = await fetch(`/api/phan-ca?tu_ngay=${fmt(mon)}&den_ngay=${fmt(sun)}`);
+      const json = await res.json();
+      if (json.success) {
+        const mine = (json.data as PhanCa[]).filter((s) => s.ma_nguoi_dung === userId);
+        setShifts(mine);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingShifts(false);
+    }
+  }, [userId, weekOffset]);
+
+  useEffect(() => {
+    if (activeSection === "LICH_CA") fetchShifts();
+  }, [activeSection, fetchShifts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,16 +300,69 @@ export default function HRClient({ userId }: Props) {
 
   const isPast = (d: Date) => d < today && !isToday(d);
 
-  type DayStatus = "completed" | "today" | "upcoming" | "off";
+  type DayStatus = "completed" | "today" | "upcoming";
 
-  const getDayStatus = (d: Date, idx: number): DayStatus => {
-    if (idx >= 5) return "off";
+  const getDayStatus = (d: Date): DayStatus => {
     if (isToday(d)) return "today";
     if (isPast(d)) return "completed";
     return "upcoming";
   };
 
+  const fetchTodayLog = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const res = await fetch(`/api/cham-cong/hom-nay?ma_nguoi_dung=${userId}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        const allCa = json.data as { danh_sach_nhan_vien: { ma_nguoi_dung: number; gio_vao: string | null; gio_ra: string | null; trang_thai: string }[] }[];
+        let found = null;
+        for (const ca of allCa) {
+          const nv = ca.danh_sach_nhan_vien?.find((n) => n.ma_nguoi_dung === userId);
+          if (nv && nv.gio_vao) { found = nv; break; }
+        }
+        setTodayLog(found ? { gio_vao: found.gio_vao, gio_ra: found.gio_ra, trang_thai: found.trang_thai } : null);
+      } else {
+        setTodayLog(null);
+      }
+    } catch {
+      setTodayLog(null);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (activeSection === "CHAM_CONG") fetchTodayLog();
+  }, [activeSection, fetchTodayLog]);
+
+  const handleChamCongFace = async (descriptor: number[], snapshot?: string) => {
+    const loai = scannerLoai;
+    setScannerLoai(null);
+    if (!loai) return;
+    setChamCongStatus({ loading: true, message: null, type: null, data: null });
+    try {
+      const endpoint = loai === "VAO" ? "/api/cham-cong/vao" : "/api/cham-cong/ra";
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ma_nguoi_dung: userId, descriptor, anh: snapshot }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || "Chấm công thất bại");
+      }
+      setChamCongStatus({ loading: false, message: loai === "VAO" ? "Chấm công VÀO thành công!" : "Chấm công RA thành công!", type: "success", data: json.data });
+      fetchTodayLog();
+    } catch (err: any) {
+      setChamCongStatus({ loading: false, message: err.message || "Đã xảy ra lỗi", type: "error", data: null });
+    }
+  };
+
+  const openChamCongScanner = (loai: "VAO" | "RA") => {
+    setChamCongStatus({ loading: false, message: null, type: null, data: null });
+    setScannerLoai(loai);
+  };
+
   const NAV_ITEMS: { id: Section; label: string; icon: React.ElementType }[] = [
+    { id: "CHAM_CONG", label: "Chấm công", icon: Clock },
     { id: "LICH_CA", label: "Lịch làm việc", icon: CalendarDays },
     { id: "NGHI_PHEP", label: "Nghỉ phép", icon: FileText },
     { id: "DOI_MAT_KHAU", label: "Đổi mật khẩu", icon: KeyRound },
@@ -282,6 +408,116 @@ export default function HRClient({ userId }: Props) {
         })}
       </div>
 
+      {/* ─── Section: Chấm Công ─── */}
+      {activeSection === "CHAM_CONG" && (
+        <div className="space-y-4">
+
+          {/* Today's Attendance Status */}
+          <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
+            <h2 className="text-[15px] font-semibold text-gray-800 mb-3">Chấm công hôm nay</h2>
+
+            {todayLog ? (
+              <div className="p-4 rounded-lg bg-[#F5F5F4] border border-gray-100 mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-[#1D9E75]/10 flex items-center justify-center">
+                      <CheckCircle2 size={18} className="text-[#1D9E75]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {todayLog.gio_vao ? `Vào: ${new Date(todayLog.gio_vao).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : "Chưa chấm công vào"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {todayLog.gio_ra ? `Ra: ${new Date(todayLog.gio_ra).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : "Chưa chấm công ra"}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                    todayLog.trang_thai === "DUNG_GIO" ? "bg-[#E8F5F0] text-[#1D9E75]" :
+                    todayLog.trang_thai === "DI_TRE" ? "bg-[#FAEEDA] text-[#BA7517]" :
+                    "bg-gray-100 text-gray-600"
+                  }`}>
+                    {todayLog.trang_thai === "DUNG_GIO" ? "Đúng giờ" :
+                     todayLog.trang_thai === "DI_TRE" ? "Đi trễ" :
+                     todayLog.trang_thai}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-100 mb-4 text-center">
+                <p className="text-sm text-gray-400">Chưa có dữ liệu chấm công hôm nay</p>
+              </div>
+            )}
+
+            {/* Status Message */}
+            {chamCongStatus.message && (
+              <div className={`mb-4 flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium border ${
+                chamCongStatus.type === "success"
+                  ? "bg-[#E8F5F0] border-[#1D9E75]/20 text-[#1D9E75]"
+                  : "bg-red-50 border-red-200 text-red-600"
+              }`}>
+                {chamCongStatus.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                {chamCongStatus.message}
+              </div>
+            )}
+
+            {/* Face Scanner Overlay */}
+            {scannerLoai && (
+              <div className="mb-4 rounded-lg overflow-hidden border border-gray-100">
+                <div className="px-4 py-2.5 bg-[#E8F5F0] border-b border-[#1D9E75]/20 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[13px] font-semibold text-[#1D9E75]">
+                    <ScanFace size={15} />
+                    Xác thực khuôn mặt để chấm công {scannerLoai === "VAO" ? "VÀO" : "RA"}
+                  </div>
+                </div>
+                <FaceRegister
+                  onSuccess={handleChamCongFace}
+                  onCancel={() => setScannerLoai(null)}
+                />
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            {!scannerLoai && (
+              <div className="grid grid-cols-2 gap-3">
+                {(!todayLog || !todayLog.gio_vao) && (
+                  <button
+                    onClick={() => openChamCongScanner("VAO")}
+                    disabled={chamCongStatus.loading}
+                    className="col-span-2 bg-[#1D9E75] hover:bg-[#158a63] disabled:bg-gray-300 text-white font-semibold py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {chamCongStatus.loading ? (
+                      <><Loader2 size={16} className="animate-spin" /> Đang xử lý...</>
+                    ) : (
+                      <><ScanFace size={16} /> Chấm công VÀO (Quét mặt)</>
+                    )}
+                  </button>
+                )}
+                {todayLog && todayLog.gio_vao && !todayLog.gio_ra && (
+                  <button
+                    onClick={() => openChamCongScanner("RA")}
+                    disabled={chamCongStatus.loading}
+                    className="col-span-2 bg-[#ea580c] hover:bg-[#c2410c] disabled:bg-gray-300 text-white font-semibold py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {chamCongStatus.loading ? (
+                      <><Loader2 size={16} className="animate-spin" /> Đang xử lý...</>
+                    ) : (
+                      <><ScanFace size={16} /> Chấm công RA (Quét mặt)</>
+                    )}
+                  </button>
+                )}
+                {todayLog && todayLog.gio_vao && todayLog.gio_ra && (
+                  <div className="col-span-2 text-center py-3 text-sm text-[#1D9E75] font-medium bg-[#E8F5F0] rounded-lg border border-[#1D9E75]/10">
+                    <CheckCircle2 size={16} className="inline mr-1.5" />
+                    Đã hoàn tất chấm công hôm nay
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ─── Section: Lịch Làm Việc ─── */}
       {activeSection === "LICH_CA" && (
         <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-5">
@@ -310,6 +546,11 @@ export default function HRClient({ userId }: Props) {
           </div>
 
           {/* Week grid */}
+          {loadingShifts ? (
+            <div className="flex items-center justify-center py-10 text-gray-400 text-[13px]">
+              <Loader2 size={16} className="animate-spin mr-2" /> Đang tải lịch ca...
+            </div>
+          ) : (
           <div className="grid grid-cols-7 gap-2">
             {weekDays.map((d, idx) => {
               const leaveForDay = donList.find((don) => {
@@ -324,16 +565,24 @@ export default function HRClient({ userId }: Props) {
 
               const isLeaveApproved = leaveForDay?.trang_thai === "DA_DUYET";
               const isLeavePending = leaveForDay?.trang_thai === "CHO_DUYET";
-              const status = getDayStatus(d, idx);
-              const isWeekend = idx >= 5;
+              const status = getDayStatus(d);
+
+              const dayShifts = shifts
+                .filter((s) => s.ngay_lam_viec && sameDay(new Date(s.ngay_lam_viec), d))
+                .sort((a, b) => {
+                  const ta = a.ca_lam_viec?.gio_bat_dau ? new Date(a.ca_lam_viec.gio_bat_dau).getUTCHours() : 99;
+                  const tb = b.ca_lam_viec?.gio_bat_dau ? new Date(b.ca_lam_viec.gio_bat_dau).getUTCHours() : 99;
+                  return ta - tb;
+                });
+              const hasShifts = dayShifts.length > 0;
 
               let borderCls = "border-gray-100";
               let bgCls = "bg-white";
               if (isLeaveApproved) { borderCls = "border-[#A32D2D]/20"; bgCls = "bg-[#FCEBEB]/50"; }
               else if (isLeavePending) { borderCls = "border-[#BA7517]/20"; bgCls = "bg-[#FAEEDA]/50"; }
               else if (status === "today") { borderCls = "border-[#1D9E75]"; bgCls = "bg-[#E8F5F0]/50"; }
-              else if (status === "completed") { borderCls = "border-[#1D9E75]/20"; bgCls = "bg-[#E8F5F0]/30"; }
-              else if (isWeekend) { bgCls = "bg-gray-50"; }
+              else if (status === "completed" && hasShifts) { borderCls = "border-[#1D9E75]/20"; bgCls = "bg-[#E8F5F0]/30"; }
+              else if (!hasShifts) { bgCls = "bg-gray-50"; }
 
               return (
                 <div key={idx} className={`rounded-[8px] border p-3 ${borderCls} ${bgCls} min-h-[120px]`}>
@@ -346,9 +595,7 @@ export default function HRClient({ userId }: Props) {
                     </span>
                   </div>
 
-                  {isWeekend ? (
-                    <p className="text-[11px] text-gray-400 text-center mt-4">Nghỉ</p>
-                  ) : isLeaveApproved ? (
+                  {isLeaveApproved ? (
                     <div className="mt-2">
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#A32D2D] text-white">OFF</span>
                       <p className="text-[11px] text-[#A32D2D] mt-1.5">{LOAI_NGHI_LABEL[leaveForDay!.loai_nghi] ?? "Nghỉ"}</p>
@@ -358,23 +605,29 @@ export default function HRClient({ userId }: Props) {
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#BA7517] text-white">Chờ duyệt</span>
                       <p className="text-[11px] text-[#BA7517] mt-1.5">{LOAI_NGHI_LABEL[leaveForDay!.loai_nghi] ?? ""}</p>
                     </div>
-                  ) : (
+                  ) : hasShifts ? (
                     <div className="space-y-1.5 mt-1">
-                      <div className="flex items-center gap-1.5">
-                        <Coffee size={10} className="text-gray-400" />
-                        <span className="text-[11px] text-gray-600">06:00–14:00</span>
-                      </div>
-                      {status === "completed" && <p className="text-[10px] text-[#1D9E75] font-medium pl-4">05:55</p>}
-                      {status === "today" && <p className="text-[10px] text-[#1D9E75] font-medium pl-4">Đang làm</p>}
-                      <div className="flex items-center gap-1.5">
-                        <Moon size={10} className="text-gray-400" />
-                        <span className="text-[11px] text-gray-600">14:00–22:00</span>
-                      </div>
-                      {status === "completed" && <p className="text-[10px] text-[#1D9E75] font-medium pl-4">13:50</p>}
+                      {dayShifts.map((s) => {
+                        const startH = s.ca_lam_viec?.gio_bat_dau ? new Date(s.ca_lam_viec.gio_bat_dau).getUTCHours() : 0;
+                        const Icon = startH < 12 ? Coffee : Moon;
+                        return (
+                          <div key={s.id} className="flex items-center gap-1.5" title={s.ca_lam_viec?.ten_ca ?? ""}>
+                            <Icon size={10} className="text-gray-400 shrink-0" />
+                            <span className="text-[11px] text-gray-600">
+                              {formatCaTime(s.ca_lam_viec?.gio_bat_dau)}–{formatCaTime(s.ca_lam_viec?.gio_ket_thuc)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                      {status === "today" && (
+                        <p className="text-[10px] text-[#1D9E75] font-medium pl-4">Đang làm</p>
+                      )}
                     </div>
+                  ) : (
+                    <p className="text-[11px] text-gray-400 text-center mt-4">Nghỉ</p>
                   )}
 
-                  {!isWeekend && !leaveForDay && status === "completed" && (
+                  {hasShifts && !leaveForDay && status === "completed" && (
                     <div className="mt-2 flex justify-end">
                       <div className="w-4 h-4 rounded-full bg-[#1D9E75] flex items-center justify-center">
                         <Check size={10} className="text-white" strokeWidth={3} />
@@ -385,6 +638,7 @@ export default function HRClient({ userId }: Props) {
               );
             })}
           </div>
+          )}
 
           <div className="mt-4 flex items-center gap-3 px-3 py-2.5 bg-[#F5F5F4] rounded-[8px] text-[12px] text-gray-500">
             <Clock size={14} className="text-gray-400 shrink-0" />
@@ -645,6 +899,17 @@ export default function HRClient({ userId }: Props) {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant="danger"
+        confirmText="Xóa"
+        cancelText="Hủy"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

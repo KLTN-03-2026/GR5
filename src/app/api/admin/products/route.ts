@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,7 +15,7 @@ export async function GET(request: Request) {
     // ĐÃ FIX: Đưa về tìm kiếm bình thường, không lọc trạng thái Xóa
     const whereCondition = search ? { ten_san_pham: { contains: search } } : {};
 
-    const [total, products] = await Promise.all([
+    const [total, rawProducts] = await Promise.all([
       prisma.san_pham.count({ where: whereCondition }),
       prisma.san_pham.findMany({
         where: whereCondition,
@@ -22,11 +24,31 @@ export async function GET(request: Request) {
         orderBy: { id: 'desc' },
         include: {
           danh_muc: true,
-          bien_the_san_pham: true,
+          bien_the_san_pham: {
+            include: {
+              lo_hang: {
+                include: { ton_kho_tong: { select: { so_luong: true } } }
+              }
+            }
+          },
           anh_san_pham: { where: { la_anh_chinh: true }, take: 1 }
         }
       })
     ]);
+
+    const products = rawProducts.map(p => {
+      const ton_kho = p.bien_the_san_pham.reduce((sum, bt) => {
+        return sum + bt.lo_hang.reduce((s, lh) => {
+          return s + lh.ton_kho_tong.reduce((s2, tk) => s2 + (tk.so_luong || 0), 0);
+        }, 0);
+      }, 0);
+      const bien_the_with_stock = p.bien_the_san_pham.map(bt => {
+        const btStock = bt.lo_hang.reduce((s, lh) => s + lh.ton_kho_tong.reduce((s2, tk) => s2 + (tk.so_luong || 0), 0), 0);
+        const { lo_hang, ...rest } = bt;
+        return { ...rest, ton_kho: btStock };
+      });
+      return { ...p, ton_kho, bien_the_san_pham: bien_the_with_stock };
+    });
 
     return NextResponse.json({
       data: products,

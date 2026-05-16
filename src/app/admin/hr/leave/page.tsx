@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   CheckCircle2, XCircle, Clock, FileText, Filter,
   CalendarRange, User, MessageSquare, ChevronDown,
@@ -42,6 +43,9 @@ function Avatar({ name }: { name: string }) {
 }
 
 export default function LeaveManagementPage() {
+  const { data: session } = useSession();
+  const adminId = Number((session?.user as any)?.id) || 1;
+
   const [list, setList] = useState<DonNghiPhep[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"ALL" | "CHO_DUYET" | "DA_DUYET" | "TU_CHOI">("ALL");
@@ -51,37 +55,55 @@ export default function LeaveManagementPage() {
 
   const fetchLeaves = async () => {
     setLoading(true);
-    const res = await fetch("/api/nghi-phep");
-    const result = await res.json();
-    if (result.success) setList(result.data);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/nghi-phep");
+      if (!res.ok) throw new Error("Lỗi tải dữ liệu");
+      const result = await res.json();
+      if (result.success) setList(result.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchLeaves(); }, []);
 
   const handleApprove = async (id: number) => {
     setProcessing(id);
-    await fetch(`/api/nghi-phep/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ trang_thai: "DA_DUYET", phan_hoi_admin: "Đã phê duyệt", ma_nguoi_duyet: 1 }),
-    });
-    setProcessing(null);
-    fetchLeaves();
+    try {
+      const res = await fetch(`/api/nghi-phep/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trang_thai: "DA_DUYET", phan_hoi_admin: "Đã phê duyệt", ma_nguoi_duyet: adminId }),
+      });
+      if (!res.ok) throw new Error("Duyệt thất bại");
+      fetchLeaves();
+    } catch (e: any) {
+      alert(e.message || "Đã xảy ra lỗi");
+    } finally {
+      setProcessing(null);
+    }
   };
 
   const handleReject = async () => {
     if (!rejectReason.trim()) return;
     setProcessing(rejectModal.id);
-    await fetch(`/api/nghi-phep/${rejectModal.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ trang_thai: "TU_CHOI", phan_hoi_admin: rejectReason, ma_nguoi_duyet: 1 }),
-    });
-    setProcessing(null);
-    setRejectModal({ id: 0, open: false });
-    setRejectReason("");
-    fetchLeaves();
+    try {
+      const res = await fetch(`/api/nghi-phep/${rejectModal.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trang_thai: "TU_CHOI", phan_hoi_admin: rejectReason, ma_nguoi_duyet: adminId }),
+      });
+      if (!res.ok) throw new Error("Từ chối thất bại");
+      setRejectModal({ id: 0, open: false });
+      setRejectReason("");
+      fetchLeaves();
+    } catch (e: any) {
+      alert(e.message || "Đã xảy ra lỗi");
+    } finally {
+      setProcessing(null);
+    }
   };
 
   const countByStatus = (s: string) => list.filter((d) => d.trang_thai === s).length;

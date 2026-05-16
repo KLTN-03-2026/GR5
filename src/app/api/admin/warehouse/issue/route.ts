@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { syncProductStatusFromStock } from "@/lib/product-stock-status";
 
 // ═══════════════════════════════════════════════
 // GET — Gợi ý lô theo FEFO cho một sản phẩm
@@ -123,6 +124,16 @@ export async function POST(req: Request) {
         },
       });
 
+      // Tạo chi tiết phiếu xuất
+      const chiTietXuat = await prisma.chi_tiet_phieu_xuat.create({
+        data: {
+          ma_phieu_xuat: phieuXuat.id,
+          ma_bien_the: Number(ma_bien_the),
+          so_luong_yeu_cau: yeuCau,
+          so_luong_thuc_xuat: Math.min(yeuCau, totalTon),
+        },
+      });
+
       // Trừ tồn theo FEFO
       let conLai = Math.min(yeuCau, totalTon);
       const xuat_items: string[] = [];
@@ -133,29 +144,23 @@ export async function POST(req: Request) {
           const tru = Math.min(conLai, tk.so_luong ?? 0);
           await tx.ton_kho_tong.update({ where: { id: tk.id }, data: { so_luong: { decrement: tru } } });
 
-          // Ghi lịch sử xuất: lấy các thùng TRONG_KHO của lô này
           const thungs = await tx.kien_hang_chi_tiet.findMany({
             where: { ma_lo_hang: tk.lo_hang?.id ?? 0, trang_thai: "TRONG_KHO", ma_vi_tri: tk.vi_tri_kho?.id },
             take: tru,
           });
-          // tk.lo_hang IS included via outer query — use it for ma_bien_the
-          const maBienTheFromLo = tk.lo_hang?.ma_bien_the;
           for (const t of thungs) {
             await tx.kien_hang_chi_tiet.update({ where: { id: t.id }, data: { trang_thai: "DA_XUAT" } });
-            if (t.ma_lo_hang && maBienTheFromLo) {
-              await tx.kien_hang_da_xuat.create({
-                data: {
-                  ma_phieu_xuat: phieuXuat.id,
-                  ma_vach_quet: t.ma_vach_quet,
-                  ma_bien_the: maBienTheFromLo,
-                  ngay_xuat: new Date(),
-                },
-              }).catch(() => null); // ignore if insert fails (e.g. constraint)
-            }
+            await tx.kien_hang_da_xuat.create({
+              data: {
+                ma_chi_tiet_xuat: chiTietXuat.id,
+                ma_kien_hang: t.id,
+              },
+            }).catch(() => null);
           }
           xuat_items.push(`${tk.lo_hang?.ma_lo_hang}: ${tru} thùng`);
           conLai -= tru;
         }
+        await syncProductStatusFromStock(tx, [Number(ma_bien_the)]);
       });
 
       return NextResponse.json({

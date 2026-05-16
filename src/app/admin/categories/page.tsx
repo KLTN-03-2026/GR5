@@ -13,7 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -143,7 +143,6 @@ export default function CategoriesPage() {
         boxSizing: "border-box",
       }}
     >
-      <Toaster />
 
       {/* Page header */}
       <div style={{ marginBottom: 24 }}>
