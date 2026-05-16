@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { auth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -120,6 +121,26 @@ export async function GET(req: Request) {
 // POST: Tạo mới nhân viên
 export async function POST(req: Request) {
   try {
+    // ── Kiểm tra phiên đăng nhập & phân quyền ──────────────────────────────
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, message: 'Bạn chưa đăng nhập' },
+        { status: 401 }
+      );
+    }
+
+    const callerRoles: string[] = (session.user as any).roles ?? [];
+    const isAdmin = callerRoles.includes('ADMIN');
+    const isThuKho = callerRoles.includes('THU_KHO');
+
+    if (!isAdmin && !isThuKho) {
+      return NextResponse.json(
+        { success: false, message: 'Bạn không có quyền tạo nhân viên' },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const {
       email, mat_khau, ho_ten, so_dien_thoai, cccd,
@@ -127,6 +148,16 @@ export async function POST(req: Request) {
       hop_dong_het_han, luong_theo_gio,
       vai_tro = 'STAFF', // STAFF | THU_KHO | CUSTOMER
     } = body;
+
+    // ── Thủ kho chỉ được tạo STAFF ─────────────────────────────────────────
+    if (!isAdmin && isThuKho) {
+      if (vai_tro !== 'STAFF') {
+        return NextResponse.json(
+          { success: false, message: 'Thủ kho chỉ được phép tạo tài khoản Nhân viên vận hành (STAFF)' },
+          { status: 403 }
+        );
+      }
+    }
 
     // 1. Validate
     if (!email || !mat_khau || !ho_ten || !cccd) {

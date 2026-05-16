@@ -10,9 +10,18 @@ import {
   UserCircle,
   LogOut,
   Layers,
+  PackageCheck,
+  ShieldCheck,
+  ShoppingBag,
 } from "lucide-react";
 
 const menuItems = [
+  {
+    name: "Quản Lý Đơn Hàng",
+    path: "/staff/orders",
+    icon: ShoppingBag,
+    description: "Xác nhận · Xử lý · Theo dõi đơn",
+  },
   {
     name: "Quản Lý Kho",
     path: "/staff/warehouse",
@@ -20,10 +29,22 @@ const menuItems = [
     description: "Tồn kho · Nhập/Xuất · Cảnh báo",
   },
   {
-    name: "Đơn Hàng",
-    path: "/staff/orders",
+    name: "Nhận Hàng (Check-in)",
+    path: "/staff/warehouse/receiving",
     icon: ClipboardList,
-    description: "Xác nhận & xử lý đơn hàng",
+    description: "Nhận & đếm hàng thực tế",
+  },
+  {
+    name: "Kiểm Định (QC)",
+    path: "/staff/warehouse/qc",
+    icon: ShieldCheck,
+    description: "Kiểm tra chất lượng lô nhập",
+  },
+  {
+    name: "Xuất Kho Đơn Hàng",
+    path: "/staff/warehouse/issue",
+    icon: PackageCheck,
+    description: "Nhặt hàng · Quét QR · Đóng gói",
   },
   {
     name: "Cá Nhân",
@@ -56,7 +77,7 @@ export default function StaffSidebar({ userEmail }: { userEmail?: string | null 
       {/* Role Badge */}
       <div className="mx-4 mb-4 px-3 py-2 bg-blue-600/10 border border-blue-500/20 rounded-lg">
         <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Quyền truy cập</p>
-        <p className="text-xs text-gray-300 mt-0.5">Kho · Đơn hàng · Cá nhân</p>
+        <p className="text-xs text-gray-300 mt-0.5">Kho · Nhận hàng · Cá nhân</p>
       </div>
 
       {/* Navigation Links */}

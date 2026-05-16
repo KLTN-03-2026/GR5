@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { Mail, ArrowLeft, Loader2 } from "lucide-react"; // Thêm Loader2 cho xịn
+import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -35,11 +36,11 @@ export default function ForgotPasswordPage() {
         router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
       } else {
         // Hiện lỗi nếu email không tồn tại hoặc lỗi server
-        alert(data.message || "Có lỗi xảy ra rồi Phú ơi!");
+        toast.error(data.message || "Có lỗi xảy ra!");
       }
     } catch (error) {
       console.error("Lỗi fetch:", error);
-      alert("Không kết nối được với Server, check lại mạng nha!");
+      toast.error("Không kết nối được với Server, vui lòng thử lại!");
     } finally {
       setLoading(false);
     }

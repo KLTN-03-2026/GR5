@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export function CategoryForm() {
   // 1. Tạo state để lưu dữ liệu người dùng gõ vào
@@ -20,7 +21,7 @@ export function CategoryForm() {
 
     // Bắt lỗi cơ bản bằng tay luôn, khỏi cần Zod lằng nhằng
     if (tenDanhMuc.trim().length < 2) {
-      alert("Lỗi: Tên danh mục phải có ít nhất 2 ký tự!");
+      toast.error("Tên danh mục phải có ít nhất 2 ký tự!");
       return;
     }
 
@@ -31,7 +32,7 @@ export function CategoryForm() {
     };
 
     console.log("Dữ liệu chuẩn bị chui vào DB:", dataToSend);
-    alert("Test thành công! Mở F12 (Console) để xem dữ liệu.");
+    toast.success("Test thành công! Mở F12 (Console) để xem dữ liệu.");
   };
 
   // 3. Giao diện (Dùng HTML thẻ input, select bình thường + Tailwind)

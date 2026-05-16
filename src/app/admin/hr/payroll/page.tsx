@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PayrollTable, LuongNhanVien } from "@/components/admin/payroll/PayrollTable";
 import * as XLSX from "xlsx";
 import { FileSpreadsheet, DollarSign, Clock, TrendingDown, Users } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function PayrollPage() {
   const [data, setData] = useState<LuongNhanVien[]>([]);
@@ -27,6 +28,7 @@ export default function PayrollPage() {
       }
     } catch (error) {
       console.error("Lỗi tính lương:", error);
+      toast.error("Lỗi tải dữ liệu lương");
     } finally {
       setLoading(false);
     }
@@ -37,7 +39,7 @@ export default function PayrollPage() {
   }, [selectedMonth]);
 
   const exportToExcel = () => {
-    if (data.length === 0) { alert("Không có dữ liệu để xuất!"); return; }
+    if (data.length === 0) { toast.error("Không có dữ liệu để xuất!"); return; }
     const excelData = data.map((nv, index) => ({
       STT: index + 1,
       "Họ và Tên": nv.ho_ten,

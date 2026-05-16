@@ -23,4 +23,5 @@ export const ImportGoodsSchema = z.object({
 export const ScanGoodsSchema = z.object({
   scannedQR: z.string().min(1, "Mã QR không hợp lệ"),
   expectedQR: z.string().min(1, "Thiếu mã QR chỉ định"),
+  phieuXuatId: z.coerce.number().optional(),
 });

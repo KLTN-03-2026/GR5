@@ -4,9 +4,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Star, ChevronRight, ShoppingCart, Minus, Plus, CheckCircle2,
   Leaf, Truck, Gift, MessageSquare, Send, ThumbsUp, User,
-  ImageIcon, ChevronLeft, Filter, AlertCircle, LogIn, Heart,
+  ImageIcon, ChevronLeft, Filter, AlertCircle, LogIn, Heart, Bell,
 } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useCart } from "@/lib/CartContext";
 import toast from "react-hot-toast";
 
@@ -61,15 +62,34 @@ function RatingBar({ star, count, total }: { star: number; count: number; total:
 
 /* ────────── main component ────────── */
 export default function ProductDetailClient({
-  product, relatedProducts, isLoggedIn, daMua,
+  product, relatedProducts, relatedSectionTitle, isLoggedIn, daMua,
 }: {
-  product: any; relatedProducts: any[]; isLoggedIn: boolean; daMua: boolean;
+  product: any; relatedProducts: any[]; relatedSectionTitle?: string; isLoggedIn: boolean; daMua: boolean;
 }) {
+  const { data: sessionData } = useSession();
   const hasVariants = product?.bien_the?.length > 0;
   const [selectedVariant, setSelectedVariant] = useState(hasVariants ? product.bien_the[0] : null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(product?.hinh_anh?.[0] || "");
   const { addToCart } = useCart();
+
+  /* ── back-in-stock notification state ── */
+  const [bisFormOpen, setBisFormOpen] = useState(false);
+  const [bisEmail, setBisEmail] = useState("");
+  const [bisLoading, setBisLoading] = useState(false);
+  const [bisSuccess, setBisSuccess] = useState(false);
+
+  useEffect(() => {
+    if (sessionData?.user?.email) {
+      setBisEmail(sessionData.user.email);
+    }
+  }, [sessionData]);
+
+  // Reset back-in-stock success state when variant changes
+  useEffect(() => {
+    setBisSuccess(false);
+    setBisFormOpen(false);
+  }, [selectedVariant]);
 
   /* ── review state ── */
   const [reviews, setReviews]         = useState<any[]>(product.danh_sach_danh_gia || []);
@@ -239,6 +259,39 @@ export default function ProductDetailClient({
     }
   };
 
+  /* ── back-in-stock subscribe ── */
+  const handleBackInStockSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bisEmail || !bisEmail.includes("@")) {
+      toast.error("Vui lòng nhập email hợp lệ");
+      return;
+    }
+    setBisLoading(true);
+    try {
+      const res = await fetch("/api/store/back-in-stock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          variantId: selectedVariant?.id || null,
+          email: bisEmail,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBisSuccess(true);
+        setBisFormOpen(false);
+        toast.success(data.message || "Đăng ký thành công!");
+      } else {
+        toast.error(data.message || "Có lỗi xảy ra");
+      }
+    } catch {
+      toast.error("Lỗi hệ thống, vui lòng thử lại");
+    } finally {
+      setBisLoading(false);
+    }
+  };
+
   const avg = reviewStats?.avg ?? product.danh_gia ?? 0;
   const total = reviewStats?.total ?? reviewTotal;
   const byStar = reviewStats?.byStar ?? {};
@@ -248,12 +301,20 @@ export default function ProductDetailClient({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24 font-sans bg-[#FDFEFC]">
 
       {/* Breadcrumb */}
-      <div className="flex items-center text-sm text-gray-500 mb-8 font-medium">
-        <Link href="/" className="hover:text-emerald-600 transition-colors">Trang chủ</Link>
-        <ChevronRight className="w-4 h-4 mx-2" />
-        <Link href="/products" className="hover:text-emerald-600 transition-colors">Sản phẩm</Link>
-        <ChevronRight className="w-4 h-4 mx-2" />
-        <span className="text-gray-900 font-bold truncate max-w-[200px]">{product?.ten_san_pham}</span>
+      <div className="flex items-center gap-1.5 mb-4 py-2 text-sm">
+        <Link href="/" className="text-gray-500 hover:text-emerald-600 transition-colors">Trang chủ</Link>
+        <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+        <Link href="/products" className="text-gray-500 hover:text-emerald-600 transition-colors">Sản phẩm</Link>
+        {product?.danh_muc && (
+          <>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+            <Link href={`/products?category=${product.danh_muc.id}`} className="text-gray-500 hover:text-emerald-600 transition-colors">
+              {product.danh_muc.ten_danh_muc}
+            </Link>
+          </>
+        )}
+        <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+        <span className="text-gray-800 font-medium truncate max-w-[200px]">{product?.ten_san_pham}</span>
       </div>
 
       {/* ── Product info ── */}
@@ -388,7 +449,66 @@ export default function ProductDetailClient({
               />
             </button>
           </div>
-          <p className="text-center text-xs text-gray-400">Miễn phí vận chuyển cho đơn hàng từ 500.000đ</p>
+
+          {/* ── Back-in-stock notification ── */}
+          {currentStock <= 0 && (
+            <div className="mt-4">
+              {bisSuccess ? (
+                <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-lg">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span className="text-sm font-medium text-green-700">
+                    Chúng tôi sẽ thông báo khi sản phẩm có hàng trở lại!
+                  </span>
+                </div>
+              ) : !bisFormOpen ? (
+                <button
+                  onClick={() => setBisFormOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 font-bold text-sm hover:bg-amber-100 transition-all"
+                >
+                  <Bell className="w-4 h-4" />
+                  Thông báo khi có hàng
+                </button>
+              ) : (
+                <form
+                  onSubmit={handleBackInStockSubscribe}
+                  className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg"
+                >
+                  <Bell className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <input
+                    type="email"
+                    value={bisEmail}
+                    onChange={(e) => setBisEmail(e.target.value)}
+                    placeholder="Nhập email của bạn"
+                    required
+                    className="flex-1 h-9 px-3 text-sm border border-amber-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                  />
+                  <button
+                    type="submit"
+                    disabled={bisLoading}
+                    className="h-9 px-4 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    {bisLoading ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="w-3 h-3" />
+                        Đăng ký
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBisFormOpen(false)}
+                    className="h-9 px-2 text-amber-600 hover:text-amber-800 text-sm font-medium"
+                  >
+                    Hủy
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
+          <p className="text-center text-xs text-gray-400 mt-3">Miễn phí vận chuyển cho đơn hàng từ 500.000đ</p>
         </div>
       </div>
 
@@ -610,7 +730,7 @@ export default function ProductDetailClient({
             </h3>
             <div className="space-y-3 text-sm text-gray-600">
               <div className="flex justify-between border-b border-emerald-100/50 pb-2">
-                <span>Nội thành TPHCM:</span>
+                <span>Nội thành Đà Nẵng:</span>
                 <span className="font-bold text-gray-900">2 - 4 giờ</span>
               </div>
               <div className="flex justify-between border-b border-emerald-100/50 pb-2">
@@ -636,12 +756,14 @@ export default function ProductDetailClient({
             <Gift className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-100/50" />
           </div>
 
-          {/* Related products */}
+          {/* Related products - compact sidebar view */}
           {relatedProducts?.length > 0 && (
             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-              <h3 className="font-bold text-gray-900 mb-4">Sản phẩm liên quan</h3>
+              <h3 className="font-bold text-gray-900 mb-4">
+                {relatedSectionTitle || "Sản phẩm liên quan"}
+              </h3>
               <div className="space-y-4">
-                {relatedProducts.map((p) => (
+                {relatedProducts.slice(0, 3).map((p) => (
                   <Link href={`/products/${p.id}`} key={p.id} className="flex gap-3 group">
                     <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
                       <img src={p.anh_chinh} alt={p.ten_san_pham} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
@@ -657,6 +779,37 @@ export default function ProductDetailClient({
           )}
         </div>
       </div>
+
+      {/* ── Full Related Products Grid Section ── */}
+      {relatedProducts?.length > 0 && (
+        <div className="mt-12 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-1 h-6 bg-emerald-600 rounded-full" />
+            <h2 className="text-xl font-extrabold text-gray-900">
+              {relatedSectionTitle || "Sản phẩm liên quan"}
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {relatedProducts.map((p) => (
+              <Link href={`/products/${p.id}`} key={p.id}
+                className="group bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all hover:-translate-y-0.5">
+                <div className="aspect-square bg-gray-50 overflow-hidden">
+                  <img src={p.anh_chinh} alt={p.ten_san_pham}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                </div>
+                <div className="p-3">
+                  <h4 className="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors line-clamp-2 mb-2">
+                    {p.ten_san_pham}
+                  </h4>
+                  <p className="text-sm font-extrabold text-emerald-700">
+                    {p.gia_ban.toLocaleString("vi-VN")}đ
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

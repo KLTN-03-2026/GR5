@@ -8,27 +8,18 @@ export async function GET() {
     // 1. Lấy dữ liệu từ bảng giao_dich_thanh_toan
     const payments = await prisma.giao_dich_thanh_toan.findMany({
       include: {
-        // Kéo thông tin đơn hàng và người dùng liên quan
         don_hang: {
-          select: {
-            id: true,
+          include: {
             nguoi_dung: {
-              select: {
-                email: true,
-                ho_so_nguoi_dung: {
-                  select: { ho_ten: true }
-                }
+              include: {
+                ho_so_nguoi_dung: true
               }
             },
-            yeu_cau_doi_tra: {
-              select: { trang_thai: true }
-            }
+            yeu_cau_doi_tra: true
           }
         },
-        // Kéo tên phương thức thanh toán
-        phuong_thuc_thanh_toan: {
-          select: { ten_phuong_thuc: true }
-        }
+        phuong_thuc_thanh_toan_ref: true,
+        lich_su_hoan_tien: true
       },
       orderBy: {
         ngay_tao: 'desc'
@@ -37,7 +28,7 @@ export async function GET() {
 
     // 2. Chuyển đổi dữ liệu (Format) để giao diện Frontend dễ hiển thị
     const formattedPayments = payments.map(payment => {
-      
+
       // Xác định trạng thái thanh toán (Mapping từ DB lên UI)
       let paymentStatus = payment.trang_thai; // Lấy trạng thái gốc từ bảng giao_dich_thanh_toan
 
@@ -47,23 +38,34 @@ export async function GET() {
       }
 
       // Xử lý tên phương thức thanh toán
-      // Giả sử ten_phuong_thuc trong DB là "Thanh toán khi nhận hàng", "Chuyển khoản ngân hàng", "VNPay"...
-      // Mình gán tạm một string ngắn gọn để UI dễ xử lý icon (COD, CHUYEN_KHOAN, VNPAY)
+      // Ưu tiên dùng cột phuong_thuc_thanh_toan trực tiếp trên giao_dich_thanh_toan (VARCHAR(50))
+      // Cột này lưu giá trị như "COD", "VNPAY", "MOMO", "CHUYEN_KHOAN"
+      // Fallback sang phuong_thuc_thanh_toan_ref.ten_phuong_thuc nếu cột trực tiếp rỗng
       let methodShortName = 'COD';
-      const methodNameDb = payment.phuong_thuc_thanh_toan?.ten_phuong_thuc?.toLowerCase() || '';
-      
-      if (methodNameDb.includes('vnpay')) {
-        methodShortName = 'VNPAY';
-      } else if (methodNameDb.includes('chuyển khoản') || methodNameDb.includes('ngân hàng') || methodNameDb.includes('banking')) {
-        methodShortName = 'CHUYEN_KHOAN';
+      const directMethod = payment.phuong_thuc_thanh_toan?.toUpperCase()?.trim() || '';
+
+      if (directMethod && ['COD', 'VNPAY', 'MOMO', 'CHUYEN_KHOAN'].includes(directMethod)) {
+        // Dùng giá trị trực tiếp từ cột phuong_thuc_thanh_toan
+        methodShortName = directMethod;
+      } else {
+        // Fallback: parse từ tên phương thức trong bảng tham chiếu
+        const methodNameDb = payment.phuong_thuc_thanh_toan_ref?.ten_phuong_thuc?.toLowerCase() || '';
+        if (methodNameDb.includes('vnpay')) {
+          methodShortName = 'VNPAY';
+        } else if (methodNameDb.includes('momo')) {
+          methodShortName = 'MOMO';
+        } else if (methodNameDb.includes('chuyển khoản') || methodNameDb.includes('ngân hàng') || methodNameDb.includes('banking')) {
+          methodShortName = 'CHUYEN_KHOAN';
+        }
       }
 
       return {
         id: payment.id, // ID của giao dịch
         ma_don_hang: payment.ma_don_hang,
         tong_tien: payment.so_tien, // Cột số tiền trong bảng giao dịch
-        phuong_thuc_thanh_toan: methodShortName, // COD, VNPAY, CHUYEN_KHOAN
-        phuong_thuc_goc: payment.phuong_thuc_thanh_toan?.ten_phuong_thuc, // Tên đầy đủ
+        phi_van_chuyen: payment.don_hang?.phi_van_chuyen ?? 0, // Phí vận chuyển từ đơn hàng
+        phuong_thuc_thanh_toan: methodShortName, // COD, VNPAY, MOMO, CHUYEN_KHOAN
+        phuong_thuc_goc: payment.phuong_thuc_thanh_toan_ref?.ten_phuong_thuc, // Tên đầy đủ
         trang_thai_thanh_toan: paymentStatus, // CHO_THANH_TOAN, DA_THANH_TOAN, THAT_BAI, DA_HOAN_TIEN
         ngay_tao: payment.ngay_tao,
         ma_giao_dich_ben_ngoai: payment.ma_giao_dich_ben_ngoai, // Mã tham chiếu VNPay (nếu có)
@@ -72,11 +74,11 @@ export async function GET() {
     });
 
     return NextResponse.json(formattedPayments);
-    
-  } catch (error: any) {
-    console.error("❌ Lỗi GET Admin Payments:", error.message);
+
+  } catch (error: unknown) {
+    console.error("Lỗi GET Admin Payments:", error);
     return NextResponse.json(
-      { success: false, message: "Lỗi hệ thống khi tải dữ liệu thanh toán" }, 
+      { success: false, message: "Lỗi hệ thống khi tải dữ liệu thanh toán" },
       { status: 500 }
     );
   }

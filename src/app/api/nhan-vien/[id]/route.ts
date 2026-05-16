@@ -1,17 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-
-// Định nghĩa kiểu cho params
-interface RouteContext {
-  params: {
-    id: string;
-  };
-}
+import { auth } from '@/lib/auth';
 
 // GET: Lấy hồ sơ chi tiết + lịch sử chấm công + lịch sử lương
-export async function GET(req: Request, context: RouteContext) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const maNhanVien = Number(context.params.id);
+    const { id } = await params;
+    const maNhanVien = Number(id);
     if (isNaN(maNhanVien)) {
       return NextResponse.json({ success: false, message: 'ID không hợp lệ' }, { status: 400 });
     }
@@ -20,6 +15,9 @@ export async function GET(req: Request, context: RouteContext) {
       where: { id: maNhanVien },
       include: {
         ho_so_nguoi_dung: true,
+        vai_tro_nguoi_dung: {
+          include: { vai_tro: { select: { ten_vai_tro: true } } }
+        },
         // Lấy 30 ngày chấm công gần nhất
         lich_su_cham_cong: {
           orderBy: { gio_vao: 'desc' },
@@ -52,18 +50,46 @@ export async function GET(req: Request, context: RouteContext) {
 }
 
 // PUT: Cập nhật thông tin hồ sơ
-export async function PUT(req: Request, context: RouteContext) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const maNhanVien = Number(context.params.id);
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ success: false, message: 'Bạn chưa đăng nhập' }, { status: 401 });
+    }
+    const callerRoles: string[] = (session.user as any).roles ?? [];
+    const isAdmin = callerRoles.includes('ADMIN');
+    const isThuKho = callerRoles.includes('THU_KHO');
+    if (!isAdmin && !isThuKho) {
+      return NextResponse.json({ success: false, message: 'Không có quyền chỉnh sửa' }, { status: 403 });
+    }
+
+    const { id: idParam } = await params;
+    const maNhanVien = Number(idParam);
     if (isNaN(maNhanVien)) {
       return NextResponse.json({ success: false, message: 'ID không hợp lệ' }, { status: 400 });
+    }
+
+    // Nếu thủ kho: kiểm tra target phải là STAFF
+    if (!isAdmin && isThuKho) {
+      const targetRoles = await prisma.vai_tro_nguoi_dung.findMany({
+        where: { ma_nguoi_dung: maNhanVien },
+        include: { vai_tro: { select: { ten_vai_tro: true } } },
+      });
+      const targetRoleNames = targetRoles.map((r) => r.vai_tro.ten_vai_tro);
+      if (!targetRoleNames.includes('STAFF') || targetRoleNames.includes('ADMIN') || targetRoleNames.includes('THU_KHO')) {
+        return NextResponse.json(
+          { success: false, message: 'Thủ kho chỉ được chỉnh sửa nhân viên vận hành (STAFF)' },
+          { status: 403 }
+        );
+      }
     }
 
     const body = await req.json();
     const { 
       ho_ten, so_dien_thoai, cccd, 
       ngay_vao_lam, chuc_vu, bo_phan, loai_hop_dong, 
-      hop_dong_het_han, luong_theo_gio, anh_dai_dien
+      hop_dong_het_han, luong_theo_gio, anh_dai_dien,
+      vai_tro, // chỉ Admin mới được đổi
     } = body;
 
     // 1. Kiểm tra tồn tại
@@ -83,24 +109,36 @@ export async function PUT(req: Request, context: RouteContext) {
       }
     }
 
-    // 3. Cập nhật dữ liệu
-    const updatedProfile = await prisma.ho_so_nguoi_dung.update({
-      where: { ma_nguoi_dung: maNhanVien },
-      data: {
-        ...(ho_ten && { ho_ten }),
-        ...(so_dien_thoai && { so_dien_thoai }),
-        ...(cccd && { cccd }),
-        ...(chuc_vu && { chuc_vu }),
-        ...(bo_phan && { bo_phan }),
-        ...(loai_hop_dong && { loai_hop_dong }),
-        ...(anh_dai_dien && { anh_dai_dien }),
-        ...(ngay_vao_lam && { ngay_vao_lam: new Date(ngay_vao_lam) }),
-        ...(hop_dong_het_han && { hop_dong_het_han: new Date(hop_dong_het_han) }),
-        ...(luong_theo_gio !== undefined && { luong_theo_gio: Number(luong_theo_gio) })
+    // 3. Cập nhật trong transaction
+    await prisma.$transaction(async (tx) => {
+      // 3a. Cập nhật hồ sơ
+      await tx.ho_so_nguoi_dung.update({
+        where: { ma_nguoi_dung: maNhanVien },
+        data: {
+          ...(ho_ten && { ho_ten }),
+          ...(so_dien_thoai !== undefined && { so_dien_thoai }),
+          ...(cccd && { cccd }),
+          ...(chuc_vu !== undefined && { chuc_vu }),
+          ...(bo_phan !== undefined && { bo_phan }),
+          ...(loai_hop_dong && { loai_hop_dong }),
+          ...(anh_dai_dien && { anh_dai_dien }),
+          ...(ngay_vao_lam ? { ngay_vao_lam: new Date(ngay_vao_lam) } : {}),
+          ...(hop_dong_het_han ? { hop_dong_het_han: new Date(hop_dong_het_han) } : {}),
+          ...(luong_theo_gio !== undefined && { luong_theo_gio: Number(luong_theo_gio) }),
+        }
+      });
+
+      // 3b. Đổi vai trò (chỉ Admin được đổi)
+      if (isAdmin && vai_tro) {
+        const newRole = await tx.vai_tro.findFirst({ where: { ten_vai_tro: vai_tro } });
+        if (!newRole) throw new Error(`Vai trò "${vai_tro}" không tồn tại`);
+        // Xoá hết roles cũ rồi gán mới
+        await tx.vai_tro_nguoi_dung.deleteMany({ where: { ma_nguoi_dung: maNhanVien } });
+        await tx.vai_tro_nguoi_dung.create({ data: { ma_nguoi_dung: maNhanVien, ma_vai_tro: newRole.id } });
       }
     });
 
-    return NextResponse.json({ success: true, message: 'Cập nhật thành công', data: updatedProfile }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'Cập nhật thành công' }, { status: 200 });
 
   } catch (error) {
     console.error('[API_PUT_NHAN_VIEN] Error:', error);
@@ -109,11 +147,38 @@ export async function PUT(req: Request, context: RouteContext) {
 }
 
 // DELETE: Xóa mềm nhân viên (Nghỉ việc)
-export async function DELETE(req: Request, context: RouteContext) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const maNhanVien = Number(context.params.id);
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ success: false, message: 'Bạn chưa đăng nhập' }, { status: 401 });
+    }
+    const callerRoles: string[] = (session.user as any).roles ?? [];
+    const isAdmin = callerRoles.includes('ADMIN');
+    const isThuKho = callerRoles.includes('THU_KHO');
+    if (!isAdmin && !isThuKho) {
+      return NextResponse.json({ success: false, message: 'Không có quyền thực hiện' }, { status: 403 });
+    }
+
+    const { id: idParam } = await params;
+    const maNhanVien = Number(idParam);
     if (isNaN(maNhanVien)) {
       return NextResponse.json({ success: false, message: 'ID không hợp lệ' }, { status: 400 });
+    }
+
+    // Nếu thủ kho: chỉ được cho STAFF nghỉ việc
+    if (!isAdmin && isThuKho) {
+      const targetRoles = await prisma.vai_tro_nguoi_dung.findMany({
+        where: { ma_nguoi_dung: maNhanVien },
+        include: { vai_tro: { select: { ten_vai_tro: true } } },
+      });
+      const targetRoleNames = targetRoles.map((r) => r.vai_tro.ten_vai_tro);
+      if (!targetRoleNames.includes('STAFF') || targetRoleNames.includes('ADMIN') || targetRoleNames.includes('THU_KHO')) {
+        return NextResponse.json(
+          { success: false, message: 'Thủ kho chỉ được cho nghỉ việc nhân viên vận hành (STAFF)' },
+          { status: 403 }
+        );
+      }
     }
 
     // SOFT DELETE: Chỉ đổi trạng thái = 0 (nghỉ việc), không xóa cứng để giữ lịch sử chấm công, tính lương

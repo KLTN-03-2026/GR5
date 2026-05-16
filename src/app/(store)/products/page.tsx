@@ -17,9 +17,11 @@ export default async function ProductsPage({
   const minPrice = params?.minPrice ? Number(params.minPrice) : undefined;
   const maxPrice = params?.maxPrice ? Number(params.maxPrice) : undefined;
   const minRating = params?.rating ? Number(params.rating) : undefined;
+  const certificatesParam = params?.certificates ? String(params.certificates) : undefined;
+  const selectedCertificates = certificatesParam ? certificatesParam.split(",") : [];
 
-  // TÍNH NĂNG MỚI: Lấy danh sách nhiều xuất xứ từ URL (ngăn cách bằng dấu phẩy)
-  const originParam = params?.origin ? String(params.origin) : undefined;
+
+
 
   // 1. ĐIỀU KIỆN LỌC DATABASE
   const whereCondition: any = { trang_thai: "DANG_BAN" };
@@ -35,13 +37,6 @@ export default async function ProductsPage({
     ];
   }
 
-  // Nếu khách chọn nhiều nơi (VD: Đà Lạt, Gia Lai), tìm SP thuộc 1 trong các nơi đó (toán tử 'in')
-  if (originParam) {
-    const originArray = originParam.split(",").filter(Boolean);
-    if (originArray.length > 0) {
-      whereCondition.xuat_xu = { in: originArray };
-    }
-  }
 
   if (minPrice !== undefined || maxPrice !== undefined) {
     whereCondition.bien_the_san_pham = {
@@ -50,6 +45,14 @@ export default async function ProductsPage({
           ...(minPrice !== undefined ? { gte: minPrice } : {}),
           ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
         },
+      },
+    };
+  }
+
+  if (selectedCertificates.length > 0) {
+    whereCondition.chung_chi_san_pham = {
+      some: {
+        ten_chung_chi: { in: selectedCertificates },
       },
     };
   }
@@ -128,23 +131,18 @@ export default async function ProductsPage({
     })),
   }));
 
-  // 8. KÉO XUẤT XỨ TỪ DB THẬT (FIX LỖI TYPE SCRIPT Ở ĐÂY)
-  const uniqueOriginsRaw = await prisma.san_pham.findMany({
-    where: { trang_thai: "DANG_BAN", xuat_xu: { not: "" } },
-    select: { xuat_xu: true },
-    distinct: ["xuat_xu"],
+  // 8. KÉO DANH SÁCH CHỨNG CHỈ TỪ DB
+  const rawCertificates = await prisma.chung_chi_san_pham.findMany({
+    select: { ten_chung_chi: true },
+    distinct: ["ten_chung_chi"],
   });
-
-  // Dùng Type Guard (x is string) để nói cho TypeScript biết mảng này cam đoan 100% là chữ, ko có null
-  const formattedOrigins: string[] = uniqueOriginsRaw
-    .map((o) => o.xuat_xu)
-    .filter((x): x is string => typeof x === "string" && x.trim() !== "");
+  const availableCertificates = rawCertificates.map((c: any) => c.ten_chung_chi);
 
   return (
     <ProductsClient
       products={paginatedProducts}
       categories={formattedCategories}
-      origins={formattedOrigins}
+      certificates={availableCertificates}
       currentPage={currentPage}
       totalPages={totalPages}
     />

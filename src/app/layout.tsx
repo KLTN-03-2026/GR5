@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro } from "next/font/google";
 import "@/app/globals.css";
 import { CartProvider } from "@/lib/CartContext";
 import { SessionProvider } from "next-auth/react";
+import { GlobalToaster } from "@/components/GlobalToaster";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -26,7 +27,10 @@ export default function RootLayout({
     <html lang="vi" className={beVietnamPro.variable}>
       <body style={{ fontFamily: "var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif" }}>
         <SessionProvider>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider>
+            {children}
+            <GlobalToaster />
+          </CartProvider>
         </SessionProvider>
       </body>
     </html>

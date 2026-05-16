@@ -30,7 +30,7 @@ function LoCard({ lo, index, soLuongIn, onSelect }: {
   lo: LoGoi; index: number; soLuongIn?: number; onSelect?: () => void;
 }) {
   const urgent = lo.days_left !== null && lo.days_left <= 7;
-  const expired = lo.days_left !== null && lo.days_left < 0;
+  const expired = lo.days_left !== null && lo.days_left <= 0;
   return (
     <div className={`border-2 rounded-xl p-4 transition-all ${lo.la_uu_tien ? "border-[#1D9E75] bg-green-50/50 shadow-sm" : "border-gray-100 bg-white"}`}>
       <div className="flex items-start justify-between gap-3">
@@ -318,12 +318,16 @@ export default function GoodsIssueScan() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold text-gray-600 block mb-1.5">Mã sản phẩm (ID) <span className="text-red-500">*</span></label>
-                <input type="number" value={maBienThe} onChange={(e) => setMaBienThe(e.target.value)}
+                <input type="number" min={0} value={maBienThe}
+                  onChange={(e) => { const v = e.target.value.replace(/^-/, ''); setMaBienThe(v); }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   placeholder="VD: 3" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/10" />
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-600 block mb-1.5">Số lượng cần xuất (thùng) <span className="text-red-500">*</span></label>
-                <input type="number" min={1} value={soLuong} onChange={(e) => setSoLuong(e.target.value)}
+                <input type="number" min={1} value={soLuong}
+                  onChange={(e) => { const v = e.target.value.replace(/^-/, ''); if (v === '' || Number(v) >= 1) setSoLuong(v); }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   placeholder="VD: 10" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/10" />
               </div>
             </div>
@@ -389,7 +393,9 @@ export default function GoodsIssueScan() {
           </div>
           <div className="p-6 space-y-5">
             <div className="flex gap-3">
-              <input type="number" value={donHangId} onChange={(e) => setDonHangId(e.target.value)}
+              <input type="number" min={0} value={donHangId}
+                onChange={(e) => { const v = e.target.value.replace(/^-/, ''); setDonHangId(v); }}
+                onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                 placeholder="Nhập ID đơn hàng..." className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-purple-400" />
               <button onClick={fetchOrderSuggest} disabled={!donHangId || orderLoading}
                 className="px-5 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 disabled:opacity-40 transition-colors flex items-center gap-2">

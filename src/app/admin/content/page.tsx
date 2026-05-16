@@ -8,7 +8,7 @@ import {
   Calendar, Tag, ToggleLeft, ToggleRight, Search, Filter,
   CheckCircle2, Clock, XCircle, LayoutTemplate, Rows3,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const BANNER_TYPES: { value: string; label: string; color: string; bg: string }[] = [
   { value: "hero",       label: "Hero / Slider",     color: "#6366f1", bg: "#eef2ff" },
@@ -185,7 +185,6 @@ export default function ContentPage() {
 
   return (
     <div style={{ background: "#f7f8f6", minHeight: "100vh", padding: "24px 28px", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}>
-      <Toaster />
 
       {/* Page header */}
       <div style={{ marginBottom: 20 }}>
@@ -564,7 +563,8 @@ export default function ContentPage() {
                   </div>
                   <div>
                     <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "#374151", marginBottom: 6 }}>Thứ tự</label>
-                    <input type="number" min={0} value={formData.thu_tu_sap_xep} onChange={e => setFormData(p => ({ ...p, thu_tu_sap_xep: e.target.value }))}
+                    <input type="number" min={0} value={formData.thu_tu_sap_xep} onChange={e => setFormData(p => ({ ...p, thu_tu_sap_xep: e.target.value.replace(/-/g, '') }))}
+                      onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                       style={{ width: "100%", height: 40, border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, padding: "0 12px", outline: "none", color: "#374151", textAlign: "center", boxSizing: "border-box" }}
                       onFocus={e => (e.currentTarget.style.borderColor = "#16a34a")}
                       onBlur={e => (e.currentTarget.style.borderColor = "#e5e7eb")} />

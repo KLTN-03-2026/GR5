@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Star, ShoppingCart } from "lucide-react";
+import { Star, ShoppingCart, Eye } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import gsap from "gsap";
@@ -19,7 +19,7 @@ interface ProductData {
   luot_danh_gia: number;
 }
 
-export default function ProductCard({ product }: { product: ProductData }) {
+export default function ProductCard({ product, onQuickView }: { product: ProductData; onQuickView?: (id: number) => void }) {
   const { addToCart } = useCart();
   const [btnState, setBtnState] = useState<"idle" | "flying" | "done">("idle");
   const imgRef = useRef<HTMLDivElement>(null);
@@ -146,8 +146,18 @@ export default function ProductCard({ product }: { product: ProductData }) {
   return (
     <div
       style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column", transition: "box-shadow 0.2s, transform 0.2s" }}
-      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; (e.currentTarget as HTMLDivElement).style.transform = "none"; }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
+        const qvBtn = (e.currentTarget as HTMLDivElement).querySelector(".quick-view-btn") as HTMLElement;
+        if (qvBtn) { qvBtn.style.opacity = "1"; qvBtn.style.transform = "translateY(0)"; }
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+        (e.currentTarget as HTMLDivElement).style.transform = "none";
+        const qvBtn = (e.currentTarget as HTMLDivElement).querySelector(".quick-view-btn") as HTMLElement;
+        if (qvBtn) { qvBtn.style.opacity = "0"; qvBtn.style.transform = "translateY(4px)"; }
+      }}
     >
       <Link href={`/products/${product.id}`} style={{ textDecoration: "none", flex: 1, display: "flex", flexDirection: "column" }}>
         {/* Ảnh */}
@@ -161,6 +171,35 @@ export default function ProductCard({ product }: { product: ProductData }) {
             <span style={{ position: "absolute", top: 10, left: 10, background: "#dc2626", color: "#fff", fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 4 }}>
               -{discountPercent}%
             </span>
+          )}
+          {onQuickView && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(product.id); }}
+              className="quick-view-btn"
+              style={{
+                position: "absolute",
+                bottom: 10,
+                right: 10,
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
+                background: "#fff",
+                border: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: 0,
+                transform: "translateY(4px)",
+                transition: "opacity 0.2s, transform 0.2s, background 0.15s",
+              }}
+              title="Xem nhanh"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#16a34a"; (e.currentTarget.querySelector("svg") as SVGElement).style.color = "#fff"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; (e.currentTarget.querySelector("svg") as SVGElement).style.color = "#374151"; }}
+            >
+              <Eye style={{ width: 16, height: 16, color: "#374151", transition: "color 0.15s" }} />
+            </button>
           )}
         </div>
 

@@ -2,8 +2,7 @@ import React from "react";
 import Header from "@/components/store/layout/Header";
 import Footer from "@/components/store/layout/Footer";
 import Chatbot from "@/components/store/chatbot/ChatbotAI";
-import { CartProvider } from "@/lib/CartContext";
-import { auth } from "@/lib/auth"; // <--- 1. Import hàm check
+import { auth } from "@/lib/auth";
 
 export default async function StoreLayout({
   children,
@@ -18,16 +17,13 @@ export default async function StoreLayout({
   }
 
   return (
-    <CartProvider>
-      <div className="flex flex-col min-h-screen">
-        {/* 3. Truyền session vào Header */}
-        <Header session={session} />
+    <div className="flex flex-col min-h-screen">
+      <Header session={session} />
 
-        <main className="grow pt-24 flex flex-col w-full">{children}</main>
+      <main className="grow flex flex-col w-full">{children}</main>
 
-        <Chatbot />
-        <Footer />
-      </div>
-    </CartProvider>
+      <Chatbot />
+      <Footer />
+    </div>
   );
 }

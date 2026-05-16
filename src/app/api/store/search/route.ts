@@ -13,9 +13,9 @@ export async function GET(req: Request) {
           { trang_thai: "DANG_BAN" }, // Chỉ lấy hàng đang hoạt động
           {
             OR: [
-              { ten_san_pham: { contains: query, mode: "insensitive" } },
-              { mo_ta: { contains: query, mode: "insensitive" } },
-              { xuat_xu: { contains: query, mode: "insensitive" } },
+              { ten_san_pham: { contains: query } },
+              { mo_ta: { contains: query } },
+              { xuat_xu: { contains: query } },
             ],
           },
         ],
@@ -37,6 +37,6 @@ export async function GET(req: Request) {
     return NextResponse.json(products);
   } catch (error: any) {
     console.error("Lỗi search:", error.message);
-    return NextResponse.json({ error: "Lỗi rồi Phú ơi!" }, { status: 500 });
+    return NextResponse.json({ error: "Có lỗi xảy ra, vui lòng thử lại!" }, { status: 500 });
   }
 }

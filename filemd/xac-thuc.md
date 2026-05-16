@@ -102,12 +102,8 @@ Module xac thuc quan ly toan bo quy trinh dang nhap, dang ky, khoi phuc mat khau
 ### Uu tien trung binh
 - [ ] Them CAPTCHA (Google reCAPTCHA) vao form dang ky/dang nhap
 - [ ] Them co che refresh token de keo dai phien
-- [ ] Xac thuc email truoc khi cho phep dang ky
 - [ ] Ghi log lich su dang nhap (thanh cong va that bai)
 
 ### Uu tien thap
-- [ ] Implement "Remember Me" thuc su (session 30 ngay)
 - [ ] Them tinh nang huy lien ket tai khoan social
 - [ ] Canh bao dang nhap tu thiet bi/vi tri moi
-- [ ] Ho tro dang ky nhieu khuon mat (backup)
-- [ ] Thong bao realtime khi co dang nhap dang ngo

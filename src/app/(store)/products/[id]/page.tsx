@@ -47,14 +47,114 @@ export default async function ProductDetailPage({
 
   if (!product) return notFound();
 
-  const relatedProducts = await prisma.san_pham.findMany({
-    where: { ma_danh_muc: product.ma_danh_muc, id: { not: productId }, trang_thai: "DANG_BAN" },
-    take: 3,
-    include: {
-      anh_san_pham: { where: { la_anh_chinh: true }, take: 1 },
-      bien_the_san_pham: { orderBy: { gia_ban: "asc" }, take: 1 },
-    },
-  });
+  // === Smart Related Products ===
+  // Priority 1: Products frequently bought together (from order history)
+  const frequentlyBoughtTogether = await prisma.$queryRaw<
+    { ma_san_pham: number; frequency: bigint }[]
+  >`
+    SELECT bts2.ma_san_pham, COUNT(*) as frequency
+    FROM chi_tiet_don_hang ct1
+    JOIN bien_the_san_pham bts1 ON ct1.ma_bien_the = bts1.id
+    JOIN chi_tiet_don_hang ct2 ON ct1.ma_don_hang = ct2.ma_don_hang AND ct1.id != ct2.id
+    JOIN bien_the_san_pham bts2 ON ct2.ma_bien_the = bts2.id
+    JOIN san_pham sp ON bts2.ma_san_pham = sp.id
+    WHERE bts1.ma_san_pham = ${productId}
+      AND bts2.ma_san_pham != ${productId}
+      AND sp.trang_thai = 'DANG_BAN'
+    GROUP BY bts2.ma_san_pham
+    ORDER BY frequency DESC
+    LIMIT 6
+  `;
+
+  const frequentIds = frequentlyBoughtTogether.map((r) => r.ma_san_pham);
+
+  let relatedProducts: any[] = [];
+  let relatedType: "bought_together" | "similar" = "similar";
+
+  if (frequentIds.length > 0) {
+    relatedProducts = await prisma.san_pham.findMany({
+      where: { id: { in: frequentIds }, trang_thai: "DANG_BAN" },
+      include: {
+        anh_san_pham: { where: { la_anh_chinh: true }, take: 1 },
+        bien_the_san_pham: { orderBy: { gia_ban: "asc" }, take: 1 },
+      },
+    });
+    // Sort by frequency order
+    relatedProducts.sort(
+      (a, b) => frequentIds.indexOf(a.id) - frequentIds.indexOf(b.id)
+    );
+    if (relatedProducts.length > 0) relatedType = "bought_together";
+  }
+
+  // Priority 2: Same category with similar price range (+-30%)
+  if (relatedProducts.length < 6) {
+    const currentPrice = product.bien_the_san_pham[0]?.gia_ban
+      ? Number(product.bien_the_san_pham[0].gia_ban)
+      : 0;
+    const minPrice = currentPrice * 0.7;
+    const maxPrice = currentPrice * 1.3;
+    const excludeIds = [productId, ...relatedProducts.map((p) => p.id)];
+
+    const sameCategoryProducts = await prisma.san_pham.findMany({
+      where: {
+        ma_danh_muc: product.ma_danh_muc,
+        id: { notIn: excludeIds },
+        trang_thai: "DANG_BAN",
+        bien_the_san_pham: {
+          some: {
+            gia_ban: { gte: minPrice, lte: maxPrice },
+          },
+        },
+      },
+      take: 6 - relatedProducts.length,
+      include: {
+        anh_san_pham: { where: { la_anh_chinh: true }, take: 1 },
+        bien_the_san_pham: { orderBy: { gia_ban: "asc" }, take: 1 },
+      },
+    });
+    relatedProducts = [...relatedProducts, ...sameCategoryProducts];
+  }
+
+  // Priority 3: Same origin (xuat_xu)
+  if (relatedProducts.length < 6 && product.xuat_xu) {
+    const excludeIds = [productId, ...relatedProducts.map((p) => p.id)];
+
+    const sameOriginProducts = await prisma.san_pham.findMany({
+      where: {
+        xuat_xu: product.xuat_xu,
+        id: { notIn: excludeIds },
+        trang_thai: "DANG_BAN",
+      },
+      take: 6 - relatedProducts.length,
+      include: {
+        anh_san_pham: { where: { la_anh_chinh: true }, take: 1 },
+        bien_the_san_pham: { orderBy: { gia_ban: "asc" }, take: 1 },
+      },
+    });
+    relatedProducts = [...relatedProducts, ...sameOriginProducts];
+  }
+
+  // Fallback: Same category (no price filter) if still not enough
+  if (relatedProducts.length < 4) {
+    const excludeIds = [productId, ...relatedProducts.map((p) => p.id)];
+
+    const fallbackProducts = await prisma.san_pham.findMany({
+      where: {
+        ma_danh_muc: product.ma_danh_muc,
+        id: { notIn: excludeIds },
+        trang_thai: "DANG_BAN",
+      },
+      take: 6 - relatedProducts.length,
+      include: {
+        anh_san_pham: { where: { la_anh_chinh: true }, take: 1 },
+        bien_the_san_pham: { orderBy: { gia_ban: "asc" }, take: 1 },
+      },
+    });
+    relatedProducts = [...relatedProducts, ...fallbackProducts];
+  }
+
+  // Limit to 6 max
+  relatedProducts = relatedProducts.slice(0, 6);
 
   const daMua = session?.user?.email
     ? await prisma.chi_tiet_don_hang.findFirst({
@@ -77,6 +177,7 @@ export default async function ProductDetailPage({
     ten_san_pham: product.ten_san_pham,
     mo_ta: product.mo_ta || "",
     xuat_xu: product.xuat_xu || "Nông sản Việt",
+    danh_muc: product.danh_muc ? { id: product.danh_muc.id, ten_danh_muc: product.danh_muc.ten_danh_muc } : null,
     hinh_anh: product.anh_san_pham.length > 0
       ? product.anh_san_pham.map((a: any) => a.duong_dan_anh)
       : ["https://images.unsplash.com/photo-1542838132-92c53300491e?w=800"],
@@ -115,6 +216,10 @@ export default async function ProductDetailPage({
     gia_ban: Number(p.bien_the_san_pham[0]?.gia_ban || 0),
   }));
 
+  const relatedSectionTitle = relatedType === "bought_together"
+    ? "Thường mua cùng"
+    : "Sản phẩm tương tự";
+
   const totalStock = formattedProduct.bien_the.reduce((s: number, bt: any) => s + (bt.ton_kho || 0), 0);
 
   const jsonLd = {
@@ -152,6 +257,7 @@ export default async function ProductDetailPage({
       <ProductDetailClient
         product={formattedProduct}
         relatedProducts={formattedRelated}
+        relatedSectionTitle={relatedSectionTitle}
         isLoggedIn={!!session}
         daMua={!!daMua}
       />

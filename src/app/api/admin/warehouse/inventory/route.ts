@@ -9,10 +9,9 @@ export async function GET(req: Request) {
     const search = searchParams.get("search") || "";
     const cat    = searchParams.get("cat")    || "";
 
-    const where: any = {
-      ...(search ? { ten_san_pham: { contains: search } } : {}),
-      ...(cat    ? { ma_danh_muc: parseInt(cat) }        : {}),
-    };
+    const where: any = {};
+    if (search) where.ten_san_pham = { contains: search };
+    if (cat)    where.ma_danh_muc = parseInt(cat);
 
     const [total, products] = await Promise.all([
       prisma.san_pham.count({ where }),
@@ -32,13 +31,25 @@ export async function GET(req: Request) {
               don_vi_tinh: true,
               gia_ban: true,
               gia_goc: true,
-              // Lấy tất cả lô hàng của variant, bao gồm cả tồn kho
               lo_hang: {
                 select: {
                   id: true,
+                  ma_lo_hang: true,
                   trang_thai: true,
                   han_su_dung: true,
-                  ton_kho_tong: { select: { so_luong: true } },
+                  ton_kho_tong: {
+                    select: {
+                      so_luong: true,
+                      vi_tri_kho: {
+                        select: {
+                          khu_vuc: true,
+                          day: true,
+                          ke: true,
+                          tang: true,
+                        },
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -49,7 +60,6 @@ export async function GET(req: Request) {
 
     const data = products.map((p) => {
       const variants = p.bien_the_san_pham.map((bt) => {
-        // Tính tổng tồn kho từ TẤT CẢ lô (không filter trang_thai để không bỏ sót)
         const ton_kho = bt.lo_hang.reduce(
           (sum, lo) => sum + lo.ton_kho_tong.reduce((s2, t) => s2 + (t.so_luong ?? 0), 0),
           0
@@ -68,8 +78,11 @@ export async function GET(req: Request) {
       data,
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[GET /api/admin/warehouse/inventory]", error);
-    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Lỗi server", detail: error?.message || String(error) },
+      { status: 500 }
+    );
   }
 }

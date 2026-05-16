@@ -12,7 +12,7 @@ export default function Footer() {
           margin: "0 auto",
           padding: "40px 24px 0",
           display: "grid",
-          gridTemplateColumns: "repeat(5, 1fr)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
           gap: 32,
         }}
         className="footer-grid"
@@ -142,7 +142,7 @@ export default function Footer() {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
               <MapPin style={{ width: 14, height: 14, color: "#16a34a", flexShrink: 0, marginTop: 2 }} />
               <span style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.5 }}>
-                123 Đường Nông Nghiệp, Quận 1, TP.HCM
+                123 Đường Nông Nghiệp, Quận Hải Châu, TP. Đà Nẵng
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>

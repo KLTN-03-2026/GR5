@@ -17,6 +17,8 @@ export async function handleLogin(formData: FormData) {
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  // callbackUrl được truyền từ trang login qua hidden input
+  const callbackUrl = (formData.get("callbackUrl") as string | null) || "/";
 
   let redirectTo = "/";
 
@@ -35,6 +37,9 @@ export async function handleLogin(formData: FormData) {
         redirectTo = "/staff";
       } else if (roles.includes("THU_KHO")) {
         redirectTo = "/warehouse-manager";
+      } else {
+        // CUSTOMER hoặc role khác → dùng callbackUrl nếu có, fallback "/"
+        redirectTo = callbackUrl.startsWith("/") ? callbackUrl : "/";
       }
     }
 
@@ -57,11 +62,11 @@ export async function handleLogin(formData: FormData) {
 }
 
 // ── 2. Đăng nhập bằng Google ─────────────────────────────────────────────────
-export async function handleGoogleLogin() {
-  await signIn("google", { redirectTo: "/" });
+export async function handleGoogleLogin(callbackUrl: string = "/") {
+  await signIn("google", { redirectTo: callbackUrl.startsWith("/") ? callbackUrl : "/" });
 }
 
 // ── 3. Đăng nhập bằng Facebook ───────────────────────────────────────────────
-export async function handleFacebookLogin() {
-  await signIn("facebook", { redirectTo: "/" });
+export async function handleFacebookLogin(callbackUrl: string = "/") {
+  await signIn("facebook", { redirectTo: callbackUrl.startsWith("/") ? callbackUrl : "/" });
 }

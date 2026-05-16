@@ -130,6 +130,7 @@ export async function GET(request: NextRequest) {
         prisma.don_hang.count({ where: { trang_thai: "DA_HUY" } }),
         prisma.don_hang.count({ where: { trang_thai: "GIAO_THAT_BAI" } }),
         prisma.don_hang.count({ where: { trang_thai: "YEU_CAU_DOI_TRA" } }),
+        prisma.don_hang.count({ where: { trang_thai: "CHO_XU_LY" } }),
       ]),
       // Today's stats
       Promise.all([
@@ -195,7 +196,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const [choXacNhan, choXacNhanCK, dangGiao, choGiao, daGiao, daHuy, giaoThatBai, doiTra] = kpiCounts;
+    const [choXacNhan, choXacNhanCK, dangGiao, choGiao, daGiao, daHuy, giaoThatBai, doiTra, choXuLy] = kpiCounts;
     const [tongDonHomNay, doanhThuHomNay, daGiaoHomNay] = todayStats;
 
     return NextResponse.json({
@@ -204,6 +205,7 @@ export async function GET(request: NextRequest) {
       kpi: {
         choXacNhan,
         choXacNhanCK,
+        choXuLy,
         dangGiao,
         choGiao,
         daGiao,
@@ -258,14 +260,14 @@ export async function POST(request: NextRequest) {
         });
         await tx.don_hang.update({
           where: { id: numId },
-          data: { trang_thai: "CHO_GIAO_HANG" },
+          data: { trang_thai: "CHO_XU_LY" },
         });
         await tx.lich_su_don_hang.create({
-          data: { ma_don_hang: numId, trang_thai: "CHO_GIAO_HANG" },
+          data: { ma_don_hang: numId, trang_thai: "CHO_XU_LY" },
         });
       });
 
-      return NextResponse.json({ success: true, message: "Đã xác nhận thanh toán" });
+      return NextResponse.json({ success: true, message: "Đã xác nhận thanh toán, chuyển sang chờ xử lý" });
     }
 
     // Cập nhật trạng thái đơn hàng
@@ -315,10 +317,10 @@ export async function POST(request: NextRequest) {
             });
             await tx.don_hang.update({
               where: { id: numId },
-              data: { trang_thai: "CHO_GIAO_HANG" },
+              data: { trang_thai: "CHO_XU_LY" },
             });
             await tx.lich_su_don_hang.create({
-              data: { ma_don_hang: numId, trang_thai: "CHO_GIAO_HANG" },
+              data: { ma_don_hang: numId, trang_thai: "CHO_XU_LY" },
             });
           });
           successCount++;

@@ -201,15 +201,42 @@ export default function ProfileForm({ user }: { user: any }) {
                 {/* Số điện thoại */}
                 <div>
                   <label className="profile-section-label" htmlFor="so_dien_thoai">
-                    Số điện thoại
+                    Số điện thoại <span style={{ color: "#ef4444" }}>*</span>
                   </label>
                   <input
                     id="so_dien_thoai"
                     name="so_dien_thoai"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={11}
+                    required
                     defaultValue={user?.so_dien_thoai || ""}
                     placeholder="09xx xxx xxx"
                     className="profile-input"
-                    onChange={() => setIsDirty(true)}
+                    onKeyDown={(e) => {
+                      if (
+                        !/[0-9]/.test(e.key) &&
+                        !["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key) &&
+                        !e.ctrlKey && !e.metaKey
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const paste = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 11);
+                      const input = e.currentTarget;
+                      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+                      if (nativeInputValueSetter) {
+                        nativeInputValueSetter.call(input, paste);
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                      }
+                    }}
+                    onChange={(e) => {
+                      e.target.value = e.target.value.replace(/\D/g, "").slice(0, 11);
+                      setIsDirty(true);
+                    }}
                   />
                 </div>
 

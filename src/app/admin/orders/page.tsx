@@ -9,10 +9,14 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import Pagination from "@/components/ui/Pagination";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import toast from "react-hot-toast";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; icon: any; bg: string; text: string; dot: string }> = {
-  CHO_XAC_NHAN:    { label: 'Chờ xác nhận',  icon: Clock,       bg: 'bg-amber-50',   text: 'text-amber-700',  dot: 'bg-amber-400' },
+  CHO_XAC_NHAN:    { label: 'Chờ duyệt',      icon: Clock,       bg: 'bg-amber-50',   text: 'text-amber-700',  dot: 'bg-amber-400' },
+  CHO_XU_LY:       { label: 'Chờ xử lý',     icon: Clock,       bg: 'bg-orange-50',  text: 'text-orange-700', dot: 'bg-orange-400' },
+  CHO_GIAO_HANG:   { label: 'Chờ giao hàng', icon: Package,     bg: 'bg-sky-50',     text: 'text-sky-700',    dot: 'bg-sky-400' },
   DANG_GIAO_HANG:  { label: 'Đang giao',      icon: Truck,       bg: 'bg-blue-50',    text: 'text-blue-700',   dot: 'bg-blue-400' },
   DA_GIAO:         { label: 'Đã giao',        icon: CheckCircle2,bg: 'bg-emerald-50', text: 'text-emerald-700',dot: 'bg-emerald-400' },
   DA_HUY:          { label: 'Đã hủy',         icon: Ban,         bg: 'bg-rose-50',    text: 'text-rose-700',   dot: 'bg-rose-400' },
@@ -84,14 +88,24 @@ export default function OrdersPage() {
   const [isEditingDate, setIsEditingDate]   = useState(false);
   const [editingDateValue, setEditingDateValue] = useState('');
 
+  // States cho modal hủy đơn admin
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonDetail, setCancelReasonDetail] = useState('');
+  const [isCancellingOrder, setIsCancellingOrder] = useState(false);
+
+  const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({isOpen: false, title: "", message: "", onConfirm: () => {}});
+
   const searchTimer = useRef<any>(null);
 
   const FILTERS = [
     { key: 'ALL',            label: 'Tất cả' },
-    { key: 'CHO_XAC_NHAN',  label: 'Chờ xác nhận' },
-    { key: 'DANG_GIAO_HANG',label: 'Đang giao' },
-    { key: 'DA_GIAO',       label: 'Đã giao' },
-    { key: 'DA_HUY',        label: 'Đã hủy' },
+    { key: 'CHO_XAC_NHAN',   label: 'Chờ duyệt' },
+    { key: 'CHO_XU_LY',      label: 'Chờ xử lý' },
+    { key: 'CHO_GIAO_HANG',  label: 'Chờ giao hàng' },
+    { key: 'DANG_GIAO_HANG', label: 'Đang giao' },
+    { key: 'DA_GIAO',        label: 'Đã giao' },
+    { key: 'DA_HUY',         label: 'Đã hủy' },
     { key: 'YEU_CAU_DOI_TRA',label: 'Đổi/Trả' },
   ];
 
@@ -132,6 +146,10 @@ export default function OrdersPage() {
 
   const handleUpdateStatus = async () => {
     if (!viewingOrder || !newStatus || newStatus === viewingOrder.trang_thai) return;
+    if (newStatus === 'DA_HUY') {
+      setShowCancelModal(true);
+      return;
+    }
     setUpdatingStatus(true);
     try {
       const res = await fetch('/api/admin/orders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: viewingOrder.id, status: newStatus }) });
@@ -139,82 +157,137 @@ export default function OrdersPage() {
       if (d.success || res.ok) {
         setOrders(o => o.map(x => x.id === viewingOrder.id ? { ...x, trang_thai: newStatus } : x));
         setViewingOrder((v: any) => ({ ...v, trang_thai: newStatus }));
-      } else alert('Lỗi: ' + (d.message || 'Không thể cập nhật'));
-    } catch { alert('Lỗi hệ thống!'); }
+        toast.success('Cập nhật trạng thái thành công!');
+      } else toast.error(d.message || 'Không thể cập nhật');
+    } catch { toast.error('Lỗi hệ thống!'); }
     finally { setUpdatingStatus(false); }
   };
 
-  const handleSendToCourier = async (orderId: number) => {
-    if (!confirm('Xác nhận gửi đơn này cho GHTK?')) return;
-    setIsPushing(true);
+  const handleAdminCancelOrder = async () => {
+    if (!cancelReason) {
+      toast.error('Vui lòng chọn lý do hủy đơn!');
+      return;
+    }
+    setIsCancellingOrder(true);
+    const fullReason = cancelReason + (cancelReasonDetail ? ' - ' + cancelReasonDetail : '');
     try {
-      const res = await fetch('/api/admin/shipping', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId, partnerId: 1 }) });
+      const res = await fetch('/api/admin/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: viewingOrder.id, status: 'DA_HUY', ly_do_huy: fullReason }),
+      });
       const d = await res.json();
-      if (d.success) { alert('Mã vận đơn: ' + d.data.ma_van_don); fetchOrders(); setViewingOrder(null); }
-      else alert('Lỗi: ' + d.message);
-    } catch { alert('Lỗi kết nối!'); }
-    finally { setIsPushing(false); }
+      if (d.success || res.ok) {
+        setOrders(o => o.map(x => x.id === viewingOrder.id ? { ...x, trang_thai: 'DA_HUY', ly_do_huy: fullReason } : x));
+        setViewingOrder((v: any) => ({ ...v, trang_thai: 'DA_HUY', ly_do_huy: fullReason }));
+        setNewStatus('DA_HUY');
+        toast.success('Đã hủy đơn hàng thành công!');
+        setShowCancelModal(false);
+        setCancelReason('');
+        setCancelReasonDetail('');
+      } else toast.error(d.message || 'Không thể hủy đơn');
+    } catch { toast.error('Lỗi hệ thống!'); }
+    finally { setIsCancellingOrder(false); }
+  };
+
+  const handleSendToCourier = async (orderId: number) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Gửi đơn cho GHTK',
+      message: 'Xác nhận gửi đơn này cho GHTK?',
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setIsPushing(true);
+        try {
+          const res = await fetch('/api/admin/shipping', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId, partnerId: 1 }) });
+          const d = await res.json();
+          if (d.success) { toast.success('Mã vận đơn: ' + d.data.ma_van_don); fetchOrders(); setViewingOrder(null); }
+          else toast.error(d.message);
+        } catch { toast.error('Lỗi kết nối!'); }
+        finally { setIsPushing(false); }
+      },
+    });
   };
 
   const handleCreateGHNOrder = async (orderId: number) => {
-    if (!confirm(`Tạo vận đơn GHN cho đơn #${orderId}?`)) return;
-    setIsCreatingGHN(true);
-    try {
-      const res = await fetch('/api/ghn/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId }),
-      });
-      const d = await res.json();
-      if (d.success || d.order_code) {
-        alert(`✅ Tạo vận đơn thành công!\nMã vận đơn: ${d.order_code}`);
-        // Cập nhật trạng thái đơn → DANG_GIAO_HANG
-        await fetch('/api/admin/orders', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId, status: 'DANG_GIAO_HANG' }),
-        });
-        fetchOrders();
-        setViewingOrder(null);
-      } else {
-        alert('Lỗi: ' + (d.error || d.message || 'Không tạo được vận đơn'));
-      }
-    } catch { alert('Lỗi kết nối!'); }
-    finally { setIsCreatingGHN(false); }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Tạo vận đơn GHN',
+      message: `Tạo vận đơn GHN cho đơn #${orderId}?`,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setIsCreatingGHN(true);
+        try {
+          const res = await fetch('/api/ghn/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId }),
+          });
+          const d = await res.json();
+          if (d.success || d.order_code) {
+            toast.success(`Tạo vận đơn thành công! Mã: ${d.order_code}`);
+            await fetch('/api/admin/orders', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId, status: 'DANG_GIAO_HANG' }),
+            });
+            fetchOrders();
+            setViewingOrder(null);
+          } else {
+            toast.error(d.error || d.message || 'Không tạo được vận đơn');
+          }
+        } catch { toast.error('Lỗi kết nối!'); }
+        finally { setIsCreatingGHN(false); }
+      },
+    });
   };
 
   const handleCancelGHN = async (orderId: number) => {
-    if (!confirm(`Hủy vận đơn GHN cho đơn #${orderId}?`)) return;
-    setIsCancellingGHN(true);
-    try {
-      const res = await fetch('/api/ghn/cancel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId }),
-      });
-      const d = await res.json();
-      if (d.success) {
-        alert('✅ Đã hủy vận đơn GHN thành công!');
-        fetchOrders();
-        setViewingOrder(null);
-      } else {
-        alert('Lỗi: ' + (d.message || 'Không hủy được vận đơn'));
-      }
-    } catch { alert('Lỗi kết nối!'); }
-    finally { setIsCancellingGHN(false); }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Hủy vận đơn GHN',
+      message: `Hủy vận đơn GHN cho đơn #${orderId}?`,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setIsCancellingGHN(true);
+        try {
+          const res = await fetch('/api/ghn/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId }),
+          });
+          const d = await res.json();
+          if (d.success) {
+            toast.success('Đã hủy vận đơn GHN thành công!');
+            fetchOrders();
+            setViewingOrder(null);
+          } else {
+            toast.error(d.message || 'Không hủy được vận đơn');
+          }
+        } catch { toast.error('Lỗi kết nối!'); }
+        finally { setIsCancellingGHN(false); }
+      },
+    });
   };
 
   const handleReturnAction = async (orderId: number, returnStatus: 'DA_DUYET' | 'TU_CHOI') => {
     const label = returnStatus === 'DA_DUYET' ? 'CHẤP NHẬN' : 'TỪ CHỐI';
-    if (!confirm(`Bạn có chắc muốn ${label} yêu cầu đổi/trả đơn #${orderId}?`)) return;
-    setIsHandlingReturn(true);
-    try {
-      const res = await fetch('/api/admin/orders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'HANDLE_RETURN', orderId, returnStatus }) });
-      const d = await res.json();
-      if (d.success) { fetchOrders(); setViewingOrder(null); }
-      else alert('Lỗi: ' + d.message);
-    } catch { alert('Lỗi kết nối!'); }
-    finally { setIsHandlingReturn(false); }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Xử lý yêu cầu đổi/trả',
+      message: `Bạn có chắc muốn ${label} yêu cầu đổi/trả đơn #${orderId}?`,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setIsHandlingReturn(true);
+        try {
+          const res = await fetch('/api/admin/orders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'HANDLE_RETURN', orderId, returnStatus }) });
+          const d = await res.json();
+          if (d.success) { fetchOrders(); setViewingOrder(null); }
+          else toast.error(d.message);
+        } catch { toast.error('Lỗi kết nối!'); }
+        finally { setIsHandlingReturn(false); }
+      },
+    });
   };
 
   const handleUpdateDate = async () => {
@@ -223,8 +296,8 @@ export default function OrdersPage() {
       const res = await fetch('/api/admin/shipping', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shipmentId: viewingOrder.don_van_chuyen[0].id, newDate: editingDateValue }) });
       const d = await res.json();
       if (d.success) { fetchOrders(); setIsEditingDate(false); setViewingOrder(null); }
-      else alert('Lỗi: ' + d.message);
-    } catch { alert('Lỗi kết nối!'); }
+      else toast.error(d.message);
+    } catch { toast.error('Lỗi kết nối!'); }
   };
 
   return (
@@ -370,10 +443,33 @@ export default function OrdersPage() {
                       <StatusBadge status={order.trang_thai} />
                     </td>
                     <td className="px-5 py-3.5 text-center">
-                      <button onClick={() => openModal(order)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#1D9E75] hover:text-[#1D9E75] transition-all group-hover:border-gray-300">
-                        <Eye size={13} /> Chi tiết
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        {order.trang_thai === 'CHO_XAC_NHAN' && (
+                          <button onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                const res = await fetch('/api/staff/orders', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ action: 'CONFIRM_PAYMENT', orderId: order.id }),
+                                });
+                                const d = await res.json();
+                                if (d.success) {
+                                  toast.success(`Đã duyệt đơn #${order.id}`);
+                                  fetchOrders();
+                                } else toast.error(d.message || 'Lỗi duyệt đơn');
+                              } catch { toast.error('Lỗi hệ thống!'); }
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white bg-[#1D9E75] rounded-lg hover:bg-[#158a63] transition-all"
+                            title="Duyệt đơn">
+                            <CheckCircle2 size={12} /> Duyệt
+                          </button>
+                        )}
+                        <button onClick={() => openModal(order)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#1D9E75] hover:text-[#1D9E75] transition-all group-hover:border-gray-300">
+                          <Eye size={13} /> Chi tiết
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -440,16 +536,49 @@ export default function OrdersPage() {
                         <RotateCcw size={13} className="text-rose-500" />
                         <span className="text-sm font-semibold text-rose-800">Yêu cầu đổi / trả</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                        viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'CHO_DUYET' ? 'bg-amber-100 text-amber-700' :
-                        viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'DA_DUYET'  ? 'bg-emerald-100 text-emerald-700' :
-                        'bg-gray-100 text-gray-500'
-                      }`}>{viewingOrder.yeu_cau_doi_tra[0].trang_thai}</span>
+                      <div className="flex items-center gap-2">
+                        {viewingOrder.yeu_cau_doi_tra[0].loai_yeu_cau && (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            viewingOrder.yeu_cau_doi_tra[0].loai_yeu_cau === 'DOI' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+                          }`}>{viewingOrder.yeu_cau_doi_tra[0].loai_yeu_cau === 'DOI' ? 'Đổi hàng' : 'Trả hàng'}</span>
+                        )}
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                          viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'CHO_DUYET' ? 'bg-amber-100 text-amber-700' :
+                          viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'DA_DUYET'  ? 'bg-emerald-100 text-emerald-700' :
+                          'bg-gray-100 text-gray-500'
+                        }`}>{viewingOrder.yeu_cau_doi_tra[0].trang_thai}</span>
+                      </div>
                     </div>
                     <div className="p-4 space-y-3 bg-white">
-                      <p className="text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100 leading-relaxed">
-                        {viewingOrder.yeu_cau_doi_tra[0].ly_do_hoan_tra || 'Không có mô tả'}
-                      </p>
+                      <div>
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Lý do đổi/trả</p>
+                        <p className="text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100 leading-relaxed">
+                          {viewingOrder.yeu_cau_doi_tra[0].ly_do_hoan_tra || 'Không có mô tả'}
+                        </p>
+                      </div>
+                      {viewingOrder.yeu_cau_doi_tra[0].anh_minh_chung && (
+                        <div>
+                          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Hình ảnh minh chứng</p>
+                          <div className="flex flex-wrap gap-2">
+                            {(() => {
+                              try {
+                                const images = JSON.parse(viewingOrder.yeu_cau_doi_tra[0].anh_minh_chung);
+                                return (Array.isArray(images) ? images : [images]).map((img: string, i: number) => (
+                                  <a key={i} href={img} target="_blank" rel="noreferrer" className="block w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-[#1D9E75] transition-colors">
+                                    <img src={img} alt={`Minh chứng ${i + 1}`} className="w-full h-full object-cover" />
+                                  </a>
+                                ));
+                              } catch {
+                                return (
+                                  <a href={viewingOrder.yeu_cau_doi_tra[0].anh_minh_chung} target="_blank" rel="noreferrer" className="block w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:border-[#1D9E75] transition-colors">
+                                    <img src={viewingOrder.yeu_cau_doi_tra[0].anh_minh_chung} alt="Minh chứng" className="w-full h-full object-cover" />
+                                  </a>
+                                );
+                              }
+                            })()}
+                          </div>
+                        </div>
+                      )}
                       {viewingOrder.yeu_cau_doi_tra[0].trang_thai === 'CHO_DUYET' && (
                         <div className="flex gap-2">
                           <button onClick={() => handleReturnAction(viewingOrder.id, 'DA_DUYET')} disabled={isHandlingReturn}
@@ -462,6 +591,21 @@ export default function OrdersPage() {
                           </button>
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Lý do hủy đơn */}
+                {viewingOrder.trang_thai === 'DA_HUY' && viewingOrder.ly_do_huy && (
+                  <div className="mx-5 mt-5 rounded-xl border border-rose-200 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 border-b border-rose-100">
+                      <Ban size={13} className="text-rose-500" />
+                      <span className="text-sm font-semibold text-rose-800">Lý do hủy đơn</span>
+                    </div>
+                    <div className="p-4 bg-white">
+                      <p className="text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100 leading-relaxed">
+                        {viewingOrder.ly_do_huy}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -686,8 +830,8 @@ export default function OrdersPage() {
                             <p className="text-xs text-amber-700">Đơn hàng này chưa có địa chỉ GHN (tỉnh/quận/phường). Không thể tạo vận đơn tự động.</p>
                           </div>
                         )}
-                        {/* Nút tạo vận đơn GHN */}
-                        {['CHO_XAC_NHAN', 'DANG_GIAO_HANG'].includes(viewingOrder.trang_thai) && viewingOrder.dia_chi_giao_hang && (
+                        {/* Nút tạo vận đơn GHN - chỉ hiện sau khi đã duyệt (CHO_GIAO_HANG) */}
+                        {viewingOrder.trang_thai === 'CHO_GIAO_HANG' && viewingOrder.dia_chi_giao_hang && (
                           <button onClick={() => handleCreateGHNOrder(viewingOrder.id)} disabled={isCreatingGHN}
                             className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#e64b1b] text-white text-xs font-semibold rounded-lg hover:bg-[#c43d14] disabled:opacity-50 transition-colors">
                             {isCreatingGHN ? (
@@ -702,6 +846,62 @@ export default function OrdersPage() {
                   </div>
                 </section>
 
+                {/* Nút duyệt đơn (CHO_XAC_NHAN → CHO_XU_LY) */}
+                {viewingOrder.trang_thai === 'CHO_XAC_NHAN' && (
+                  <div className="px-5 pt-5">
+                    <button onClick={async () => {
+                        setUpdatingStatus(true);
+                        try {
+                          const res = await fetch(`/api/staff/orders/${viewingOrder.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'APPROVE_ORDER' }),
+                          });
+                          const d = await res.json();
+                          if (d.success) {
+                            toast.success('Đã duyệt đơn, chuyển sang Chờ xử lý!');
+                            setOrders(o => o.map(x => x.id === viewingOrder.id ? { ...x, trang_thai: 'CHO_XU_LY' } : x));
+                            setViewingOrder((v: any) => ({ ...v, trang_thai: 'CHO_XU_LY' }));
+                            setNewStatus('CHO_XU_LY');
+                          } else toast.error(d.message || 'Không thể duyệt đơn');
+                        } catch { toast.error('Lỗi hệ thống!'); }
+                        finally { setUpdatingStatus(false); }
+                      }} disabled={updatingStatus}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-[#1D9E75] text-white text-sm font-bold rounded-xl hover:bg-[#158a63] disabled:opacity-50 transition-colors shadow-sm">
+                      {updatingStatus ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle2 size={16} />}
+                      Duyệt đơn hàng
+                    </button>
+                  </div>
+                )}
+
+                {/* Nút "Xử lý đơn" (CHO_XU_LY → CHO_GIAO_HANG, tạo phiếu xuất kho FEFO) */}
+                {viewingOrder.trang_thai === 'CHO_XU_LY' && (
+                  <div className="px-5 pt-5">
+                    <button onClick={async () => {
+                        setUpdatingStatus(true);
+                        try {
+                          const res = await fetch(`/api/staff/orders/${viewingOrder.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'CONFIRM_ORDER' }),
+                          });
+                          const d = await res.json();
+                          if (d.success) {
+                            toast.success('Đã xử lý đơn & tạo phiếu xuất kho!');
+                            setOrders(o => o.map(x => x.id === viewingOrder.id ? { ...x, trang_thai: 'CHO_GIAO_HANG' } : x));
+                            setViewingOrder((v: any) => ({ ...v, trang_thai: 'CHO_GIAO_HANG' }));
+                            setNewStatus('CHO_GIAO_HANG');
+                          } else toast.error(d.message || 'Không thể xử lý đơn');
+                        } catch { toast.error('Lỗi hệ thống!'); }
+                        finally { setUpdatingStatus(false); }
+                      }} disabled={updatingStatus}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-orange-600 text-white text-sm font-bold rounded-xl hover:bg-orange-700 disabled:opacity-50 transition-colors shadow-sm">
+                      {updatingStatus ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Package size={16} />}
+                      Xử lý đơn (tạo phiếu xuất kho)
+                    </button>
+                  </div>
+                )}
+
                 {/* Footer actions */}
                 <div className="px-5 py-5 mt-2">
                   <div className="rounded-xl border border-gray-100 overflow-hidden">
@@ -711,7 +911,9 @@ export default function OrdersPage() {
                     <div className="p-4 space-y-2.5 bg-white">
                       <select value={newStatus} onChange={e => setNewStatus(e.target.value)}
                         className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/10 bg-white font-medium text-gray-800 transition-all cursor-pointer">
-                        <option value="CHO_XAC_NHAN">⏳ Chờ xác nhận</option>
+                        <option value="CHO_XAC_NHAN">⏳ Chờ duyệt</option>
+                        <option value="CHO_XU_LY">🔧 Chờ xử lý</option>
+                        <option value="CHO_GIAO_HANG">📦 Chờ giao hàng</option>
                         <option value="DANG_GIAO_HANG">🚚 Đang giao hàng</option>
                         <option value="DA_GIAO">✅ Đã giao thành công</option>
                         <option value="YEU_CAU_DOI_TRA">🔄 Yêu cầu đổi/trả</option>
@@ -731,15 +933,114 @@ export default function OrdersPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* ══════════════════════════════════════════════
+          MODAL HỦY ĐƠN HÀNG (ADMIN)
+      ══════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showCancelModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl"
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center">
+                  <Ban size={20} className="text-rose-500" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Hủy đơn hàng</h3>
+                  <p className="text-sm text-gray-500">Đơn hàng #{viewingOrder?.id}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Lý do hủy đơn <span className="text-rose-500">*</span></label>
+                  <select
+                    value={cancelReason}
+                    onChange={e => setCancelReason(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 bg-white transition-all cursor-pointer"
+                  >
+                    <option value="">Chọn lý do...</option>
+                    <option value="Khách hàng yêu cầu hủy">Khách hàng yêu cầu hủy</option>
+                    <option value="Hết hàng / Không đủ hàng">Hết hàng / Không đủ hàng</option>
+                    <option value="Không liên lạc được khách hàng">Không liên lạc được khách hàng</option>
+                    <option value="Đơn hàng trùng lặp">Đơn hàng trùng lặp</option>
+                    <option value="Thông tin giao hàng không hợp lệ">Thông tin giao hàng không hợp lệ</option>
+                    <option value="Nghi ngờ gian lận">Nghi ngờ gian lận</option>
+                    <option value="Lý do khác">Lý do khác</option>
+                  </select>
+                </div>
+
+                {cancelReason && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1.5">Chi tiết bổ sung</label>
+                    <textarea
+                      value={cancelReasonDetail}
+                      onChange={e => setCancelReasonDetail(e.target.value)}
+                      placeholder="Nhập thêm ghi chú về lý do hủy (không bắt buộc)..."
+                      rows={3}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 bg-white resize-none transition-all"
+                    />
+                  </div>
+                )}
+
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                  <p className="text-xs text-amber-700 flex items-start gap-2">
+                    <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                    Hành động này sẽ hủy đơn hàng và hoàn lại tồn kho. Lý do hủy sẽ được hiển thị cho khách hàng.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end mt-6">
+                <button
+                  onClick={() => { setShowCancelModal(false); setCancelReason(''); setCancelReasonDetail(''); }}
+                  disabled={isCancellingOrder}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  onClick={handleAdminCancelOrder}
+                  disabled={isCancellingOrder || !cancelReason}
+                  className="px-4 py-2.5 text-sm font-semibold text-white bg-rose-500 hover:bg-rose-600 disabled:opacity-50 rounded-xl transition-colors flex items-center gap-2"
+                >
+                  {isCancellingOrder ? (
+                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Đang xử lý...</>
+                  ) : (
+                    <><Ban size={14} /> Xác nhận hủy đơn</>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Confirm Dialog ── */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant="warning"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }
 
 // ── OrderTimeline ─────────────────────────────────────────────────────────
 const TIMELINE_STEPS = [
-  { key: 'CHO_XAC_NHAN',   label: 'Chờ xác nhận', icon: Clock },
-  { key: 'DANG_GIAO_HANG', label: 'Đang giao',     icon: Truck },
-  { key: 'DA_GIAO',        label: 'Hoàn thành',    icon: CheckCircle2 },
+  { key: 'CHO_XAC_NHAN',   label: 'Chờ duyệt',    icon: Clock },
+  { key: 'CHO_XU_LY',      label: 'Chờ xử lý',   icon: Clock },
+  { key: 'CHO_GIAO_HANG',  label: 'Chờ giao',    icon: Package },
+  { key: 'DANG_GIAO_HANG', label: 'Đang giao',    icon: Truck },
+  { key: 'DA_GIAO',        label: 'Hoàn thành',   icon: CheckCircle2 },
 ];
 const CANCELLED_STEPS = [
   { key: 'CHO_XAC_NHAN', label: 'Đặt hàng', icon: Clock },
@@ -756,7 +1057,7 @@ function OrderTimeline({ order }: { order: any }) {
   const isReturn    = status === 'YEU_CAU_DOI_TRA';
   const steps = isCancelled ? CANCELLED_STEPS : isReturn ? RETURN_STEPS : TIMELINE_STEPS;
 
-  const normalOrder = ['CHO_XAC_NHAN', 'DANG_GIAO_HANG', 'DA_GIAO'];
+  const normalOrder = ['CHO_XAC_NHAN', 'CHO_XU_LY', 'CHO_GIAO_HANG', 'DANG_GIAO_HANG', 'DA_GIAO'];
   const currentIdx = steps.findIndex(s => s.key === status);
 
   const getStepState = (stepKey: string, stepIdx: number) => {

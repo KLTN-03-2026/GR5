@@ -7,7 +7,7 @@ import {
   CheckCircle2, XCircle, Infinity, Copy, Check,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 
 type Promotion = {
@@ -200,7 +200,6 @@ export default function PromotionsPage() {
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-full">
-      <Toaster />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -542,7 +541,12 @@ export default function PromotionsPage() {
                     max={formData.loai_giam_gia === "PHAN_TRAM" ? 100 : undefined}
                     name="gia_tri_giam"
                     value={formData.gia_tri_giam}
-                    onChange={(e) => setFormData({ ...formData, gia_tri_giam: e.target.value })}
+                    onChange={(e) => {
+                      let v = e.target.value.replace(/-/g, '');
+                      if (formData.loai_giam_gia === "PHAN_TRAM" && Number(v) > 100) v = '100';
+                      setFormData({ ...formData, gia_tri_giam: v });
+                    }}
+                    onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                     className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
                     placeholder={formData.loai_giam_gia === "PHAN_TRAM" ? "VD: 10" : "VD: 50000"}
                   />
@@ -558,7 +562,8 @@ export default function PromotionsPage() {
                     min="0"
                     name="don_toi_thieu"
                     value={formData.don_toi_thieu}
-                    onChange={(e) => setFormData({ ...formData, don_toi_thieu: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, don_toi_thieu: e.target.value.replace(/-/g, '') })}
+                    onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                     className="w-full border bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
                     placeholder="Không yêu cầu"
                   />
@@ -567,10 +572,11 @@ export default function PromotionsPage() {
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5">Giới hạn lượt dùng</label>
                   <input
                     type="number"
-                    min="0"
+                    min="1"
                     name="gioi_han_su_dung"
                     value={formData.gioi_han_su_dung}
-                    onChange={(e) => setFormData({ ...formData, gioi_han_su_dung: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, gioi_han_su_dung: e.target.value.replace(/-/g, '') })}
+                    onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                     className="w-full border bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
                     placeholder="Không giới hạn"
                   />

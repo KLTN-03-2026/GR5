@@ -37,12 +37,13 @@ const WARNING_META: Record<string, { label: string; color: string; bg: string; b
   CANH_BAO_TON_KHO_THAP: { label: "TỒN THẤP",   color: "text-blue-700",  bg: "bg-blue-50",    border: "border-blue-200",  icon: AlertCircle },
 };
 
+// `comingSoon: true` → ẩn nút (chỉ Tiêu huỷ được bật, các luồng khác chưa hoàn thiện)
 const WORKFLOWS = [
-  { id: "GIAM_GIA",   label: "Giảm giá khẩn cấp", icon: Tag,       color: "text-rose-600",   bg: "bg-rose-50",   border: "border-rose-200" },
-  { id: "XUAT_NOI_BO", label: "Xuất nội bộ",       icon: Package,   color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-200" },
-  { id: "TRA_NCC",    label: "Trả nhà cung cấp",   icon: Truck,     color: "text-cyan-600",   bg: "bg-cyan-50",   border: "border-cyan-200" },
+  { id: "GIAM_GIA",   label: "Giảm giá khẩn cấp", icon: Tag,       color: "text-rose-600",   bg: "bg-rose-50",   border: "border-rose-200", comingSoon: true },
+  { id: "XUAT_NOI_BO", label: "Xuất nội bộ",       icon: Package,   color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-200", comingSoon: true },
+  { id: "TRA_NCC",    label: "Trả nhà cung cấp",   icon: Truck,     color: "text-cyan-600",   bg: "bg-cyan-50",   border: "border-cyan-200", comingSoon: true },
   { id: "TIEU_HUY",  label: "Tiêu hủy",            icon: Trash2,    color: "text-red-700",    bg: "bg-red-50",    border: "border-red-200" },
-  { id: "XU_LY_LAI", label: "Xử lý lại",           icon: RotateCcw, color: "text-green-600",  bg: "bg-green-50",  border: "border-green-200" },
+  { id: "XU_LY_LAI", label: "Xử lý lại",           icon: RotateCcw, color: "text-green-600",  bg: "bg-green-50",  border: "border-green-200", comingSoon: true },
 ];
 
 const FILTERS = [
@@ -280,12 +281,16 @@ export default function ExpirationWarnings({ warningsData }: { warningsData?: Wa
                       <td className="px-4 py-3 font-medium text-gray-800 max-w-[180px] truncate">{w.san_pham}</td>
                       <td className="px-4 py-3 text-right font-bold text-gray-700">{(w.so_luong ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3">
-                        <span className={`font-semibold text-xs ${w.days_left !== null && w.days_left < 0 ? "text-red-600" : w.days_left !== null && w.days_left <= 7 ? "text-orange-600" : "text-gray-700"}`}>
+                        <span className={`font-semibold text-xs ${w.days_left !== null && w.days_left <= 0 ? "text-red-600" : w.days_left !== null && w.days_left <= 7 ? "text-orange-600" : "text-gray-700"}`}>
                           {w.han_su_dung}
                         </span>
                         {!w.da_xu_ly && w.days_left !== null && (
                           <div className="text-[10px] text-gray-400">
-                            {w.days_left < 0 ? `Hết hạn ${Math.abs(w.days_left)} ngày` : `Còn ${w.days_left} ngày`}
+                            {w.days_left < 0
+                              ? `Hết hạn ${Math.abs(w.days_left)} ngày`
+                              : w.days_left === 0
+                                ? "Hết hạn hôm nay"
+                                : `Còn ${w.days_left} ngày`}
                           </div>
                         )}
                       </td>
@@ -359,11 +364,13 @@ export default function ExpirationWarnings({ warningsData }: { warningsData?: Wa
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {WORKFLOWS.map((w) => {
                     const Icon = w.icon;
-                    const isDisabled = w.id === "XU_LY_LAI" && resolving.loai_canh_bao !== "HANG_HONG";
+                    const isDisabledRole = w.id === "XU_LY_LAI" && resolving.loai_canh_bao !== "HANG_HONG";
                     const isDisabledTra = w.id === "TRA_NCC" && !resolving.ncc_id;
-                    const disabled = isDisabled || isDisabledTra;
+                    const isComingSoon = !!w.comingSoon;
+                    const disabled = isDisabledRole || isDisabledTra || isComingSoon;
                     return (
                       <button key={w.id} disabled={disabled}
+                        title={isComingSoon ? "Tính năng đang phát triển" : undefined}
                         onClick={() => { setWorkflow(w.id); setFormData({}); }}
                         className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${disabled ? "opacity-30 cursor-not-allowed bg-gray-50 border-gray-100" : workflow === w.id ? `${w.bg} ${w.border} shadow-sm` : "bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm"}`}>
                         <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${workflow === w.id ? w.bg : "bg-gray-50"} ${w.border} border`}>
@@ -371,8 +378,9 @@ export default function ExpirationWarnings({ warningsData }: { warningsData?: Wa
                         </div>
                         <div>
                           <div className={`font-semibold text-sm ${workflow === w.id ? w.color : "text-gray-700"}`}>{w.label}</div>
-                          {isDisabled && <div className="text-[10px] text-gray-400">Chỉ cho hàng hỏng</div>}
-                          {isDisabledTra && <div className="text-[10px] text-gray-400">Lô không có NCC</div>}
+                          {isComingSoon && <div className="text-[10px] text-gray-400">Đang phát triển</div>}
+                          {!isComingSoon && isDisabledRole && <div className="text-[10px] text-gray-400">Chỉ cho hàng hỏng</div>}
+                          {!isComingSoon && isDisabledTra && <div className="text-[10px] text-gray-400">Lô không có NCC</div>}
                         </div>
                         {workflow === w.id && <ChevronRight size={14} className={`ml-auto ${w.color}`} />}
                       </button>
@@ -390,7 +398,8 @@ export default function ExpirationWarnings({ warningsData }: { warningsData?: Wa
                     <div className="space-y-3">
                       <FormField label="Phần trăm giảm giá (%)" required>
                         <input type="number" min={1} max={99} placeholder="VD: 30"
-                          value={formData.phan_tram_giam || ""} onChange={(e) => setFormData((p) => ({ ...p, phan_tram_giam: e.target.value }))}
+                          value={formData.phan_tram_giam || ""} onChange={(e) => { const v = e.target.value.replace(/^-/, '').replace(/^0+(?=\d)/, ''); setFormData((p) => ({ ...p, phan_tram_giam: v })); }}
+                          onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                           className="input-modal" />
                       </FormField>
                       <FormField label="Ghi chú (tùy chọn)">
@@ -407,7 +416,8 @@ export default function ExpirationWarnings({ warningsData }: { warningsData?: Wa
                     <div className="space-y-3">
                       <FormField label="Số lượng xuất" required>
                         <input type="number" min={1} max={resolving.so_luong} placeholder={`Tối đa: ${resolving.so_luong}`}
-                          value={formData.so_luong || ""} onChange={(e) => setFormData((p) => ({ ...p, so_luong: e.target.value }))}
+                          value={formData.so_luong || ""} onChange={(e) => { const v = e.target.value.replace(/^-/, '').replace(/^0+(?=\d)/, ''); setFormData((p) => ({ ...p, so_luong: v })); }}
+                          onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                           className="input-modal" />
                       </FormField>
                       <FormField label="Bộ phận nhận" required>
@@ -428,7 +438,8 @@ export default function ExpirationWarnings({ warningsData }: { warningsData?: Wa
                       </FormField>
                       <FormField label="Số lượng trả" required>
                         <input type="number" min={1} max={resolving.so_luong} placeholder={`Tối đa: ${resolving.so_luong}`}
-                          value={formData.so_luong || ""} onChange={(e) => setFormData((p) => ({ ...p, so_luong: e.target.value }))}
+                          value={formData.so_luong || ""} onChange={(e) => { const v = e.target.value.replace(/^-/, '').replace(/^0+(?=\d)/, ''); setFormData((p) => ({ ...p, so_luong: v })); }}
+                          onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                           className="input-modal" />
                       </FormField>
                       <FormField label="Lý do trả hàng" required>

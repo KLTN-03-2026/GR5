@@ -77,8 +77,11 @@ const RANGE_MAP: Record<string, string> = {
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   CHO_XAC_NHAN: { label: "Chờ xác nhận", color: "text-amber-700", bg: "bg-amber-50" },
-  DANG_XU_LY: { label: "Đang xử lý", color: "text-blue-700", bg: "bg-blue-50" },
-  DANG_GIAO_HANG: { label: "Đang giao", color: "text-purple-700", bg: "bg-purple-50" },
+  DA_XAC_NHAN: { label: "Đã xác nhận", color: "text-blue-700", bg: "bg-blue-50" },
+  DA_THANH_TOAN: { label: "Đã thanh toán", color: "text-blue-700", bg: "bg-blue-50" },
+  DANG_DONG_GOI: { label: "Đang đóng gói", color: "text-indigo-700", bg: "bg-indigo-50" },
+  CHO_GIAO_HANG: { label: "Chờ giao hàng", color: "text-orange-700", bg: "bg-orange-50" },
+  DANG_GIAO: { label: "Đang giao", color: "text-purple-700", bg: "bg-purple-50" },
   DA_GIAO: { label: "Đã giao", color: "text-emerald-700", bg: "bg-emerald-50" },
   DA_HUY: { label: "Đã hủy", color: "text-red-700", bg: "bg-red-50" },
 };

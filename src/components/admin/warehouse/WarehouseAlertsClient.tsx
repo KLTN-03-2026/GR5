@@ -379,18 +379,15 @@ export default function WarehouseAlertsClient({ readOnly = false }: { readOnly?:
                     </button>
                     <button
                       type="button"
-                      disabled={actionLoading}
-                      onClick={() =>
-                        setClearanceModal({
-                          alert: selectedAlert,
-                          discount: suggestDiscount(selectedAlert.days_left),
-                          endDate: suggestEndDate(selectedAlert.days_left),
-                        })
-                      }
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled
+                      title="Tính năng đang phát triển"
+                      className="inline-flex flex-col items-center justify-center gap-1 rounded-2xl bg-emerald-600/40 px-4 py-3 font-semibold text-white/70 cursor-not-allowed"
                     >
-                      <Sparkles className="h-4 w-4" />
-                      Duyệt xả kho
+                      <span className="inline-flex items-center gap-2">
+                        <Sparkles className="h-4 w-4" />
+                        Duyệt xả kho
+                      </span>
+                      <span className="text-[10px] font-normal text-white/60">Đang phát triển</span>
                     </button>
                   </div>
                 )}
@@ -426,12 +423,14 @@ export default function WarehouseAlertsClient({ readOnly = false }: { readOnly?:
                   min={1}
                   max={99}
                   value={clearanceModal.discount}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const v = event.target.value.replace(/^-/, '').replace(/^0+(?=\d)/, '');
                     setClearanceModal({
                       ...clearanceModal,
-                      discount: Number(event.target.value),
-                    })
-                  }
+                      discount: Number(v),
+                    });
+                  }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-slate-900"
                 />
               </label>

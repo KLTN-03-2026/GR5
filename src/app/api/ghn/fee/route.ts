@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 const GHN_BASE = process.env.GHN_BASE_URL || "https://dev-online-gateway.ghn.vn/shiip/public-api";
 const GHN_TOKEN = process.env.GHN_TOKEN!;
 const GHN_SHOP_ID = process.env.GHN_SHOP_ID!;
-const FROM_DISTRICT_ID = Number(process.env.GHN_FROM_DISTRICT_ID || 1542);
+const FROM_DISTRICT_ID = Number(process.env.GHN_FROM_DISTRICT_ID || 1526);
+const FROM_WARD_CODE = process.env.GHN_FROM_WARD_CODE || "40113";
 
 export async function POST(req: Request) {
   try {
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         service_type_id: 2,
         from_district_id: FROM_DISTRICT_ID,
+        from_ward_code: FROM_WARD_CODE,
         to_district_id: Number(to_district_id),
         to_ward_code: String(to_ward_code),
         weight: Number(weight),

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 interface Address {
   id: number;
@@ -48,6 +49,7 @@ export default function AddressPage() {
   const [form, setForm] = useState<AddrForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void}>({isOpen: false, title: "", message: "", onConfirm: () => {}});
 
   const [provinces, setProvinces] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
@@ -190,17 +192,24 @@ export default function AddressPage() {
     fetchAddresses();
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Bạn chắc chắn muốn xoá địa chỉ này?")) return;
-    setDeletingId(id);
-    await fetch("/api/store/account/addresses", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+  const handleDelete = (id: number) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Xoá địa chỉ",
+      message: "Bạn chắc chắn muốn xoá địa chỉ này?",
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setDeletingId(id);
+        await fetch("/api/store/account/addresses", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        toast.success("Đã xoá địa chỉ");
+        setDeletingId(null);
+        fetchAddresses();
+      },
     });
-    toast.success("Đã xoá địa chỉ");
-    setDeletingId(null);
-    fetchAddresses();
   };
 
   const inputCls = "w-full bg-white border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all placeholder:text-gray-400";
@@ -371,8 +380,11 @@ export default function AddressPage() {
                       <input
                         className={inputCls + " pl-8"}
                         value={form.so_dien_thoai}
-                        onChange={e => setForm(f => ({ ...f, so_dien_thoai: e.target.value }))}
-                        placeholder="0901 234 567"
+                        onChange={e => setForm(f => ({ ...f, so_dien_thoai: e.target.value.replace(/\D/g, '').slice(0, 11) }))}
+                        onKeyDown={(e) => { if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
+                        placeholder="0901234567"
+                        inputMode="numeric"
+                        maxLength={11}
                       />
                     </div>
                   </div>
@@ -513,6 +525,17 @@ export default function AddressPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant="danger"
+        confirmText="Xoá"
+        cancelText="Huỷ"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

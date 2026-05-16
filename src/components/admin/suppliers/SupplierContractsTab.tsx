@@ -97,7 +97,8 @@ export default function SupplierContractsTab({ nccId }: { nccId: number }) {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Giá trị cam kết (đ)</label>
-                <input type="number" value={form.gia_tri_hop_dong} onChange={(e) => setForm({ ...form, gia_tri_hop_dong: e.target.value })}
+                <input type="number" min="0" value={form.gia_tri_hop_dong} onChange={(e) => { const v = e.target.value.replace(/^-/, ''); setForm({ ...form, gia_tri_hop_dong: v }); }}
+                  onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>

@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   Users, CheckCircle2, Clock, AlertTriangle, XCircle,
-  Banknote, CalendarDays, ClipboardList, Gift, Trophy,
-  FileWarning, ChevronRight, TrendingUp, RefreshCw,
+  Banknote, CalendarDays, ClipboardList, Trophy,
+  ChevronRight, TrendingUp, RefreshCw,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -22,22 +23,16 @@ type DonNghi = {
   ly_do: string; ho_ten: string; chuc_vu: string | null; anh: string | null;
 };
 
-type SinhNhat = { ho_ten: string; ngay_sinh: string; chuc_vu: string | null; anh: string | null };
-
 type TopNV = { id: number; ho_ten: string; chuc_vu: string | null; anh: string | null; tong_gio: number; so_ngay_cong: number };
 
 type BieuDo = { ngay: string; dung_gio: number; di_tre: number; tong: number };
-
-type HopDong = { ho_ten: string; chuc_vu: string | null; hop_dong_het_han: string; anh_dai_dien: string | null };
 
 type DashboardData = {
   metrics: Metrics;
   lichCaHomNay: Ca[];
   donChoDuyet: DonNghi[];
-  sinhNhatThang: SinhNhat[];
   bieuDoChuvenCan: BieuDo[];
   topNhanVien: TopNV[];
-  hopDongSapHetHan: HopDong[];
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -53,10 +48,6 @@ const fmtTime = (s: string | null) => {
   return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
 };
 
-const daysUntil = (s: string) => {
-  const diff = new Date(s).getTime() - Date.now();
-  return Math.ceil(diff / 86400000);
-};
 
 function Avatar({ src, name, size = 32 }: { src?: string | null; name: string; size?: number }) {
   const initials = name.trim().split(" ").slice(-1)[0]?.[0]?.toUpperCase() ?? "?";
@@ -81,20 +72,28 @@ function Avatar({ src, name, size = 32 }: { src?: string | null; name: string; s
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function HrDashboardPage() {
+  const { data: session } = useSession();
+  const adminId = Number((session?.user as any)?.id) || 1;
+
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [error, setError] = useState("");
 
   const fetchData = async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     else setLoading(true);
+    setError("");
     try {
       const res = await fetch("/api/hr/dashboard");
+      if (!res.ok) throw new Error("Lỗi tải dữ liệu");
       const result = await res.json();
       if (result.success) setData(result.data);
-    } catch (e) {
+      else throw new Error(result.message || "Không thể tải dữ liệu");
+    } catch (e: any) {
       console.error(e);
+      setError(e.message || "Đã xảy ra lỗi");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -106,12 +105,15 @@ export default function HrDashboardPage() {
   const handleApprove = async (id: number, status: "DA_DUYET" | "TU_CHOI") => {
     setApprovingId(id);
     try {
-      await fetch(`/api/nghi-phep/${id}`, {
+      const res = await fetch(`/api/nghi-phep/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trang_thai: status, phan_hoi_admin: status === "DA_DUYET" ? "Đã duyệt" : "Từ chối", ma_nguoi_duyet: 1 }),
+        body: JSON.stringify({ trang_thai: status, phan_hoi_admin: status === "DA_DUYET" ? "Đã duyệt" : "Từ chối", ma_nguoi_duyet: adminId }),
       });
+      if (!res.ok) throw new Error("Thao tác thất bại");
       fetchData(true);
+    } catch (e: any) {
+      alert(e.message || "Đã xảy ra lỗi");
     } finally {
       setApprovingId(null);
     }
@@ -129,9 +131,16 @@ export default function HrDashboardPage() {
     );
   }
 
-  if (!data) return <div style={{ padding: 24, color: "#ef4444" }}>Không thể tải dữ liệu.</div>;
+  if (!data) return (
+    <div style={{ padding: 24, textAlign: "center" }}>
+      <p style={{ color: "#ef4444", marginBottom: 12 }}>{error || "Không thể tải dữ liệu."}</p>
+      <button onClick={() => fetchData()} style={{ padding: "8px 16px", background: "#059669", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>
+        Thử lại
+      </button>
+    </div>
+  );
 
-  const { metrics, lichCaHomNay, donChoDuyet, sinhNhatThang, bieuDoChuvenCan, topNhanVien, hopDongSapHetHan } = data;
+  const { metrics, lichCaHomNay, donChoDuyet, bieuDoChuvenCan, topNhanVien } = data;
 
   // Metric cards config
   const metricCards = [
@@ -287,7 +296,7 @@ export default function HrDashboardPage() {
                     {/* Avatars */}
                     <div style={{ display: "flex", gap: 4 }}>
                       {ca.nhan_vien.map((nv, nvIdx) => (
-                        <div key={`${ca.ma_ca}-${nv.id ?? nvIdx}`} style={{ position: "relative" }} title={nv.ho_ten}>
+                        <div key={`${ca.ma_ca}-${nv.id ?? "no-id"}-${nvIdx}`} style={{ position: "relative" }} title={nv.ho_ten}>
                           <Avatar src={nv.anh} name={nv.ho_ten} size={28} />
                           {nv.da_cham_cong && (
                             <span style={{
@@ -376,99 +385,7 @@ export default function HrDashboardPage() {
         </div>
       </div>
 
-      {/* ── Row 3: Sinh nhật + Hợp đồng hết hạn ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
-
-        {/* Sinh nhật tháng */}
-        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "1rem 1.25rem", borderBottom: "1px solid #f3f4f6" }}>
-            <Gift size={17} color="#db2777" />
-            <h2 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>
-              Sinh nhật tháng {new Date().getMonth() + 1}
-            </h2>
-          </div>
-          <div style={{ padding: "0.75rem 1.25rem 1.25rem", display: "flex", flexDirection: "column", gap: 8 }}>
-            {sinhNhatThang.length === 0 ? (
-              <p style={{ color: "#9ca3af", fontSize: "0.85rem", textAlign: "center", padding: "1.5rem 0" }}>
-                Không có sinh nhật trong tháng này
-              </p>
-            ) : (
-              sinhNhatThang.map((nv, i) => {
-                const d = new Date(nv.ngay_sinh!);
-                const isToday = d.getDate() === new Date().getDate();
-                return (
-                  <div key={i} style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "0.625rem 0.75rem",
-                    borderRadius: 9, background: isToday ? "#fdf2f8" : "#f9fafb",
-                    border: `1px solid ${isToday ? "#f9a8d4" : "#f0f0f0"}`,
-                  }}>
-                    <Avatar src={nv.anh} name={nv.ho_ten} size={34} />
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontWeight: 700, fontSize: "0.85rem", color: "#111827" }}>
-                        {nv.ho_ten} {isToday && "🎂"}
-                      </p>
-                      <p style={{ margin: "1px 0 0", fontSize: "0.72rem", color: "#db2777" }}>
-                        {d.getDate()}/{d.getMonth() + 1} · {nv.chuc_vu || "Nhân viên"}
-                      </p>
-                    </div>
-                    {isToday && (
-                      <span style={{ fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#db2777", color: "#fff" }}>
-                        Hôm nay!
-                      </span>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Hợp đồng sắp hết hạn */}
-        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "1rem 1.25rem", borderBottom: "1px solid #f3f4f6" }}>
-            <FileWarning size={17} color="#dc2626" />
-            <h2 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>
-              Hợp đồng sắp hết hạn
-            </h2>
-            <span style={{ fontSize: "0.72rem", color: "#6b7280" }}>(trong 30 ngày)</span>
-          </div>
-          <div style={{ padding: "0.75rem 1.25rem 1.25rem", display: "flex", flexDirection: "column", gap: 8 }}>
-            {hopDongSapHetHan.length === 0 ? (
-              <p style={{ color: "#9ca3af", fontSize: "0.85rem", textAlign: "center", padding: "1.5rem 0" }}>
-                Không có hợp đồng nào sắp hết hạn
-              </p>
-            ) : (
-              hopDongSapHetHan.map((nv, i) => {
-                const days = daysUntil(nv.hop_dong_het_han);
-                const urgent = days <= 7;
-                return (
-                  <div key={i} style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "0.625rem 0.75rem",
-                    borderRadius: 9, background: urgent ? "#fef2f2" : "#fffbeb",
-                    border: `1px solid ${urgent ? "#fecaca" : "#fde68a"}`,
-                  }}>
-                    <Avatar src={nv.anh_dai_dien} name={nv.ho_ten} size={34} />
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontWeight: 700, fontSize: "0.85rem", color: "#111827" }}>{nv.ho_ten}</p>
-                      <p style={{ margin: "1px 0 0", fontSize: "0.72rem", color: "#6b7280" }}>
-                        {nv.chuc_vu || "Nhân viên"} · Hết hạn {fmtDate(nv.hop_dong_het_han)}
-                      </p>
-                    </div>
-                    <span style={{
-                      fontSize: "0.72rem", fontWeight: 700, padding: "2px 8px", borderRadius: 20,
-                      background: urgent ? "#dc2626" : "#d97706", color: "#fff",
-                    }}>
-                      {days}d
-                    </span>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Row 4: Biểu đồ + Top nhân viên ── */}
+      {/* ── Row 3: Biểu đồ + Top nhân viên ── */}
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1.25rem" }}>
 
         {/* Biểu đồ chuyên cần 30 ngày */}
@@ -575,7 +492,6 @@ export default function HrDashboardPage() {
             { label: "Lịch phân ca", href: "/admin/hr/shifts", color: "#7c3aed", bg: "#f5f3ff" },
             { label: "Bảng lương tháng", href: "/admin/hr/payroll", color: "#d97706", bg: "#fffbeb" },
             { label: "Quản lý nghỉ phép", href: "/admin/hr/leave", color: "#db2777", bg: "#fdf2f8" },
-            { label: "Kanban giao việc", href: "/admin/hr/tasks", color: "#0891b2", bg: "#ecfeff" },
           ].map((link) => (
             <Link key={link.href} href={link.href} style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",

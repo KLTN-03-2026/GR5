@@ -40,6 +40,7 @@ interface Order {
 interface KPI {
   choXacNhan: number;
   choXacNhanCK: number;
+  choXuLy?: number;
   dangGiao: number;
   choGiao: number;
   daGiao: number;
@@ -54,7 +55,8 @@ interface KPI {
 // ─── Tab config ───────────────────────────────────────────────────────────────
 const ORDER_TABS = [
   { id: "", label: "Tất cả", icon: ClipboardList, activeBg: "bg-[#F5F5F4]", activeText: "text-[#5F5E5A]", badgeBg: "bg-[#5F5E5A]" },
-  { id: "CHO_XAC_NHAN", label: "Chờ xác nhận", icon: Clock, activeBg: "bg-[#FAEEDA]", activeText: "text-[#BA7517]", badgeBg: "bg-[#BA7517]" },
+  { id: "CHO_XAC_NHAN", label: "Chờ duyệt", icon: Clock, activeBg: "bg-[#FAEEDA]", activeText: "text-[#BA7517]", badgeBg: "bg-[#BA7517]" },
+  { id: "CHO_XU_LY", label: "Chờ xử lý", icon: Clock, activeBg: "bg-[#FFEDD5]", activeText: "text-[#9A3412]", badgeBg: "bg-[#EA580C]" },
   { id: "CHO_GIAO_HANG", label: "Chờ giao", icon: Package, activeBg: "bg-[#E8F5F0]", activeText: "text-[#1D9E75]", badgeBg: "bg-[#1D9E75]" },
   { id: "DANG_GIAO_HANG", label: "Đang giao", icon: Truck, activeBg: "bg-[#E8F5F0]", activeText: "text-[#1D9E75]", badgeBg: "bg-[#1D9E75]" },
   { id: "DA_GIAO", label: "Đã giao", icon: PackageCheck, activeBg: "bg-[#EAF3DE]", activeText: "text-[#3B6D11]", badgeBg: "bg-[#3B6D11]" },
@@ -78,7 +80,8 @@ const PAYMENT_STATUS_CONFIG: Record<string, { label: string; style: string }> = 
 };
 
 const ORDER_STATUS_CONFIG: Record<string, { label: string; icon: string; style: string }> = {
-  CHO_XAC_NHAN:    { label: "Chờ xác nhận", icon: "⏳", style: "bg-[#FAEEDA] text-[#BA7517] border border-[#BA7517]/30" },
+  CHO_XAC_NHAN:    { label: "Chờ duyệt", icon: "⏳", style: "bg-[#FAEEDA] text-[#BA7517] border border-[#BA7517]/30" },
+  CHO_XU_LY:       { label: "Chờ xử lý", icon: "🔧", style: "bg-[#FFEDD5] text-[#9A3412] border border-[#EA580C]/30" },
   DA_THANH_TOAN:   { label: "Đã thanh toán", icon: "💳", style: "bg-[#EAF3DE] text-[#3B6D11] border border-[#3B6D11]/30" },
   CHO_GIAO_HANG:   { label: "Chờ giao", icon: "📦", style: "bg-[#E8F5F0] text-[#1D9E75] border border-[#1D9E75]/30" },
   DANG_GIAO_HANG:  { label: "Đang giao", icon: "🚚", style: "bg-[#E8F5F0] text-[#1D9E75] border border-[#1D9E75]/30" },
@@ -241,6 +244,7 @@ export default function StaffOrdersPage() {
     if (!tabId) return total;
     switch (tabId) {
       case "CHO_XAC_NHAN": return kpi.choXacNhan;
+      case "CHO_XU_LY": return kpi.choXuLy ?? 0;
       case "CHO_GIAO_HANG": return kpi.choGiao;
       case "DANG_GIAO_HANG": return kpi.dangGiao;
       case "DA_GIAO": return kpi.daGiao;

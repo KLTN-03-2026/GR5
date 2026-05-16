@@ -4,6 +4,7 @@ import React, { useState, Suspense } from "react";
 import { Lock, Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 function ResetPasswordContent() {
   const [password, setPassword] = useState("");
@@ -14,32 +15,43 @@ function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
+  const token = searchParams.get("token") || "";
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword)
-      return alert("Mật khẩu xác nhận không khớp Phú ơi!");
-    if (password.length < 6)
-      return alert("Mật khẩu ít nhất phải có 6 ký tự nhé!");
+    if (password !== confirmPassword) {
+      toast.error("Mật khẩu xác nhận không khớp!");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Mật khẩu ít nhất phải có 6 ký tự!");
+      return;
+    }
+
+    if (!token) {
+      toast.error("Phiên xác thực không hợp lệ. Vui lòng thực hiện lại từ đầu!");
+      router.push("/forgot-password");
+      return;
+    }
 
     setLoading(true);
     try {
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, token }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        alert("Mật khẩu của bạn đã được đổi thành công.");
+        toast.success("Mật khẩu của bạn đã được đổi thành công.");
         router.push("/login");
       } else {
-        alert(data.message || "Có lỗi xảy ra, thử lại sau nhé!");
+        toast.error(data.message || "Có lỗi xảy ra, thử lại sau!");
       }
     } catch (error) {
-      alert("Lỗi kết nối server!");
+      toast.error("Lỗi kết nối server!");
     } finally {
       setLoading(false);
     }

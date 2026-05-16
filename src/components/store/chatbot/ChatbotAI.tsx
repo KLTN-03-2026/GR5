@@ -76,12 +76,22 @@ export default function ChatbotAI() {
       const cartSummary = cart.length > 0 ? {
         totalItems: cart.reduce((sum, item) => sum + item.so_luong, 0),
         totalWeight: cart.reduce((sum, item) => sum + item.so_luong * 500, 0),
+        items: cart.map(item => ({
+          name: item.ten_san_pham,
+          variant: item.phan_loai,
+          price: item.gia_ban,
+          quantity: item.so_luong,
+        })),
       } : null;
+
+      // Lấy sản phẩm đã gợi ý gần nhất để hỗ trợ context "mua luôn đi"
+      const lastBotWithProducts = [...messages].reverse().find(m => m.sender === "bot" && m.products && m.products.length > 0);
+      const lastRecommendedProductIds = lastBotWithProducts?.products?.map(p => p.id) || [];
 
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText, history, cart: cartSummary }),
+        body: JSON.stringify({ message: userText, history, cart: cartSummary, lastRecommendedProductIds }),
       });
 
       if (!res.ok) throw new Error("Lỗi kết nối");
@@ -99,10 +109,19 @@ export default function ChatbotAI() {
         },
       ]);
 
-      if (data.navigate) {
-        setTimeout(() => {
-          router.push(data.navigate);
-        }, 1500);
+      // Không auto-navigate nữa - user sẽ click nút "Đi đến trang" để điều hướng
+      // Chặn navigate đến /payment nếu giỏ hàng trống
+      if (data.navigate === "/payment" && cart.length === 0) {
+        setMessages((prev) => {
+          const lastMsg = prev[prev.length - 1];
+          if (lastMsg && lastMsg.sender === "bot") {
+            return [
+              ...prev.slice(0, -1),
+              { ...lastMsg, navigate: null, text: lastMsg.text + "\n\n⚠️ Giỏ hàng đang trống, bạn cần thêm sản phẩm vào giỏ trước khi thanh toán nhé!" },
+            ];
+          }
+          return prev;
+        });
       }
     } catch {
       setMessages((prev) => [
@@ -188,7 +207,7 @@ export default function ChatbotAI() {
                       className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-[12px] font-medium text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 transition-all"
                     >
                       <span>👉</span>
-                      <span>Đi đến trang</span>
+                      <span>{msg.navigate.startsWith("/products/") ? "Xem sản phẩm" : msg.navigate === "/payment" ? "Đến thanh toán" : msg.navigate === "/cart" ? "Xem giỏ hàng" : "Đi đến trang"}</span>
                       <span className="text-emerald-500">→</span>
                     </Link>
                   </div>

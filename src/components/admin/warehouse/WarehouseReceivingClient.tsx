@@ -1,545 +1,657 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
-  BadgeCheck,
-  ClipboardList,
-  RefreshCw,
-  ShieldAlert,
-  Truck,
-  XCircle,
+  Truck, Camera, CheckCircle, AlertTriangle,
+  Package, ChevronRight, FileSignature, ArrowLeft,
+  Clock, ClipboardCheck, BoxIcon, Users,
+  RotateCcw, ShieldCheck, Loader2,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
-type ReceiptListItem = {
-  id: number;
-  ma_phieu: string;
-  ncc_ten: string;
-  ngay_tao: string | null;
-  trang_thai: string;
-  nguoi_tao: string;
-  tong_san_pham: number;
-  tong_so_luong: number;
-  co_chenh_lech: boolean;
+type Step = "DASHBOARD" | "COUNT" | "CONFIRM" | "DONE";
+
+const STEP_LABELS: Record<Step, string> = {
+  DASHBOARD: "Bảng điều khiển",
+  COUNT: "Kiểm đếm",
+  CONFIRM: "Xác nhận",
+  DONE: "Hoàn tất",
 };
 
-type ReceiptDetail = {
-  phieu: {
-    id: number;
-    ma_phieu: string;
-    ncc: string;
-    ngay_tao: string | null;
-    trang_thai: string;
-    nguoi_tao: string;
-  };
-  items: Array<{
-    id: number;
-    san_pham: string;
-    ma_bien_the: number | null;
-    yeu_cau: number;
-    thuc_nhan: number;
-    chenh_lech: number;
-    ly_do_chenh_lech: string | null;
-    ghi_chu: string | null;
-  }>;
-  history: Array<{ at: string; text: string }>;
+// don_vi_tinh đôi khi bị nhập lẫn khối lượng ("7Kg", "500g") thay vì đơn vị đếm ("Túi", "Kiện").
+// Bỏ phần số ở đầu để tránh hiển thị kiểu "50 7Kg".
+const normalizeUnit = (raw?: string | null) => {
+  const cleaned = (raw || "").trim().replace(/^\d+(?:[.,]\d+)?\s*/, "").trim();
+  return cleaned || "kg";
 };
-
-const STATUS_TABS = [
-  { value: "pending", label: "Chờ xử lý" },
-  { value: "CHO_DUYET", label: "Chờ duyệt" },
-  { value: "CHO_KIEM_TRA", label: "Cần đếm lại" },
-  { value: "DA_DUYET", label: "Đã duyệt" },
-  { value: "DA_HUY", label: "Đã hủy" },
-  { value: "all", label: "Tất cả" },
-];
-
-function formatDateTime(value: string | null) {
-  if (!value) return "N/A";
-  return new Date(value).toLocaleString("vi-VN");
-}
 
 export default function WarehouseReceivingClient() {
-  const [status, setStatus] = useState("pending");
-  const [receipts, setReceipts] = useState<ReceiptListItem[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [detail, setDetail] = useState<ReceiptDetail | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [listLoading, setListLoading] = useState(true);
-  const [rejectReason, setRejectReason] = useState("");
-  const [confirmChecked, setConfirmChecked] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [summary, setSummary] = useState<{
-    qrCount: number;
-    totalQuantity: number;
-    debtAfter: number;
-    supplierName: string;
-    receiptCode: string;
-  } | null>(null);
+  const [step, setStep] = useState<Step>("DASHBOARD");
+  const [pos, setPos] = useState<any[]>([]);
+  const [selectedPo, setSelectedPo] = useState<any>(null);
 
-  const filteredLabel = useMemo(
-    () => STATUS_TABS.find((tab) => tab.value === status)?.label || "",
-    [status],
-  );
 
-  const loadReceipts = async () => {
-    setListLoading(true);
+  const [actualQty, setActualQty] = useState<Record<number, number | "">>({});
+  const [reasons, setReasons] = useState<Record<number, string>>({});
+  const [evidence, setEvidence] = useState<Record<number, string>>({});
+  const [packageStatus, setPackageStatus] = useState<Record<number, string>>({});
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("ALL");
+
+  useEffect(() => { fetchPOs(); }, []);
+
+  const fetchPOs = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch(
-        `/api/admin/warehouse/import?status=${encodeURIComponent(status)}`,
-        { cache: "no-store" },
-      );
-      const json = await response.json();
-      setReceipts(json.phieus || []);
-    } finally {
-      setListLoading(false);
-    }
+      const res = await fetch("/api/admin/warehouse/receiving/today");
+      const data = await res.json();
+      if (!data.error) setPos(data);
+    } catch { toast.error("Không thể tải dữ liệu"); }
+    finally { setIsLoading(false); }
   };
 
-  const loadDetail = async (id: number) => {
-    setLoading(true);
+  const handleOpenPO = (po: any) => {
+    setSelectedPo(po);
+    initCountState(po);
+    setStep("COUNT");
+  };
+
+
+  const initCountState = (po: any) => {
+    const initialQty: Record<number, number | ""> = {};
+    const initialPkg: Record<number, string> = {};
+    po.chi_tiet_phieu_nhap?.forEach((item: any) => {
+      initialQty[item.id] = "";
+      initialPkg[item.id] = "OK";
+    });
+    setActualQty(initialQty);
+    setPackageStatus(initialPkg);
+  };
+
+  const handleUploadEvidence = async (itemId: number, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
     try {
-      const response = await fetch(`/api/admin/warehouse/import/${id}`, {
-        cache: "no-store",
+      const res = await fetch("/api/admin/warehouse/upload/evidence", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.success) {
+        setEvidence((prev) => ({ ...prev, [itemId]: data.url }));
+        toast.success("Tải ảnh thành công!");
+      }
+    } catch { toast.error("Upload thất bại"); }
+  };
+
+  const validateCount = () => {
+    const items = selectedPo.chi_tiet_phieu_nhap;
+    for (const item of items) {
+      const expected = item.so_luong_yeu_cau;
+      const actual = actualQty[item.id] === "" ? 0 : Number(actualQty[item.id]);
+      const diffPct = Math.abs(expected - actual) / expected;
+      if (diffPct > 0.05 && (!reasons[item.id] || !evidence[item.id])) {
+        toast.error(`"${item.bien_the_san_pham?.san_pham?.ten_san_pham}" lệch >5% — cần ghi lý do & ảnh bằng chứng!`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleProceedToConfirm = () => { if (validateCount()) setStep("CONFIRM"); };
+
+  const handleSubmitFinal = async () => {
+    if (!selectedPo) return;
+    setIsSubmitting(true);
+    const items = selectedPo.chi_tiet_phieu_nhap.map((item: any) => ({
+      id: item.id,
+      actualQty: actualQty[item.id] === "" ? 0 : Number(actualQty[item.id]),
+      reason: reasons[item.id] || "",
+      evidenceUrl: evidence[item.id] || "",
+      packageStatus: packageStatus[item.id] || "OK",
+    }));
+    try {
+      const res = await fetch("/api/admin/warehouse/receiving/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ poId: selectedPo.id, items }),
       });
-      const json = (await response.json()) as ReceiptDetail;
-      setDetail(json);
-      setRejectReason("");
-      setConfirmChecked(false);
-    } finally {
-      setLoading(false);
+      const data = await res.json();
+      if (data.success) { setStep("DONE"); toast.success("Tiếp nhận hoàn tất!"); }
+      else toast.error(data.error || "Lỗi xử lý");
+    } catch { toast.error("Lỗi kết nối"); }
+    finally { setIsSubmitting(false); }
+  };
+
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case "CHO_GIAO_HANG": return { label: "Chờ xe đến", color: "text-slate-600", bg: "bg-slate-100", border: "border-slate-200", icon: Clock };
+      case "DANG_NHAN": case "RECEIVING": return { label: "Đang dỡ hàng", color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", icon: Truck };
+      case "WAITING_FOR_QC": case "CHO_KIEM_TRA": return { label: "Chờ QC kiểm", color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", icon: ShieldCheck };
+      case "HOAN_THANH": case "DA_DUYET": return { label: "Hoàn thành", color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle };
+      default: return { label: status, color: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200", icon: AlertTriangle };
     }
   };
 
-  useEffect(() => {
-    loadReceipts();
-  }, [status]);
+  const filteredPos = filterStatus === "ALL" ? pos : pos.filter((p) => {
+    if (filterStatus === "PENDING") return p.trang_thai === "CHO_GIAO_HANG";
+    if (filterStatus === "RECEIVING") return p.trang_thai === "DANG_NHAN" || p.trang_thai === "RECEIVING";
+    if (filterStatus === "WAITING_FOR_QC") return p.trang_thai === "WAITING_FOR_QC" || p.trang_thai === "CHO_KIEM_TRA";
+    if (filterStatus === "COMPLETED") return p.trang_thai === "HOAN_THANH" || p.trang_thai === "DA_DUYET";
+    return p.trang_thai === filterStatus;
+  });
 
-  useEffect(() => {
-    if (!selectedId && receipts.length > 0) {
-      setSelectedId(receipts[0].id);
-      loadDetail(receipts[0].id);
-    }
-  }, [receipts, selectedId]);
+  // ═══════════════════════════════════════════════
+  // STEP: DASHBOARD
+  // ═══════════════════════════════════════════════
+  if (step === "DASHBOARD") {
+    const totalPOs = pos.length;
+    const pending = pos.filter((p) => p.trang_thai === "CHO_GIAO_HANG").length;
+    const processing = pos.filter((p) => ["DANG_NHAN", "RECEIVING", "WAITING_FOR_QC", "CHO_KIEM_TRA"].includes(p.trang_thai)).length;
+    const completed = pos.filter((p) => ["HOAN_THANH", "DA_DUYET"].includes(p.trang_thai)).length;
 
-  const onSelectReceipt = (id: number) => {
-    setSelectedId(id);
-    loadDetail(id);
-  };
-
-  const refreshAll = async () => {
-    await loadReceipts();
-    if (selectedId) {
-      await loadDetail(selectedId);
-    }
-  };
-
-  const approveReceipt = async () => {
-    if (!selectedId || !confirmChecked) return;
-    setActionLoading(true);
-    try {
-      const response = await fetch(
-        `/api/admin/warehouse/import/${selectedId}/approve`,
-        { method: "POST" },
-      );
-      const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Không thể duyệt phiếu");
-      setSummary(json);
-      await refreshAll();
-    } catch (error: any) {
-      alert(error?.message || "Không thể duyệt phiếu");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const rejectReceipt = async () => {
-    if (!selectedId || !rejectReason.trim()) return;
-    setActionLoading(true);
-    try {
-      const response = await fetch(
-        `/api/admin/warehouse/import/${selectedId}/reject`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reason: rejectReason.trim() }),
-        },
-      );
-      const json = await response.json();
-      if (!response.ok)
-        throw new Error(json.error || "Không thể từ chối phiếu");
-      await refreshAll();
-      setRejectReason("");
-      setConfirmChecked(false);
-    } catch (error: any) {
-      alert(error?.message || "Không thể từ chối phiếu");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-4">
-        <InfoCard
-          icon={<ClipboardList size={14} />}
-          label="Danh sách đang xem"
-          value={filteredLabel}
-          accentColor="#64748b"
-        />
-        <InfoCard
-          icon={<Truck size={14} />}
-          label="Tổng phiếu"
-          value={receipts.length}
-          accentColor="#059669"
-        />
-        <InfoCard
-          icon={<BadgeCheck size={14} />}
-          label="Phiếu có chênh lệch"
-          value={receipts.filter((item) => item.co_chenh_lech).length}
-          accentColor="#f59e0b"
-        />
-        <InfoCard
-          icon={<ShieldAlert size={14} />}
-          label="Phiếu cần xử lý"
-          value={
-            receipts.filter((item) => item.trang_thai === "CHO_KIEM_TRA").length
-          }
-          accentColor="#ef4444"
-        />
-      </div>
-
-      <div className="rounded-3xl border border-white/70 bg-white/95 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-[15px] font-medium text-slate-900">
-              Nhập kho master-detail
-            </h2>
-            <p className="text-[13px] text-[#64748b]">
-              Bảng trái là danh sách phiếu, bảng phải là chi tiết và nút
-              duyệt/từ chối.
+            <h1 className="text-2xl font-bold text-gray-900">Tiếp Nhận Hàng Hóa</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
           <button
-            type="button"
-            onClick={refreshAll}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+            onClick={fetchPOs}
+            className="flex items-center gap-2 px-4 py-2 bg-white text-gray-600 font-medium rounded-xl border border-gray-200 hover:bg-gray-50 transition text-sm"
           >
-            <RefreshCw className="h-4 w-4" />
-            Làm mới
+            <RotateCcw size={16} /> Làm mới
           </button>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-2">
-          {STATUS_TABS.map((tab) => (
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Tổng phiếu", value: totalPOs, icon: ClipboardCheck, color: "text-gray-700", bg: "bg-gray-50" },
+            { label: "Chờ xe đến", value: pending, icon: Clock, color: "text-slate-600", bg: "bg-slate-50" },
+            { label: "Đang xử lý", value: processing, icon: Truck, color: "text-blue-600", bg: "bg-blue-50" },
+            { label: "Hoàn thành", value: completed, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50" },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 ${s.bg} rounded-lg flex items-center justify-center`}>
+                  <s.icon size={20} className={s.color} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">{s.label}</p>
+                  <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {[
+            { key: "ALL", label: "Tất cả" },
+            { key: "PENDING", label: "Chờ xe" },
+            { key: "RECEIVING", label: "Đang dỡ" },
+            { key: "WAITING_FOR_QC", label: "Chờ QC" },
+            { key: "COMPLETED", label: "Xong" },
+          ].map((f) => (
             <button
-              key={tab.value}
-              type="button"
-              onClick={() => setStatus(tab.value)}
-              className={`h-[32px] rounded-[6px] border-[0.5px] px-3 text-[13px] font-medium transition-colors ${
-                status === tab.value 
-                  ? "border-[#059669] bg-[#f0fdf4] text-[#065f46]" 
-                  : "border-[#e2e8f0] bg-transparent text-[#64748b] hover:bg-[#f8fafc]"
+              key={f.key}
+              onClick={() => setFilterStatus(f.key)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${
+                filterStatus === f.key
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
               }`}
             >
-              {tab.label}
+              {f.label}
             </button>
           ))}
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-          <section className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900">Danh sách phiếu</h3>
-              <span className="text-sm text-slate-500">
-                {receipts.length} phiếu
-              </span>
+        {/* PO List */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16 text-gray-400">
+              <Loader2 size={24} className="animate-spin mr-3" /> Đang tải...
             </div>
-
-            <div className="space-y-3">
-              {listLoading ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-500">
-                  Đang tải danh sách...
-                </div>
-              ) : receipts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 rounded-2xl border border-dashed border-slate-200 bg-white text-center">
-                  <ClipboardList size={24} className="text-[#e2e8f0] mb-2" />
-                  <p className="text-[13px] text-[#94a3b8] font-medium">Không có phiếu phù hợp</p>
-                  <p className="text-[11px] text-[#cbd5e1] mt-1">Thử chọn bộ lọc khác</p>
-                </div>
-              ) : (
-                receipts.map((receipt) => {
-                  const active = receipt.id === selectedId;
-                  return (
-                    <button
-                      key={receipt.id}
-                      type="button"
-                      onClick={() => onSelectReceipt(receipt.id)}
-                      className={`w-full rounded-2xl border p-4 text-left transition ${active ? "border-emerald-600 bg-emerald-50 shadow-sm" : "border-slate-200 bg-white hover:border-slate-300"}`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-base font-semibold">
-                            {receipt.ma_phieu}
-                          </div>
-                          <div
-                            className={`mt-1 text-sm ${active ? "text-emerald-800" : "text-slate-500"}`}
-                          >
-                            {receipt.ncc_ten}
-                          </div>
-                        </div>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${receipt.co_chenh_lech ? (active ? "bg-amber-400/20 text-amber-200" : "bg-amber-100 text-amber-700") : active ? "bg-white/10 text-white" : "bg-emerald-100 text-emerald-700"}`}
-                        >
-                          {receipt.trang_thai}
-                        </span>
-                      </div>
-                      <div
-                        className={`mt-3 grid grid-cols-2 gap-2 text-sm ${active ? "text-emerald-700" : "text-slate-500"}`}
-                      >
-                        <div>{receipt.tong_san_pham} dòng hàng</div>
-                        <div>{receipt.tong_so_luong} đơn vị</div>
-                        <div>{formatDateTime(receipt.ngay_tao)}</div>
-                        <div>{receipt.nguoi_tao}</div>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
+          ) : filteredPos.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <BoxIcon size={48} className="mb-3 opacity-30" />
+              <p className="font-medium">Không có phiếu nào</p>
             </div>
-          </section>
-
-          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_16px_60px_rgba(15,23,42,0.05)]">
-            {loading ? (
-              <div className="grid min-h-[420px] place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-slate-500">
-                Đang tải chi tiết phiếu...
-              </div>
-            ) : !detail ? (
-              <div className="flex flex-col items-center justify-center min-h-[420px] rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-center p-6">
-                <ClipboardList size={32} className="text-[#e2e8f0] mb-3" />
-                <p className="text-[13px] text-[#94a3b8] font-medium">Chọn một phiếu để xem chi tiết</p>
-                <p className="text-[11px] text-[#cbd5e1] mt-1 max-w-[250px]">Chi tiết phiếu, danh sách sản phẩm và nút duyệt sẽ hiển thị tại đây</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="text-xs uppercase tracking-[0.1em] text-emerald-700 font-bold">
-                        Phiếu nhập
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {filteredPos.map((po) => {
+                const cfg = getStatusConfig(po.trang_thai);
+                const StatusIcon = cfg.icon;
+                return (
+                  <div
+                    key={po.id}
+                    onClick={() => handleOpenPO(po)}
+                    className="p-4 hover:bg-gray-50 transition cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-11 h-11 ${cfg.bg} rounded-xl flex items-center justify-center shrink-0 border ${cfg.border}`}>
+                        <StatusIcon size={20} className={cfg.color} />
                       </div>
-                      <div className="mt-2 text-2xl font-bold text-slate-900">
-                        {detail.phieu.ma_phieu}
-                      </div>
-                      <div className="mt-1 text-sm text-slate-600">
-                        {detail.phieu.ncc} · {detail.phieu.nguoi_tao}
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white border border-emerald-100 px-4 py-3 text-right">
-                      <div className="text-xs text-slate-500">Trạng thái</div>
-                      <div className="mt-1 text-sm font-bold text-emerald-700">
-                        {detail.phieu.trang_thai}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200">
-                  <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-                    Danh sách sản phẩm
-                  </div>
-                  <div className="divide-y divide-slate-200">
-                    {detail.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className={`grid gap-3 px-4 py-3 md:grid-cols-[1.4fr_0.5fr_0.5fr_0.5fr] ${item.chenh_lech !== 0 ? "bg-amber-50/80" : "bg-white"}`}
-                      >
-                        <div>
-                          <div className="font-medium text-slate-900">
-                            {item.san_pham}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            Biến thể #{item.ma_bien_the ?? "N/A"}
-                          </div>
-                        </div>
-                        <div className="text-sm text-slate-600">
-                          Yêu cầu:{" "}
-                          <span className="font-semibold text-slate-900">
-                            {item.yeu_cau}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-bold text-gray-900">PN-{String(po.id).padStart(4, "0")}</span>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color} border ${cfg.border}`}>
+                            {cfg.label}
                           </span>
                         </div>
-                        <div className="text-sm text-slate-600">
-                          Thực nhận:{" "}
-                          <span className="font-semibold text-slate-900">
-                            {item.thuc_nhan}
-                          </span>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Users size={14} className="shrink-0" />
+                          <span className="truncate">{po.nha_cung_cap?.ten_ncc || "NCC chưa xác định"}</span>
                         </div>
-                        <div
-                          className={`text-sm font-semibold ${item.chenh_lech === 0 ? "text-emerald-600" : "text-amber-700"}`}
-                        >
-                          Chênh lệch: {item.chenh_lech > 0 ? "+" : ""}
-                          {item.chenh_lech}
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {po.chi_tiet_phieu_nhap?.slice(0, 3).map((item: any) => (
+                            <span key={item.id} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-medium">
+                              {item.bien_the_san_pham?.san_pham?.ten_san_pham?.slice(0, 20)} × {item.so_luong_yeu_cau}
+                            </span>
+                          ))}
+                          {po.chi_tiet_phieu_nhap?.length > 3 && (
+                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md">
+                              +{po.chi_tiet_phieu_nhap.length - 3}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <h4 className="font-semibold text-slate-900">
-                        Lịch sử xử lý
-                      </h4>
-                      <span className="text-xs text-slate-500">
-                        {detail.history.length} dòng
-                      </span>
-                    </div>
-                    <div className="mt-3 space-y-3">
-                      {detail.history.length > 0 ? (
-                        detail.history.map((entry, index) => (
-                          <div
-                            key={`${entry.at}-${index}`}
-                            className="rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-600"
-                          >
-                            <div className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                              {entry.at || "N/A"}
-                            </div>
-                            <div className="mt-1">{entry.text}</div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-sm text-slate-500">
-                          Chưa có lịch sử xử lý.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <h4 className="font-semibold text-slate-900">
-                      Phê duyệt master-detail
-                    </h4>
-                    <div className="mt-3 space-y-3 text-sm text-slate-600">
-                      <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3">
-                        <input
-                          type="checkbox"
-                          checked={confirmChecked}
-                          onChange={(event) =>
-                            setConfirmChecked(event.target.checked)
-                          }
-                          className="mt-1 h-4 w-4 rounded border-slate-300"
-                        />
-                        <span>
-                          Tôi đã kiểm tra đủ số lượng, lô hàng, QR và vị trí
-                          trước khi duyệt.
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="text-xs text-gray-400">
+                          {new Date(po.ngay_tao).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                         </span>
-                      </label>
-
-                      <textarea
-                        value={rejectReason}
-                        onChange={(event) =>
-                          setRejectReason(event.target.value)
-                        }
-                        placeholder="Nhập lý do từ chối hoặc yêu cầu đếm lại..."
-                        className="min-h-[112px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-900"
-                      />
-
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        <button
-                          type="button"
-                          disabled={!confirmChecked || actionLoading}
-                          onClick={approveReceipt}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <BadgeCheck className="h-4 w-4" />
-                          Duyệt phiếu
-                        </button>
-                        <button
-                          type="button"
-                          disabled={!rejectReason.trim() || actionLoading}
-                          onClick={rejectReceipt}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <XCircle className="h-4 w-4" />
-                          Từ chối / đếm lại
-                        </button>
+                        <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500 transition" />
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
-          </section>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
+    );
+  }
 
-      {summary && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur">
-          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white p-6 shadow-2xl">
-            <div className="text-xs uppercase tracking-[0.24em] text-slate-400">
-              Phiếu đã duyệt
+  // ═══════════════════════════════════════════════
+  // Breadcrumb / Steps indicator
+  // ═══════════════════════════════════════════════
+  const StepsBar = () => {
+    const steps: Step[] = ["COUNT", "CONFIRM", "DONE"];
+    const currentIdx = steps.indexOf(step);
+    return (
+      <div className="flex items-center gap-1 mb-6">
+        {steps.map((s, i) => (
+          <div key={s} className="flex items-center gap-1">
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition ${
+              i <= currentIdx ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"
+            }`}>
+              {i < currentIdx ? <CheckCircle size={14} /> : i + 1}
             </div>
-            <h3 className="mt-2 text-2xl font-semibold text-slate-900">
-              {summary.receiptCode}
-            </h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Vào in mã QR cho {summary.supplierName} để hoàn tất nhập kho.
-            </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl bg-slate-50 p-3 text-sm">
-                <div className="text-slate-500">QR tạo ra</div>
-                <div className="mt-1 text-xl font-semibold text-slate-900">
-                  {summary.qrCount}
-                </div>
+            <span className={`text-xs font-medium hidden sm:inline ${i <= currentIdx ? "text-blue-700" : "text-gray-400"}`}>
+              {STEP_LABELS[s]}
+            </span>
+            {i < steps.length - 1 && <div className={`w-6 h-0.5 ${i < currentIdx ? "bg-blue-400" : "bg-gray-200"}`} />}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // ═══════════════════════════════════════════════
+  // STEP: COUNT (Kiểm đếm)
+  // ═══════════════════════════════════════════════
+  if (step === "COUNT") {
+    const items = selectedPo?.chi_tiet_phieu_nhap || [];
+    const totalItems = items.length;
+    let checkedCount = 0;
+    items.forEach((item: any) => {
+      if (actualQty[item.id] !== undefined && String(actualQty[item.id]) !== "") checkedCount++;
+    });
+    const progressPct = totalItems > 0 ? Math.round((checkedCount / totalItems) * 100) : 0;
+
+    return (
+      <div className="max-w-4xl mx-auto space-y-4">
+        <button onClick={() => setStep("DASHBOARD")} className="flex items-center gap-2 text-gray-500 hover:text-gray-800 text-sm font-medium transition">
+          <ArrowLeft size={16} /> Lưu tạm & quay lại
+        </button>
+        <StepsBar />
+
+        {/* PO Info + Progress */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-gray-900">PN-{String(selectedPo?.id).padStart(4, "0")}</h2>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Đang kiểm đếm</span>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3 text-sm">
-                <div className="text-slate-500">Số lượng</div>
-                <div className="mt-1 text-xl font-semibold text-slate-900">
-                  {summary.totalQuantity}
-                </div>
+              <p className="text-sm text-gray-500 mt-0.5">{selectedPo?.nha_cung_cap?.ten_ncc}</p>
+            </div>
+            <div className="w-full sm:w-48">
+              <div className="flex justify-between text-xs font-semibold text-gray-500 mb-1">
+                <span>{checkedCount}/{totalItems} mặt hàng</span>
+                <span>{progressPct}%</span>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3 text-sm">
-                <div className="text-slate-500">Công nợ sau</div>
-                <div className="mt-1 text-xl font-semibold text-slate-900">
-                  {summary.debtAfter.toLocaleString("vi-VN")}
-                </div>
+              <div className="w-full bg-gray-100 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
               </div>
             </div>
-            <div className="mt-6 flex justify-end">
+          </div>
+        </div>
+
+        {/* Items */}
+        <div className="space-y-3">
+          {items.map((item: any, idx: number) => {
+            const expected = item.so_luong_yeu_cau;
+            const actual = actualQty[item.id] ?? "";
+            const unit = normalizeUnit(item.bien_the_san_pham?.don_vi_tinh);
+            const isFilled = actual !== "";
+            const diffPct = isFilled ? Math.abs(expected - Number(actual)) / expected : 0;
+            const pkgStatus = packageStatus[item.id] || "OK";
+
+            let borderColor = "border-gray-200";
+            let bgColor = "bg-white";
+            let statusTag = null;
+
+            if (isFilled) {
+              if (Number(actual) === expected) {
+                borderColor = "border-emerald-300";
+                bgColor = "bg-emerald-50/30";
+                statusTag = <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Khớp</span>;
+              } else if (diffPct <= 0.05) {
+                borderColor = "border-amber-300";
+                bgColor = "bg-amber-50/30";
+                statusTag = <span className="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Lệch nhẹ</span>;
+              } else {
+                borderColor = "border-red-300";
+                bgColor = "bg-red-50/30";
+                statusTag = <span className="text-xs font-semibold text-red-700 bg-red-100 px-2 py-0.5 rounded-full">Lệch lớn</span>;
+              }
+            }
+
+            return (
+              <div key={item.id} className={`rounded-xl border ${borderColor} ${bgColor} shadow-sm overflow-hidden transition-all`}>
+                <div className="p-4">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    {/* Item Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="w-6 h-6 rounded-md bg-gray-200 text-gray-600 text-xs font-bold flex items-center justify-center">{idx + 1}</span>
+                        <h3 className="font-bold text-gray-900 truncate">{item.bien_the_san_pham?.san_pham?.ten_san_pham}</h3>
+                        {statusTag}
+                      </div>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+                        <span className="bg-gray-100 px-2 py-0.5 rounded font-medium">{item.bien_the_san_pham?.ma_sku}</span>
+                        <span>{item.bien_the_san_pham?.ten_bien_the}</span>
+                      </div>
+                    </div>
+
+                    {/* Count Input */}
+                    <div className="flex items-center gap-4 bg-gray-50 rounded-lg p-3 border border-gray-200 w-full sm:w-auto">
+                      <div className="text-center">
+                        <div className="text-[10px] font-semibold text-gray-400 uppercase">Yêu cầu</div>
+                        <div className="text-lg font-bold text-gray-500">{expected} <span className="text-xs font-normal">{unit}</span></div>
+                      </div>
+                      <div className="w-px h-8 bg-gray-300" />
+                      <div>
+                        <div className="text-[10px] font-semibold text-blue-600 uppercase">Thực đếm</div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <input
+                            type="number"
+                            min={0}
+                            placeholder="0"
+                            value={actual}
+                            onChange={(e) => { const v = e.target.value.replace(/^-/, ''); setActualQty({ ...actualQty, [item.id]: v === "" ? "" : Number(v) }); }}
+                            onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
+                            className="w-20 text-right text-xl font-bold text-blue-700 bg-white border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <span className="text-xs text-gray-500 font-medium">{unit}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Package Status + Evidence Row */}
+                  <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-gray-500">Bao bì:</span>
+                      <select
+                        value={pkgStatus}
+                        onChange={(e) => setPackageStatus({ ...packageStatus, [item.id]: e.target.value })}
+                        className={`text-xs font-medium px-2 py-1 rounded-lg border focus:outline-none ${
+                          pkgStatus !== "OK" ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-white border-gray-200 text-gray-600"
+                        }`}
+                      >
+                        <option value="OK">Bình thường</option>
+                        <option value="MOP">Móp / rách nhẹ</option>
+                        <option value="UOT">Ướt / ẩm</option>
+                        <option value="LOI">Bất thường</option>
+                      </select>
+                    </div>
+
+                    {isFilled && (diffPct > 0.05 || pkgStatus !== "OK") && (
+                      <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                        <input
+                          type="text"
+                          placeholder="Lý do lệch / ghi chú..."
+                          value={reasons[item.id] || ""}
+                          onChange={(e) => setReasons({ ...reasons, [item.id]: e.target.value })}
+                          className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-red-200 bg-white focus:outline-none focus:ring-2 focus:ring-red-400"
+                        />
+                        <label className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition ${
+                          evidence[item.id]
+                            ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                            : "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                        }`}>
+                          {evidence[item.id] ? <><CheckCircle size={12} /> Có ảnh</> : <><Camera size={12} /> Ảnh</>}
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                            if (e.target.files?.[0]) handleUploadEvidence(item.id, e.target.files[0]);
+                          }} />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Submit */}
+        <button
+          onClick={handleProceedToConfirm}
+          disabled={checkedCount < totalItems}
+          className="w-full py-4 rounded-xl bg-gray-900 text-white font-semibold text-sm hover:bg-gray-800 transition shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {checkedCount < totalItems
+            ? `Còn ${totalItems - checkedCount} mặt hàng chưa đếm`
+            : <><ClipboardCheck size={18} /> Chuyển bước xác nhận</>}
+        </button>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════
+  // STEP: CONFIRM
+  // ═══════════════════════════════════════════════
+  if (step === "CONFIRM") {
+    const items = selectedPo?.chi_tiet_phieu_nhap || [];
+    const totalExpected = items.reduce((s: number, i: any) => s + i.so_luong_yeu_cau, 0);
+    const totalActual = items.reduce((s: number, i: any) => s + (actualQty[i.id] === "" ? 0 : Number(actualQty[i.id])), 0);
+    const hasIssues = items.some((i: any) => {
+      const a = actualQty[i.id] === "" ? 0 : Number(actualQty[i.id]);
+      return a !== i.so_luong_yeu_cau || packageStatus[i.id] !== "OK";
+    });
+
+    return (
+      <div className="max-w-3xl mx-auto space-y-4">
+        <button onClick={() => setStep("COUNT")} className="flex items-center gap-2 text-gray-500 hover:text-gray-800 text-sm font-medium transition">
+          <ArrowLeft size={16} /> Quay lại sửa
+        </button>
+        <StepsBar />
+
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 text-white">
+            <h2 className="text-lg font-bold">Biên Bản Tiếp Nhận Hàng Hóa</h2>
+            <p className="text-blue-100 text-sm mt-0.5">PN-{String(selectedPo?.id).padStart(4, "0")} · {selectedPo?.nha_cung_cap?.ten_ncc}</p>
+          </div>
+
+          <div className="p-6 space-y-6">
+            {/* Summary info */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-gray-400 text-xs font-medium block">Thời gian</span>
+                <span className="font-semibold text-gray-800">{new Date().toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 text-xs font-medium block">NCC</span>
+                <span className="font-semibold text-gray-800">{selectedPo?.nha_cung_cap?.ten_ncc?.slice(0, 20)}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 text-xs font-medium block">Tổng YC</span>
+                <span className="font-semibold text-gray-800">{totalExpected}</span>
+              </div>
+              <div>
+                <span className="text-gray-400 text-xs font-medium block">Tổng thực nhận</span>
+                <span className={`font-bold ${totalActual === totalExpected ? "text-emerald-600" : "text-amber-600"}`}>{totalActual}</span>
+              </div>
+            </div>
+
+            {/* Items table */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="text-left px-4 py-2.5 font-semibold text-gray-600">Sản phẩm</th>
+                    <th className="text-center px-3 py-2.5 font-semibold text-gray-600 w-20">Bao bì</th>
+                    <th className="text-right px-3 py-2.5 font-semibold text-gray-600 w-20">YC</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-gray-600 w-24">Thực nhận</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item: any) => {
+                    const expected = item.so_luong_yeu_cau;
+                    const actual = actualQty[item.id] === "" ? 0 : Number(actualQty[item.id]);
+                    const pkg = packageStatus[item.id];
+                    const unit = normalizeUnit(item.bien_the_san_pham?.don_vi_tinh);
+                    return (
+                      <tr key={item.id} className="border-b border-gray-100 last:border-0">
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-gray-800">{item.bien_the_san_pham?.san_pham?.ten_san_pham}</div>
+                          <div className="text-xs text-gray-400 mt-0.5">{item.bien_the_san_pham?.ten_bien_the}</div>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {pkg === "OK" ? (
+                            <span className="text-emerald-600 text-xs font-bold">OK</span>
+                          ) : (
+                            <span className="text-amber-600 text-xs font-bold">Lỗi</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-right text-gray-500 font-medium">{expected} {unit}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="font-bold text-gray-900">{actual}</span>
+                          <span className="text-xs text-gray-400 ml-1">{unit}</span>
+                          {actual !== expected && (
+                            <div className={`text-xs font-bold mt-0.5 ${actual > expected ? "text-emerald-600" : "text-red-600"}`}>
+                              {actual > expected ? "+" : ""}{actual - expected}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Warning */}
+            {hasIssues && (
+              <div className="flex gap-3 items-start bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-800">
+                  Có mục lệch số lượng hoặc bao bì bất thường. Biên bản sẽ được gửi đến QC để kiểm định.
+                </p>
+              </div>
+            )}
+
+            {/* Confirm note */}
+            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 border border-gray-200">
+              Bằng việc xác nhận, nhân viên cam kết số liệu kiểm đếm là chính xác. Hàng sẽ chuyển sang Staging Area và gửi thông báo cho đội QC.
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
               <button
-                type="button"
-                onClick={() => setSummary(null)}
-                className="rounded-full bg-slate-800 px-4 py-2 font-medium text-white hover:bg-slate-700 transition"
+                onClick={() => setStep("COUNT")}
+                className="flex-1 py-3.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition text-sm flex items-center justify-center gap-2"
               >
-                Đóng
+                <RotateCcw size={16} /> Sửa lại
+              </button>
+              <button
+                onClick={handleSubmitFinal}
+                disabled={isSubmitting}
+                className="flex-[2] py-3.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-sm flex items-center justify-center gap-2 disabled:opacity-50 shadow-md"
+              >
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <FileSignature size={16} />}
+                {isSubmitting ? "Đang xử lý..." : "Ký xác nhận & Hoàn tất"}
               </button>
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-function InfoCard({
-  icon,
-  label,
-  value,
-  accentColor,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number | string;
-  accentColor: string;
-}) {
-  return (
-    <div className="h-[64px] rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm flex items-center justify-between" style={{ borderLeft: `3px solid ${accentColor}` }}>
-      <div>
-        <div className="flex items-center gap-1.5 text-[12px] font-medium text-slate-500">
-          {icon} {label}
-        </div>
-        <div className="mt-0.5 text-lg font-bold text-slate-900">{value}</div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // ═══════════════════════════════════════════════
+  // STEP: DONE
+  // ═══════════════════════════════════════════════
+  if (step === "DONE") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] max-w-md mx-auto text-center px-4">
+        <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle size={40} className="text-emerald-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Tiếp Nhận Hoàn Tất!</h2>
+        <p className="text-gray-500 mb-3">
+          Lô hàng đã được chuyển vào Staging Area. Hệ thống đã gửi yêu cầu kiểm định tới đội QC.
+        </p>
+        <div className="w-full bg-amber-50 border border-amber-200 rounded-xl p-3 mb-6 flex items-start gap-2 text-left">
+          <AlertTriangle size={16} className="text-amber-600 mt-0.5 shrink-0" />
+          <p className="text-[13px] text-amber-700">
+            <strong>Bước tiếp theo:</strong> hàng chỉ vào tồn kho & sơ đồ kho sau khi <strong>QC duyệt</strong>. Hãy sang trang Kiểm Định để xử lý.
+          </p>
+        </div>
+        <div className="flex flex-col w-full gap-3">
+          <Link
+            href="/staff/warehouse/qc"
+            className="w-full py-3.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition text-sm flex items-center justify-center gap-2"
+          >
+            <ShieldCheck size={16} /> Đi đến Kiểm Định (QC)
+          </Link>
+          <button
+            onClick={() => { setStep("DASHBOARD"); fetchPOs(); }}
+            className="w-full py-3.5 rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 transition text-sm"
+          >
+            Quay về bảng điều khiển
+          </button>
+          <button
+            onClick={() => { setStep("DASHBOARD"); setSelectedPo(null); fetchPOs(); }}
+            className="w-full py-3.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
+          >
+            Tiếp nhận phiếu khác
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }

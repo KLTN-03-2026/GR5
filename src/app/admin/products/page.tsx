@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
+import * as XLSX from "xlsx";
 import {
   Plus,
   Search,
@@ -17,10 +18,9 @@ import {
   XCircle,
   Download,
   Upload,
-  Eye,
   TriangleAlert,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const CATEGORY_BADGE: Record<string, { bg: string; color: string }> = {
   "Trà & Hoa thảo mộc": { bg: "#fef9c3", color: "#854d0e" },
@@ -192,9 +192,54 @@ export default function ProductsPage() {
     } catch { toast.error("Lỗi hệ thống!"); }
   };
 
+  const toggleStatus = async (product: any) => {
+    const newStatus = product.trang_thai === "DANG_BAN" ? "NGUNG_BAN" : "DANG_BAN";
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ten_san_pham: product.ten_san_pham, ma_danh_muc: product.ma_danh_muc, xuat_xu: product.xuat_xu, mo_ta: product.mo_ta, trang_thai: newStatus, bien_the: product.bien_the_san_pham || [], anh_san_pham: product.anh_san_pham?.map((a: any) => a.duong_dan_anh) || [] }),
+      });
+      if (res.ok) {
+        setProducts(prev => prev.map(p => p.id === product.id ? { ...p, trang_thai: newStatus } : p));
+        toast.success(newStatus === "DANG_BAN" ? "Đã bật bán sản phẩm" : "Đã tạm ngưng bán");
+      } else toast.error("Không thể cập nhật trạng thái");
+    } catch { toast.error("Lỗi hệ thống"); }
+  };
+
   const allChecked = filteredProducts.length > 0 && filteredProducts.every(p => selectedIds.includes(p.id));
   const toggleAll  = () => setSelectedIds(allChecked ? [] : filteredProducts.map(p => p.id));
   const toggleOne  = (id: number) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  const handleExportExcel = (onlySelected = false) => {
+    const source = onlySelected
+      ? products.filter((p: any) => selectedIds.includes(p.id))
+      : filteredProducts;
+    if (source.length === 0) { toast.error("Không có sản phẩm để xuất"); return; }
+    const rows = source.map((p: any, i: number) => {
+      const stock = p.ton_kho ?? p.bien_the_san_pham?.reduce((s: number, b: any) => s + (Number(b.ton_kho) || 0), 0) ?? 0;
+      const firstVariant = p.bien_the_san_pham?.[0];
+      return {
+        STT: i + 1,
+        "Mã SP": p.id,
+        "Tên sản phẩm": p.ten_san_pham || "",
+        "Danh mục": p.danh_muc?.ten_danh_muc || "",
+        "Xuất xứ": p.xuat_xu || "",
+        "Số biến thể": p.bien_the_san_pham?.length || 0,
+        "Giá bán (đ)": firstVariant?.gia_ban ? Number(firstVariant.gia_ban) : 0,
+        "Đơn vị": firstVariant?.don_vi_tinh || "",
+        "Tồn kho": stock,
+        "Trạng thái": p.trang_thai === "DANG_BAN" ? "Đang bán" : p.trang_thai === "TAM_NGUNG" ? "Tạm ngưng" : (p.trang_thai || ""),
+        "Ngày tạo": p.ngay_tao ? new Date(p.ngay_tao).toLocaleDateString("vi-VN") : "",
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "SanPham");
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `SanPham_${today}.xlsx`);
+    toast.success(`Đã xuất ${source.length} sản phẩm`);
+  };
 
   const startItem = totalCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem   = Math.min(currentPage * itemsPerPage, totalCount);
@@ -212,13 +257,11 @@ export default function ProductsPage() {
     enter: e => { e.currentTarget.style.background = hBg; e.currentTarget.style.color = hColor; },
     leave: e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = color; },
   });
-  const btnView   = makeBtn("#6b7280", "#eef2ff", "#6366f1");
   const btnEdit   = makeBtn("#6b7280", "#f0fdf4", "#16a34a");
   const btnDelete = makeBtn("#6b7280", "#fef2f2", "#dc2626");
 
   return (
     <div style={{ background: "#f7f8f6", minHeight: "100vh", padding: "24px 28px", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}>
-      <Toaster />
 
       {/* Page header */}
       <div style={{ marginBottom: 20 }}>
@@ -252,7 +295,13 @@ export default function ProductsPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#1e293b", color: "#fff", borderRadius: 8, padding: "10px 16px", marginBottom: 16 }}>
           <span style={{ fontSize: 13, fontWeight: 500 }}>Đã chọn {selectedIds.length} sản phẩm</span>
           {["Ẩn sản phẩm", "Xóa", "Xuất Excel"].map(lbl => (
-            <button key={lbl} style={{ height: 32, padding: "0 14px", background: lbl === "Xóa" ? "#7f1d1d" : "#334155", border: "none", borderRadius: 6, fontSize: 13, color: "#fff", cursor: "pointer" }}>{lbl}</button>
+            <button
+              key={lbl}
+              onClick={lbl === "Xuất Excel" ? () => handleExportExcel(true) : undefined}
+              style={{ height: 32, padding: "0 14px", background: lbl === "Xóa" ? "#7f1d1d" : "#334155", border: "none", borderRadius: 6, fontSize: 13, color: "#fff", cursor: "pointer" }}
+            >
+              {lbl}
+            </button>
           ))}
           <button onClick={() => setSelectedIds([])} style={{ marginLeft: "auto", height: 32, padding: "0 14px", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, fontSize: 13, color: "#94a3b8", cursor: "pointer" }}>
             Bỏ chọn
@@ -285,12 +334,22 @@ export default function ProductsPage() {
             </select>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            {[{ Icon: Download, label: "Xuất Excel" }, { Icon: Upload, label: "Nhập Excel" }].map(btn => (
-              <button key={btn.label} style={{ display: "flex", alignItems: "center", gap: 6, height: 38, padding: "0 14px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", fontSize: 13, color: "#374151", cursor: "pointer" }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "#16a34a")} onMouseLeave={e => (e.currentTarget.style.borderColor = "#e5e7eb")}>
-                <btn.Icon style={{ width: 14, height: 14 }} />{btn.label}
-              </button>
-            ))}
+            <button
+              onClick={() => handleExportExcel(false)}
+              style={{ display: "flex", alignItems: "center", gap: 6, height: 38, padding: "0 14px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", fontSize: 13, color: "#374151", cursor: "pointer" }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "#16a34a")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = "#e5e7eb")}
+            >
+              <Download style={{ width: 14, height: 14 }} />Xuất Excel
+            </button>
+            <button
+              onClick={() => toast("Tính năng nhập Excel sẽ được bổ sung sau", { icon: "ℹ️" })}
+              style={{ display: "flex", alignItems: "center", gap: 6, height: 38, padding: "0 14px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", fontSize: 13, color: "#374151", cursor: "pointer" }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "#16a34a")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = "#e5e7eb")}
+            >
+              <Upload style={{ width: 14, height: 14 }} />Nhập Excel
+            </button>
             <button onClick={openAddModal} style={{ display: "flex", alignItems: "center", gap: 6, height: 38, padding: "0 16px", background: "#16a34a", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, color: "#fff", cursor: "pointer" }}
               onMouseEnter={e => (e.currentTarget.style.background = "#15803d")} onMouseLeave={e => (e.currentTarget.style.background = "#16a34a")}>
               <Plus style={{ width: 15, height: 15 }} /> Thêm sản phẩm
@@ -395,10 +454,15 @@ export default function ProductsPage() {
                           </td>
                           <td style={{ padding: "12px 12px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <div style={{ width: 32, height: 18, borderRadius: 99, background: "#16a34a", position: "relative", flexShrink: 0, cursor: "pointer" }}>
-                                <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff", position: "absolute", top: 2, right: 2, boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+                              <div
+                                onClick={(e) => { e.stopPropagation(); toggleStatus(p); }}
+                                style={{ width: 32, height: 18, borderRadius: 99, background: p.trang_thai === "NGUNG_BAN" ? "#d1d5db" : "#16a34a", position: "relative", flexShrink: 0, cursor: "pointer", transition: "background 0.2s" }}
+                              >
+                                <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff", position: "absolute", top: 2, left: p.trang_thai === "NGUNG_BAN" ? 2 : 16, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
                               </div>
-                              <span style={{ fontSize: 12, color: "#15803d" }}>Đang bán</span>
+                              <span style={{ fontSize: 12, color: p.trang_thai === "NGUNG_BAN" ? "#9ca3af" : "#15803d" }}>
+                                {p.trang_thai === "NGUNG_BAN" ? "Ngưng bán" : "Đang bán"}
+                              </span>
                             </div>
                           </td>
                           <td style={{ padding: "12px 12px" }}>
@@ -406,7 +470,6 @@ export default function ProductsPage() {
                           </td>
                           <td style={{ padding: "12px 12px" }}>
                             <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
-                              <button style={btnView.base} onMouseEnter={btnView.enter} onMouseLeave={btnView.leave}><Eye style={{ width: 14, height: 14 }} /></button>
                               <button onClick={() => openEditModal(p)} style={btnEdit.base} onMouseEnter={btnEdit.enter} onMouseLeave={btnEdit.leave}><Edit style={{ width: 14, height: 14 }} /></button>
                               <button onClick={() => setDeleteModal({ isOpen: true, id: p.id, name: p.ten_san_pham })} style={btnDelete.base} onMouseEnter={btnDelete.enter} onMouseLeave={btnDelete.leave}><Trash2 style={{ width: 14, height: 14 }} /></button>
                             </div>
@@ -533,7 +596,9 @@ export default function ProductsPage() {
                         { val: v.gia_ban,       key: "gia_ban",      ph: "0", type: "number" },
                       ].map(field => (
                         <input key={field.key} type={field.type || "text"} value={field.val ?? ""} placeholder={field.ph}
-                          onChange={e => { const nv = [...variations]; nv[index][field.key] = e.target.value; setVariations(nv); }}
+                          min={field.type === "number" ? "0" : undefined}
+                          onKeyDown={field.type === "number" ? (e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); } : undefined}
+                          onChange={e => { const nv = [...variations]; nv[index][field.key] = field.type === "number" ? e.target.value.replace(/^-/, '') : e.target.value; setVariations(nv); }}
                           style={{ height: 36, border: field.key === "gia_ban" ? "1px solid #fca5a5" : "1px solid #e5e7eb", borderRadius: 6, fontSize: 13, padding: "0 10px", outline: "none", background: "#fff", color: field.key === "gia_ban" ? "#dc2626" : "#374151", fontWeight: field.key === "gia_ban" ? 600 : 400, width: "100%", boxSizing: "border-box" }} />
                       ))}
                       {variations.length > 1 ? (

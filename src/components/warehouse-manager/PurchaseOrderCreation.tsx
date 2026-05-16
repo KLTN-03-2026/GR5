@@ -129,11 +129,19 @@ function PrintModal({ phieuId, onClose }: { phieuId: number; onClose: () => void
   );
 }
 
-// ─── REVIEW MODAL (Người kiểm tra duyệt) ──────────────────────────
+// ─── REVIEW MODAL (Nhận hàng + Kiểm tra + Duyệt) ─────────────────
 function ReviewModal({ phieu, onClose, onDone }: { phieu: Phieu; onClose: () => void; onDone: () => void }) {
   const chiTiet = phieu.chi_tiet?.[0];
   const soLuongYC = chiTiet?.so_luong_yeu_cau ?? 0;
-  const [form, setForm] = useState({ so_luong_thuc_nhan: String(soLuongYC), ghi_chu: "", ly_do: "" });
+  const isWaitingDelivery = phieu.trang_thai === "CHO_GIAO_HANG";
+
+  const [form, setForm] = useState({
+    so_luong_thuc_nhan: String(soLuongYC),
+    han_su_dung: "",
+    ngay_thu_hoach: "",
+    ghi_chu: "",
+    ly_do: "",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [action, setAction] = useState<"approve" | "reject">("approve");
@@ -141,6 +149,10 @@ function ReviewModal({ phieu, onClose, onDone }: { phieu: Phieu; onClose: () => 
   const chenh = soLuongYC > 0 ? Math.abs((Number(form.so_luong_thuc_nhan) - soLuongYC) / soLuongYC) * 100 : 0;
 
   const handle = async () => {
+    if (action === "approve" && !form.han_su_dung) {
+      setError("Hạn sử dụng là bắt buộc khi nhận hàng");
+      return;
+    }
     if (action === "approve" && chenh > 5 && !form.ly_do) {
       setError(`Chênh lệch ${chenh.toFixed(1)}% — bắt buộc nhập lý do!`);
       return;
@@ -151,8 +163,10 @@ function ReviewModal({ phieu, onClose, onDone }: { phieu: Phieu; onClose: () => 
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action,
+          action: isWaitingDelivery ? "receive_and_approve" : action,
           so_luong_thuc_nhan: Number(form.so_luong_thuc_nhan),
+          han_su_dung: form.han_su_dung || undefined,
+          ngay_thu_hoach: form.ngay_thu_hoach || undefined,
           ghi_chu_kiem_tra: form.ghi_chu,
           ly_do_chenh_lech: form.ly_do,
         }),
@@ -168,10 +182,13 @@ function ReviewModal({ phieu, onClose, onDone }: { phieu: Phieu; onClose: () => 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2"><Eye size={16} className="text-blue-500" /> Kiểm tra phiếu {phieu.ma_phieu}</h3>
+          <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+            <Eye size={16} className="text-blue-500" />
+            {isWaitingDelivery ? "Nhận hàng & Kiểm tra" : "Kiểm tra phiếu"} {phieu.ma_phieu}
+          </h3>
           <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
         </div>
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <div className="bg-gray-50 rounded-xl p-3 text-xs space-y-1">
             <div className="font-medium text-gray-700">NCC: {phieu.nha_cung_cap?.ten_ncc || "N/A"}</div>
             <div className="text-gray-500">SP: {chiTiet?.bien_the_san_pham?.ten_bien_the || "N/A"}</div>
@@ -181,7 +198,8 @@ function ReviewModal({ phieu, onClose, onDone }: { phieu: Phieu; onClose: () => 
           <div>
             <label className="text-xs font-semibold text-gray-600 block mb-1.5">Số lượng thực nhận <span className="text-red-500">*</span></label>
             <input type="number" min={0} value={form.so_luong_thuc_nhan}
-              onChange={(e) => setForm((p) => ({ ...p, so_luong_thuc_nhan: e.target.value }))}
+              onChange={(e) => setForm((p) => ({ ...p, so_luong_thuc_nhan: e.target.value.replace(/-/g, '') }))}
+              onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" />
             {chenh > 0 && (
               <div className={`mt-1.5 text-xs flex items-center gap-1.5 font-semibold ${chenh > 5 ? "text-red-600" : "text-amber-600"}`}>
@@ -189,6 +207,22 @@ function ReviewModal({ phieu, onClose, onDone }: { phieu: Phieu; onClose: () => 
                 Chênh lệch: {chenh.toFixed(1)}% {chenh > 5 ? "— BẮT BUỘC nhập lý do" : "— trong phạm vi cho phép"}
               </div>
             )}
+          </div>
+
+          {/* HSD + Ngày thu hoạch — nhập khi nhận hàng thực tế */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1.5">Hạn sử dụng <span className="text-red-500">*</span></label>
+              <input type="date" value={form.han_su_dung}
+                onChange={(e) => setForm((p) => ({ ...p, han_su_dung: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1.5">Ngày thu hoạch</label>
+              <input type="date" value={form.ngay_thu_hoach}
+                onChange={(e) => setForm((p) => ({ ...p, ngay_thu_hoach: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400" />
+            </div>
           </div>
 
           {chenh > 5 && action === "approve" && (
@@ -212,7 +246,7 @@ function ReviewModal({ phieu, onClose, onDone }: { phieu: Phieu; onClose: () => 
             <button onClick={() => { setAction("approve"); handle(); }} disabled={loading}
               className="flex-1 py-2.5 bg-[#1D9E75] text-white text-sm font-bold rounded-xl hover:bg-[#158a63] disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5">
               {loading && action === "approve" ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle2 size={14} />}
-              Duyệt & Nhập kho
+              {isWaitingDelivery ? "Nhận hàng & Duyệt" : "Duyệt & Nhập kho"}
             </button>
             <button onClick={() => { setAction("reject"); handle(); }} disabled={loading}
               className="px-4 py-2.5 bg-red-50 text-red-700 border border-red-200 text-sm font-bold rounded-xl hover:bg-red-100 disabled:opacity-50 transition-colors">
@@ -231,8 +265,8 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
   const [formData, setFormData] = useState({
     ma_ncc: "", ma_bien_the: "", so_luong_thung: "",
     don_gia_tam_tinh: "",
-    ngay_nhap_kho: new Date().toISOString().split("T")[0],
-    han_su_dung: "", ma_lo_hang_tuy_chinh: "",
+    ngay_giao_du_kien: "",
+    ma_lo_hang_tuy_chinh: "",
     vi_tri: { khu: "", day: "", ke: "", tang: "" },
   });
 
@@ -252,6 +286,20 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Danh sách product_id mà NCC đang chọn cung cấp. null = chưa fetch hoặc chưa chọn NCC.
+  const [nccProductIds, setNccProductIds] = useState<Set<number> | null>(null);
+  const [nccProductsLoading, setNccProductsLoading] = useState(false);
+
+  // Tree vị trí kho: Khu → Dãy → Kệ → Tầng, dùng cho 4 dropdown cascading
+  const [zoneTree, setZoneTree] = useState<any[]>([]);
+
+  // Ngày tối thiểu cho ngày giao dự kiến = hôm nay (local timezone)
+  const todayISO = React.useMemo(() => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  }, []);
+
   const showToast = (type: "success" | "error", msg: string) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 4000);
@@ -265,7 +313,7 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
     setTotalPages(d.meta?.totalPages || 1);
   }, [currentPage]);
 
-  useEffect(() => { 
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const sp = new URLSearchParams(window.location.search);
       const z = sp.get("zone");
@@ -277,7 +325,12 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
         setOrderContext({ zone: z, day: d, ke: k, tang: t });
       }
     }
-    loadPhieus(); 
+    loadPhieus();
+    // Load tree vị trí kho cho 4 dropdown
+    fetch("/api/admin/warehouse/zones")
+      .then(r => r.ok ? r.json() : { zones: [] })
+      .then(d => setZoneTree(d.zones || []))
+      .catch(() => setZoneTree([]));
   }, [loadPhieus]);
 
   // Real-time batch duplicate check (debounced 600ms)
@@ -308,10 +361,41 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
     setFormData((p) => ({ ...p, vi_tri: { khu: s.khu, day: s.day, ke: s.ke, tang: s.tang } }));
   };
 
+  // Fetch sản phẩm NCC cung cấp khi đổi NCC
+  const fetchNccProducts = useCallback(async (nccId: string) => {
+    if (!nccId) { setNccProductIds(null); return; }
+    setNccProductsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/ncc/${nccId}/san-pham`);
+      if (!res.ok) { setNccProductIds(new Set()); return; }
+      const data = await res.json();
+      const ids = new Set<number>(
+        (Array.isArray(data) ? data : []).map((r: any) => Number(r.ma_san_pham || r.san_pham?.id)).filter((n: number) => !isNaN(n))
+      );
+      setNccProductIds(ids);
+    } catch {
+      setNccProductIds(new Set());
+    } finally {
+      setNccProductsLoading(false);
+    }
+  }, []);
+
   const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (["khu", "day", "ke", "tang"].includes(name)) {
-      setFormData((p) => ({ ...p, vi_tri: { ...p.vi_tri, [name]: value } }));
+      // Cascading: đổi cấp cha thì reset các cấp con
+      setFormData((p) => {
+        const vi_tri = { ...p.vi_tri, [name]: value };
+        if (name === "khu") { vi_tri.day = ""; vi_tri.ke = ""; vi_tri.tang = ""; }
+        else if (name === "day") { vi_tri.ke = ""; vi_tri.tang = ""; }
+        else if (name === "ke") { vi_tri.tang = ""; }
+        return { ...p, vi_tri };
+      });
+    } else if (name === "ma_ncc") {
+      // Đổi NCC: reset SP đã chọn và fetch danh sách SP của NCC mới
+      setFormData((p) => ({ ...p, ma_ncc: value, ma_bien_the: "" }));
+      setSuggestions([]);
+      fetchNccProducts(value);
     } else {
       setFormData((p) => ({ ...p, [name]: value }));
       if (name === "ma_lo_hang_tuy_chinh") checkBatch(value);
@@ -319,18 +403,40 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
     }
   };
 
+  // Lọc biến thể theo NCC đã chọn
+  const filteredSp = React.useMemo(() => {
+    const all = formOptions?.sp || [];
+    if (!formData.ma_ncc || !nccProductIds) return all;
+    return all.filter((s: any) => s.productId == null || nccProductIds.has(Number(s.productId)));
+  }, [formOptions, formData.ma_ncc, nccProductIds]);
+
+  // Options cascading cho dropdown vị trí
+  const khuOptions = React.useMemo(() => zoneTree.map((z: any) => z.name as string), [zoneTree]);
+  const currentZone = React.useMemo(() => zoneTree.find((z: any) => z.name === formData.vi_tri.khu), [zoneTree, formData.vi_tri.khu]);
+  const dayOptions = React.useMemo(() => (currentZone?.days || []).map((d: any) => d.name as string), [currentZone]);
+  const currentDay = React.useMemo(() => currentZone?.days?.find((d: any) => d.name === formData.vi_tri.day), [currentZone, formData.vi_tri.day]);
+  const keOptions = React.useMemo(() => (currentDay?.shelves || []).map((k: any) => k.name as string), [currentDay]);
+  const currentKe = React.useMemo(() => currentDay?.shelves?.find((k: any) => k.name === formData.vi_tri.ke), [currentDay, formData.vi_tri.ke]);
+  const tangOptions = React.useMemo(() => (currentKe?.floors || []).map((f: any) => f.tang as string), [currentKe]);
+
   const handleSubmit = async () => {
     if (batchCheck?.exists) return showToast("error", "Mã lô đã tồn tại — hãy dùng mã khác");
+    if (formData.ngay_giao_du_kien && formData.ngay_giao_du_kien < todayISO) {
+      return showToast("error", "Ngày giao dự kiến không được trước hôm nay");
+    }
     setSubmitting(true);
     try {
       const res = await fetch("/api/admin/warehouse/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
           ma_ncc: Number(formData.ma_ncc),
           ma_bien_the: Number(formData.ma_bien_the),
           so_luong_thung: Number(formData.so_luong_thung),
+          don_gia_tam_tinh: formData.don_gia_tam_tinh ? Number(formData.don_gia_tam_tinh) : 0,
+          ngay_giao_du_kien: formData.ngay_giao_du_kien,
+          ma_lo_hang_tuy_chinh: formData.ma_lo_hang_tuy_chinh || undefined,
+          vi_tri: formData.vi_tri,
         }),
       });
       const data = await res.json();
@@ -488,14 +594,31 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-600 block mb-1.5">Sản phẩm <span className="text-red-500">*</span></label>
-                    <select name="ma_bien_the" value={formData.ma_bien_the} onChange={handleInput} required className={inputCls}>
-                      <option value="">-- Chọn SP --</option>
-                      {formOptions?.sp?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    <select
+                      name="ma_bien_the"
+                      value={formData.ma_bien_the}
+                      onChange={handleInput}
+                      required
+                      disabled={!formData.ma_ncc || nccProductsLoading}
+                      className={`${inputCls} ${!formData.ma_ncc ? "opacity-60 cursor-not-allowed" : ""}`}
+                    >
+                      <option value="">
+                        {!formData.ma_ncc
+                          ? "-- Chọn NCC trước --"
+                          : nccProductsLoading
+                            ? "Đang tải sản phẩm NCC..."
+                            : filteredSp.length === 0
+                              ? "NCC này chưa có sản phẩm nào"
+                              : "-- Chọn SP --"}
+                      </option>
+                      {filteredSp.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-600 block mb-1.5">Số lượng (thùng) <span className="text-red-500">*</span></label>
-                    <input type="number" min={1} name="so_luong_thung" value={formData.so_luong_thung} onChange={handleInput}
+                    <input type="number" min={1} name="so_luong_thung" value={formData.so_luong_thung}
+                      onChange={(e) => { const v = e.target.value.replace(/-/g, ''); setFormData((p) => ({ ...p, so_luong_thung: v })); }}
+                      onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                       placeholder="VD: 50" required className={inputCls} />
                   </div>
                 </div>
@@ -506,26 +629,23 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
                     <span className="text-gray-400 text-[10px] font-normal">(tùy chọn)</span>
                     <span title="Dùng để ước tính công nợ NCC trước khi hàng về" className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 cursor-help text-[10px] font-bold">?</span>
                   </label>
-                  <input type="number" min={0} name="don_gia_tam_tinh" value={formData.don_gia_tam_tinh} onChange={handleInput}
+                  <input type="number" min={0} name="don_gia_tam_tinh" value={formData.don_gia_tam_tinh}
+                    onChange={(e) => { const v = e.target.value.replace(/-/g, ''); setFormData((p) => ({ ...p, don_gia_tam_tinh: v })); }}
+                    onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                     placeholder="Kế toán sẽ chốt giá chính thức khi duyệt phiếu nhập"
                     className={inputCls} />
                 </div>
               </section>
 
-              {/* Block 3: Thời gian — Ngày thu hoạch đã bị xóa (sẽ điền ở Phiếu Nhập Kho) */}
+              {/* Block 3: Thời gian */}
               <section>
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
                   <Calendar size={12} /> Thời gian
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 block mb-1.5">Ngày nhập kho dự kiến</label>
-                    <input type="date" name="ngay_nhap_kho" value={formData.ngay_nhap_kho} onChange={handleInput} className={inputCls} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 block mb-1.5">Hạn sử dụng <span className="text-red-500">*</span></label>
-                    <input type="date" name="han_su_dung" value={formData.han_su_dung} onChange={handleInput} required className={inputCls} />
-                  </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1.5">Ngày giao hàng dự kiến <span className="text-red-500">*</span></label>
+                  <input type="date" name="ngay_giao_du_kien" min={todayISO} value={formData.ngay_giao_du_kien} onChange={handleInput} required className={inputCls} />
+                  <p className="text-[11px] text-gray-400 mt-1.5">HSD, ngày thu hoạch sẽ được nhập khi NCC giao hàng thực tế</p>
                 </div>
               </section>
 
@@ -600,24 +720,40 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
                 })()}
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { name: "khu", placeholder: "Khu A" },
-                    { name: "day", placeholder: "D1" },
-                    { name: "ke",  placeholder: "K2" },
-                    { name: "tang", placeholder: "T1" },
-                  ].map(({ name, placeholder }) => (
-                    <div key={name}>
-                      <label className="text-[10px] font-semibold text-gray-500 block mb-1 uppercase">{name === "khu" ? "Khu vực" : name === "day" ? "Dãy" : name === "ke" ? "Kệ" : "Tầng"}</label>
-                      <input name={name} value={(formData.vi_tri as any)[name]} onChange={handleInput}
-                        placeholder={placeholder} className={inputCls} />
-                    </div>
-                  ))}
+                  {([
+                    { name: "khu", label: "Khu vực", options: khuOptions, parentValue: true },
+                    { name: "day", label: "Dãy", options: dayOptions, parentValue: formData.vi_tri.khu },
+                    { name: "ke", label: "Kệ", options: keOptions, parentValue: formData.vi_tri.day },
+                    { name: "tang", label: "Tầng", options: tangOptions, parentValue: formData.vi_tri.ke },
+                  ] as const).map(({ name, label, options, parentValue }) => {
+                    const disabled = !parentValue;
+                    return (
+                      <div key={name}>
+                        <label className="text-[10px] font-semibold text-gray-500 block mb-1 uppercase">{label}</label>
+                        <select
+                          name={name}
+                          value={(formData.vi_tri as any)[name]}
+                          onChange={handleInput}
+                          disabled={disabled}
+                          className={`${inputCls} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+                        >
+                          <option value="">{disabled ? "—" : `-- Chọn ${label.toLowerCase()} --`}</option>
+                          {options.map((opt: string) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })}
                 </div>
+                {zoneTree.length === 0 && (
+                  <p className="text-[11px] text-amber-600 mt-2">Chưa có vị trí kho nào. Tạo khu vực ở trang Sơ đồ kho trước.</p>
+                )}
               </section>
 
               {/* Submit */}
               <div className="flex justify-end pt-2">
-                <button onClick={handleSubmit} disabled={submitting || !!batchCheck?.exists || !formData.ma_ncc || !formData.ma_bien_the || !formData.so_luong_thung || !formData.han_su_dung}
+                <button onClick={handleSubmit} disabled={submitting || !!batchCheck?.exists || !formData.ma_ncc || !formData.ma_bien_the || !formData.so_luong_thung || !formData.ngay_giao_du_kien}
                   className="px-8 py-3 bg-[#1D9E75] text-white font-bold rounded-xl hover:bg-[#158a63] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
                   {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <FileText size={16} />}
                   Tạo Phiếu Nhập
@@ -665,6 +801,12 @@ export default function PurchaseOrderCreation({ formOptions }: { formOptions: an
                         <td className="px-4 py-3 text-center"><StatusBadge status={p.trang_thai} /></td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1.5">
+                            {p.trang_thai === "CHO_GIAO_HANG" && (
+                              <button onClick={() => setReviewTarget(p)}
+                                className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-semibold rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1">
+                                <Package size={10} /> Nhận hàng
+                              </button>
+                            )}
                             {p.trang_thai === "CHO_DUYET" && (
                               <button onClick={() => submitForReview(p.id)}
                                 className="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-semibold rounded-lg hover:bg-blue-100 transition-colors">

@@ -5,8 +5,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || searchParams.get("q") || "";
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "15")));
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "15") || 15));
     const sort = searchParams.get("sort") || "newest";
 
     const where: any = {
@@ -46,9 +46,6 @@ export async function GET(request: Request) {
             where: { trang_thai: { not: "DA_HUY" } },
             select: { tong_tien: true, trang_thai: true, ngay_tao: true },
           },
-          _count: {
-            select: { don_hang: true },
-          },
         },
         orderBy: sort === "spent" ? { id: "desc" } : { ngay_tao: "desc" },
       }),
@@ -69,11 +66,12 @@ export async function GET(request: Request) {
         sdt: user.ho_so_nguoi_dung?.so_dien_thoai || null,
         avatar: user.ho_so_nguoi_dung?.anh_dai_dien || null,
         gioi_tinh: user.ho_so_nguoi_dung?.gioi_tinh || null,
+        ngay_sinh: user.ho_so_nguoi_dung?.ngay_sinh || null,
         ngay_tao: user.ngay_tao,
-        trang_thai: user.trang_thai,
+        trang_thai: user.trang_thai ?? 1,
         tinh_thanh: diaChi?.tinh_thanh || null,
         quan_huyen: diaChi?.quan_huyen || null,
-        tong_don: user._count.don_hang,
+        tong_don: user.don_hang.length,
         don_giao: donGiao,
         tong_chi_tieu: tongChiTieu,
         don_cuoi: lastOrder,
@@ -87,15 +85,22 @@ export async function GET(request: Request) {
     // Stats
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const newThisMonth = await prisma.nguoi_dung.count({
-      where: {
-        vai_tro_nguoi_dung: { some: { vai_tro: { ten_vai_tro: "KHACH_HANG" } } },
-        ngay_tao: { gte: startOfMonth },
-      },
-    });
+    const [newThisMonth, repeatBuyersCount] = await Promise.all([
+      prisma.nguoi_dung.count({
+        where: {
+          vai_tro_nguoi_dung: { some: { vai_tro: { ten_vai_tro: "KHACH_HANG" } } },
+          ngay_tao: { gte: startOfMonth },
+        },
+      }),
+      prisma.nguoi_dung.count({
+        where: {
+          vai_tro_nguoi_dung: { some: { vai_tro: { ten_vai_tro: "KHACH_HANG" } } },
+          don_hang: { some: { id: { gt: 0 } } },
+        },
+      }),
+    ]);
 
-    const repeatBuyers = rawCustomers.filter((u) => u._count.don_hang > 1).length;
-    const repeatRate = total > 0 ? Math.round((repeatBuyers / Math.min(total, rawCustomers.length)) * 100) : 0;
+    const repeatRate = total > 0 ? Math.round((repeatBuyersCount / total) * 100) : 0;
 
     return NextResponse.json({
       data: customers,

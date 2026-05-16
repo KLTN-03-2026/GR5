@@ -4,7 +4,31 @@ import { useEffect, useState } from "react";
 import { EmployeeTable, NhanVien } from "@/components/admin/employees/EmployeeTable";
 import Pagination from "@/components/ui/Pagination";
 import { X, Plus, Loader2, Users, CheckCircle2, Clock, Palmtree, UserX } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+
+const CHUC_VU_OPTIONS = [
+  "Nhân viên kho",
+  "Nhân viên giao nhận",
+  "Nhân viên kiểm phẩm",
+  "Nhân viên đóng gói",
+  "Nhân viên bán hàng",
+  "Nhân viên giao hàng",
+  "Thủ kho",
+  "Kế toán kho",
+  "Quản lý ca",
+  "Tài xế",
+  "Bảo vệ",
+];
+
+const BO_PHAN_OPTIONS = [
+  "Kho Vận",
+  "Kiểm Phẩm",
+  "Bán Hàng",
+  "Giao Hàng",
+  "Kế Toán",
+  "Hành Chính",
+  "Bảo Vệ",
+];
 
 // ─── Form State ────────────────────────────────────────────────────────────────
 const EMPTY_FORM = {
@@ -134,7 +158,6 @@ export default function EmployeeListPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <Toaster position="top-right" />
 
       {/* ── Header ────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b">
@@ -196,7 +219,7 @@ export default function EmployeeListPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <EmployeeTable employees={employees} onRefresh={() => fetchEmployees(search, currentPage)} />
+          <EmployeeTable employees={employees} onRefresh={() => fetchEmployees(search, currentPage)} isAdmin={false} />
           <div className="p-4 border-t">
             <Pagination
               currentPage={currentPage}
@@ -282,11 +305,13 @@ export default function EmployeeListPage() {
                         value={form.vai_tro}
                         onChange={handleChange}
                         className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                        disabled
                       >
                         <option value="STAFF">NV Vận Hành (STAFF)</option>
-                        <option value="THU_KHO">Thủ Kho (THU_KHO)</option>
-                        <option value="CUSTOMER">Khách hàng (CUSTOMER)</option>
                       </select>
+                      <p className="text-xs text-amber-600 mt-1">
+                        ⚠️ Thủ kho chỉ có thể tạo nhân viên vận hành (STAFF).
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -318,8 +343,12 @@ export default function EmployeeListPage() {
                         type="text"
                         name="cccd"
                         value={form.cccd}
-                        onChange={handleChange}
+                        onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 12); handleChange({ target: { name: 'cccd', value: v } } as any); }}
                         placeholder="012345678901"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={12}
+                        onKeyDown={(e) => { if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                         className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
@@ -329,8 +358,12 @@ export default function EmployeeListPage() {
                         type="tel"
                         name="so_dien_thoai"
                         value={form.so_dien_thoai}
-                        onChange={handleChange}
+                        onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 11); handleChange({ target: { name: 'so_dien_thoai', value: v } } as any); }}
                         placeholder="0901234567"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={11}
+                        onKeyDown={(e) => { if (!/[0-9]/.test(e.key) && !['Backspace','Tab','Delete','ArrowLeft','ArrowRight','Home','End'].includes(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                         className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
@@ -355,25 +388,31 @@ export default function EmployeeListPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Chức vụ</label>
-                      <input
-                        type="text"
+                      <select
                         name="chuc_vu"
                         value={form.chuc_vu}
                         onChange={handleChange}
-                        placeholder="VD: Nhân viên kho"
-                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
+                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                      >
+                        <option value="">-- Chọn chức vụ --</option>
+                        {CHUC_VU_OPTIONS.map((cv) => (
+                          <option key={cv} value={cv}>{cv}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Bộ phận</label>
-                      <input
-                        type="text"
+                      <select
                         name="bo_phan"
                         value={form.bo_phan}
                         onChange={handleChange}
-                        placeholder="VD: Kho Vận"
-                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
+                        className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                      >
+                        <option value="">-- Chọn bộ phận --</option>
+                        {BO_PHAN_OPTIONS.map((bp) => (
+                          <option key={bp} value={bp}>{bp}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Loại hợp đồng</label>
@@ -407,9 +446,10 @@ export default function EmployeeListPage() {
                         type="number"
                         name="luong_theo_gio"
                         value={form.luong_theo_gio}
-                        onChange={handleChange}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || Number(v) >= 0) setForm((prev) => ({ ...prev, luong_theo_gio: v })); }}
                         placeholder="VD: 35000"
                         min={0}
+                        onKeyDown={(e) => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                         className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>

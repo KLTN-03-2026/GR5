@@ -4,7 +4,8 @@ import prisma from '@/lib/prisma';
 export async function GET(req: Request) {
   // 1. CƠ CHẾ BẢO VỆ: Kiểm tra Secret Key
   const secret = req.headers.get('x-cron-secret') || req.headers.get('authorization');
-  if (secret !== process.env.CRON_SECRET) {
+  const expected = process.env.CRON_SECRET;
+  if (!expected || (secret !== expected && secret !== `Bearer ${expected}`)) {
     return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });
   }
 

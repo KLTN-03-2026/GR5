@@ -111,16 +111,13 @@ Module nha cung cap quan ly toan bo thong tin va quan he voi cac nha cung cap no
 ## 3. Tinh nang con thieu & Lo hong
 
 ### 3.1 Van de logic nghiep vu
-- **Khong tu dong canh bao hop dong sap het han**: Can cron job kiem tra
 - **Khong tu dong tinh diem uy tin**: Diem uy tin nhap thu cong, khong tu dong cap nhat tu danh gia
-- **Khong co so sanh NCC**: Khong the so sanh gia/chat luong giua cac NCC cung san pham
 - **Khong lien ket lich dat hang voi phieu nhap**: Lich dat tu dong khong tao phieu nhap
 
 ### 3.2 Thieu validation
 - Khong validate MST (Mã số thuế) format (10 hoac 13 chu so)
 - Khong kiem tra trung lap NCC (cung email/SDT)
 - Khong validate gia nhap (cho phep gia am?)
-- Khong gioi han so hop dong dong thoi
 
 ### 3.3 Thieu tinh nang
 - Khong co dashboard tong quan NCC (top NCC, NCC co van de)
@@ -142,21 +139,10 @@ Module nha cung cap quan ly toan bo thong tin va quan he voi cac nha cung cap no
 
 ### Uu tien cao
 - [ ] Tu dong tinh diem uy tin tu trung binh cac lan danh gia giao hang
-- [ ] Them cron job canh bao hop dong sap het han (truoc 30 ngay)
 - [ ] Validate MST format (10 hoac 13 so, kiem tra check digit)
-- [ ] Them tinh nang so sanh NCC (bang so sanh gia + diem theo san pham)
-- [ ] Them workflow duyet thanh toan NCC (nhan vien tao → quan ly duyet)
-
 ### Uu tien trung binh
 - [ ] Them dashboard NCC: Top 5 NCC tot nhat, NCC co van de, tong cong no
-- [ ] Canh bao tu dong khi diem uy tin < 3.0
-- [ ] Lien ket lich dat hang voi tu dong tao phieu nhap (draft)
-- [ ] Them bao cao chi phi nhap hang theo thang/quy
 - [ ] Export cong no ra Excel/PDF
 - [ ] Them lich su thay doi gia (price trend chart)
 
-### Uu tien thap
-- [ ] Xay dung portal NCC (NCC dang nhap xem don, cap nhat gia, gui hoa don)
-- [ ] Implement auto PO khi ton kho duoi reorder point
-- [ ] Them tinh nang gui email thong bao cho NCC (don hang moi, thanh toan)
-- [ ] Tich hop OCR doc hoa don NCC tu dong
+

@@ -151,7 +151,6 @@ Module kho hang quan ly toan bo hoat dong nhap kho, xuat kho, kiem ke, canh bao 
 - [ ] Them cron job quet canh bao HSD hang ngay
 
 ### Uu tien trung binh
-- [ ] Them tinh nang du bao ton kho (dua tren lich su ban hang 30 ngay)
 - [ ] Export bao cao ton kho ra Excel
 - [ ] Them pagination + search nang cao cho danh sach ton kho
 - [ ] Cache warehouse map data (invalidate khi co thay doi)

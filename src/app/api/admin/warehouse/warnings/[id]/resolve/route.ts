@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { syncProductStatusFromStock } from "@/lib/product-stock-status";
 
 // ==========================================
 // POST — Xử lý cảnh báo theo 5 hướng
@@ -227,6 +228,11 @@ export async function POST(
         ...(maPhieuXuLy && { ma_phieu_xu_ly: maPhieuXuLy }),
       },
     });
+
+    // Sau khi xử lý cảnh báo (trừ kho/tiêu huỷ/trả NCC) — chốt lại trạng thái bán
+    if (loHang?.ma_bien_the) {
+      await syncProductStatusFromStock(prisma, [loHang.ma_bien_the]);
+    }
 
     return NextResponse.json({
       message: "Xử lý thành công",

@@ -14,6 +14,7 @@ import WarehouseMapView from "@/components/admin/warehouse/WarehouseMapView";
 import IssueHistory from "@/components/admin/warehouse/IssueHistory";
 import ExpirationWarnings from "@/components/admin/warehouse/ExpirationWarnings";
 import PurchaseOrderCreation from "@/components/warehouse-manager/PurchaseOrderCreation";
+import toast from "react-hot-toast";
 
 // ─── Types ───────────────────────────────────────────────────────────
 type PhieuNhap = {
@@ -204,7 +205,8 @@ function ReceiveModal({ phieu, onClose, onDone }: { phieu: PhieuNhap; onClose: (
             </label>
             <input
               type="number" min={0} value={soLuong}
-              onChange={e => setSoLuong(e.target.value)}
+              onChange={e => { const v = e.target.value.replace(/^-/, ''); setSoLuong(v); }}
+              onKeyDown={e => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
               className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 bg-gray-50"
             />
             {chenh > 0 && (
@@ -286,23 +288,35 @@ export default function StaffWarehousePage() {
       const d = await res.json();
       // Flatten lô hàng từ inventory
       const items: TonKhoItem[] = [];
-      (d.inventory || d.items || []).forEach((inv: any) => {
-        (inv.lo_hang || []).forEach((lo: any) => {
-          const hsd = lo.han_su_dung ? new Date(lo.han_su_dung) : null;
-          const daysLeft = hsd ? Math.floor((hsd.getTime() - Date.now()) / 86400000) : null;
-          items.push({
-            id: lo.id,
-            ma_lo: lo.ma_lo_hang,
-            san_pham: inv.ten_san_pham || inv.bien_the?.san_pham?.ten_san_pham || "—",
-            bien_the: lo.bien_the?.ten_bien_the || inv.ten_bien_the,
-            so_luong_ton: lo.so_luong_ton ?? lo.ton_kho_tong?.reduce((a: number, t: any) => a + (t.so_luong_ton || 0), 0) ?? 0,
-            don_vi: "thùng",
-            vi_tri: lo.ton_kho_tong?.[0]?.vi_tri_kho
-              ? `${lo.ton_kho_tong[0].vi_tri_kho.khu}-${lo.ton_kho_tong[0].vi_tri_kho.day}-${lo.ton_kho_tong[0].vi_tri_kho.ke}`
-              : "—",
-            han_su_dung: hsd ? hsd.toLocaleDateString("vi-VN") : "—",
-            days_left: daysLeft,
-            trang_thai_hsd: daysLeft === null ? "GOOD" : daysLeft < 0 ? "EXPIRED" : daysLeft <= 7 ? "WARNING" : "GOOD",
+      (d.data || d.inventory || d.items || []).forEach((product: any) => {
+        (product.bien_the_san_pham || []).forEach((variant: any) => {
+          (variant.lo_hang || []).forEach((lo: any) => {
+            const tonKhoTong = lo.ton_kho_tong || [];
+            const soLuongTon = tonKhoTong.reduce((a: number, t: any) => a + (t.so_luong || t.so_luong_ton || 0), 0);
+            if (soLuongTon <= 0) return;
+
+            const hsd = lo.han_su_dung ? new Date(lo.han_su_dung) : null;
+            const daysLeft = hsd ? Math.floor((hsd.getTime() - Date.now()) / 86400000) : null;
+            const viTri = tonKhoTong
+              .map((t: any) => {
+                const vt = t.vi_tri_kho;
+                return vt ? [vt.khu_vuc, vt.day, vt.ke, vt.tang].filter(Boolean).join("-") : "";
+              })
+              .filter(Boolean)
+              .join(", ");
+
+            items.push({
+              id: lo.id,
+              ma_lo: lo.ma_lo_hang || `LO-${lo.id}`,
+              san_pham: product.ten_san_pham || "—",
+              bien_the: variant.ten_bien_the || product.ten_san_pham,
+              so_luong_ton: soLuongTon,
+              don_vi: variant.don_vi_tinh || "thùng",
+              vi_tri: viTri || "—",
+              han_su_dung: hsd ? hsd.toLocaleDateString("vi-VN") : "—",
+              days_left: daysLeft,
+              trang_thai_hsd: daysLeft === null ? "GOOD" : daysLeft <= 0 ? "EXPIRED" : daysLeft <= 7 ? "WARNING" : "GOOD",
+            });
           });
         });
       });
@@ -362,7 +376,7 @@ export default function StaffWarehousePage() {
       const res = await fetch(`/api/admin/warehouse/issue?ma_bien_the=${xuatForm.ma_bien_the}&so_luong=${xuatForm.so_luong}`);
       const json = await res.json();
       setXuatSuggestions(json.lo_list || []);
-      if (json.thieu > 0) alert(`⚠️ Kho không đủ hàng — thiếu ${json.thieu} kiện`);
+      if (json.thieu > 0) toast.error(`Kho không đủ hàng — thiếu ${json.thieu} kiện`);
     } catch {}
     finally { setIsSuggesting(false); }
   };
@@ -388,9 +402,9 @@ export default function StaffWarehousePage() {
         setQrCodeData("");
         loadTonKho();
       } else {
-        alert(json.error || "Lỗi xuất kho");
+        toast.error(json.error || "Lỗi xuất kho");
       }
-    } catch { alert("Lỗi kết nối"); }
+    } catch { toast.error("Lỗi kết nối"); }
     finally { setIsExporting(false); }
   };
 
@@ -711,6 +725,16 @@ export default function StaffWarehousePage() {
               </div>
             </div>
 
+            {/* Link đến trang xuất kho theo đơn */}
+            <a href="/staff/warehouse/issue"
+              className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-5 hover:bg-emerald-100 transition-colors group">
+              <div className="flex items-center gap-2.5">
+                <Boxes size={16} className="text-emerald-600" />
+                <span className="text-sm font-semibold text-emerald-700">Xuất kho theo đơn hàng (FEFO + khoảng cách)</span>
+              </div>
+              <ChevronRight size={14} className="text-emerald-400 group-hover:text-emerald-600 transition-colors" />
+            </a>
+
             {/* Success banner */}
             {xuatDone && (
               <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-5 text-sm text-emerald-700 font-medium">
@@ -753,7 +777,8 @@ export default function StaffWarehousePage() {
                       <label className="block text-xs font-semibold text-slate-700 mb-1.5">Số lượng xuất (thùng/kiện) <span className="text-red-500">*</span></label>
                       <div className="flex gap-2">
                         <input type="number" min={1} value={xuatForm.so_luong}
-                          onChange={e => { setXuatForm(f => ({ ...f, so_luong: e.target.value })); setXuatSuggestions([]); }}
+                          onChange={e => { const v = e.target.value.replace(/^-/, '').replace(/^0+(?=\d)/, ''); setXuatForm(f => ({ ...f, so_luong: v })); setXuatSuggestions([]); }}
+                          onKeyDown={e => { if ((e.key === '-' || e.key === 'e') && !e.ctrlKey && !e.metaKey) e.preventDefault(); }}
                           placeholder="VD: 20"
                           className="flex-1 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/10 bg-white" />
                         <button onClick={handleSuggestFefo}

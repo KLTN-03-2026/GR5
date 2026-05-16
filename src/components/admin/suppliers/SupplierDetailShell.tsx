@@ -36,6 +36,7 @@ const SupplierDetailContext = createContext<SupplierDetailContextValue | null>(
 
 const TAB_ITEMS = [
   { href: "info", label: "Thông tin", icon: Info },
+  { href: "products", label: "Sản phẩm", icon: LayoutGrid },
   { href: "history", label: "Lịch sử nhập", icon: History },
   { href: "debt", label: "Công nợ", icon: CreditCard },
   { href: "quality", label: "Chất lượng", icon: ShieldCheck },

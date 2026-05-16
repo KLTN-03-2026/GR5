@@ -32,7 +32,8 @@ export default function OrderDetailsClientPage({ params }: { params: Promise<{ i
   // Cấu hình các bước cho Stepper (Động theo trạng thái DB)
   const steps = [
     { label: 'Đã đặt', icon: Check, status: 'CHO_XAC_NHAN' },
-    { label: 'Đã thanh toán', icon: Check, status: 'DA_THANH_TOAN' },
+    { label: 'Chờ xử lý', icon: Check, status: 'CHO_XU_LY' },
+    { label: 'Chờ giao', icon: Package, status: 'CHO_GIAO_HANG' },
     { label: 'Đang giao', icon: Truck, status: 'DANG_GIAO_HANG' },
     { label: 'Hoàn tất', icon: Package, status: 'DA_GIAO' }
   ];

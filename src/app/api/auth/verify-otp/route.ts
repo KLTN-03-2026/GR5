@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { randomUUID, createHash } from "crypto";
 import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
@@ -46,8 +47,24 @@ export async function POST(req: Request) {
     );
   }
 
-  // 4. Xóa mã sau khi dùng xong
+  // 4. Xóa mã OTP sau khi xác thực thành công
   await prisma.ma_otp.delete({ where: { id: otpRecord.id } });
 
-  return NextResponse.json({ message: "Xác thực thành công", success: true });
+  // 5. Tạo reset token ngẫu nhiên, hash và lưu vào DB với thời hạn 10 phút
+  const resetToken = randomUUID();
+  const hashedToken = createHash("sha256").update(resetToken).digest("hex");
+
+  await prisma.ma_otp.create({
+    data: {
+      email,
+      code: hashedToken,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 phút
+    },
+  });
+
+  return NextResponse.json({
+    message: "Xác thực thành công",
+    success: true,
+    resetToken, // Trả token (chưa hash) cho client để dùng ở bước reset-password
+  });
 }

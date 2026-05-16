@@ -20,7 +20,6 @@ export default async function AccountLayout({
       display: "flex",
       width: "100%",
       flex: 1,
-      marginTop: "-6rem",         /* cancel store layout pt-24 (96px) */
       minHeight: "calc(100vh - 64px)",
       background: "#f7f8f6",
       alignItems: "stretch",
